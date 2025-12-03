@@ -33,15 +33,17 @@ public class InterviewController {
 
     @PostMapping("/start")
     public Interview startAiInterview(@RequestBody String jobRole) {
-        // TO DO: Call AI Service to prepare session context
-        // aiService.generateInterviewQuestions(jobRole, "Resume content here");
+        // Call AI Service to prepare session context (simulated)
+        // In a real app, we would save these questions to the database linked to the interview ID
+        List<String> questions = aiService.generateInterviewQuestions(jobRole);
+        System.out.println("Generated questions for " + jobRole + ": " + questions);
         
         // Return a new interview object
         Interview newInterview = new Interview(
             UUID.randomUUID().toString(),
             jobRole != null && !jobRole.isEmpty() ? jobRole : "New AI Interview",
             "English",
-            "React, Java, Spring",
+            "React, Java, Spring", // This could also be dynamic based on role
             LocalDate.now(),
             "In Progress"
         );
@@ -51,7 +53,7 @@ public class InterviewController {
     
     @PostMapping("/{id}/chat")
     public String chatWithAi(@PathVariable String id, @RequestBody String userMessage) {
-        // TO DO: Implement real chat logic passing message to LLM
-        return "This is a mock AI response to: " + userMessage;
+        // Implement real chat logic passing message to Service
+        return aiService.generateAiResponse(userMessage);
     }
 }

@@ -17,7 +17,7 @@ const InterviewRoom = () => {
   //   connectToSignalingServer();
   // }, []);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
     // Add user message
@@ -25,16 +25,35 @@ const InterviewRoom = () => {
     setMessages(newMessages);
     setInputText("");
 
-    // TO DO: Send message to Backend/AI Service
-    // aiService.sendMessage(inputText);
+    try {
+      // Call Backend/AI Service
+      const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain', // Sending raw string as body
+        },
+        body: inputText
+      });
 
-    // Mock AI thinking and response
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        sender: 'ai', 
-        text: "That's an interesting point. Can you elaborate more on how you handled the scalability issues in that project?" 
-      }]);
-    }, 1500);
+      if (response.ok) {
+        const aiResponseText = await response.text();
+        setMessages(prev => [...prev, { 
+          sender: 'ai', 
+          text: aiResponseText 
+        }]);
+      } else {
+        console.error("Failed to get AI response");
+      }
+    } catch (error) {
+      console.error("Error calling AI service:", error);
+      // Fallback for demo if backend is not running
+      setTimeout(() => {
+        setMessages(prev => [...prev, { 
+          sender: 'ai', 
+          text: "(Offline Mock) That's an interesting point. Can you elaborate more?" 
+        }]);
+      }, 1500);
+    }
   };
 
   const handleEndInterview = () => {
