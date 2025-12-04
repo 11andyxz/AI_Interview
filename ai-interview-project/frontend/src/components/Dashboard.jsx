@@ -4,7 +4,7 @@ import InterviewCard from './InterviewCard';
 const Dashboard = () => {
   const [interviews, setInterviews] = useState([]);
 
-  useEffect(() => {
+  {/*useEffect(() => {
     // TO DO: Fetch data from Backend API
     // fetch('http://localhost:8080/api/interviews')
     //   .then(res => res.json())
@@ -25,6 +25,15 @@ const Dashboard = () => {
       { id: 11, title: "Internet / AI / Backend Development", language: "English", techStack: "JavaScript,Python,Java,Kotlin", date: "2025/05/08" },
     ];
     // setInterviews(mockData);
+  }, []);*/}
+  useEffect(() => {
+    fetch('/mockApi.json')
+      .then(res => res.json())
+      .then(data => {
+        console.log("Fetched API data:", data);
+        setInterviews(data);
+      })
+      .catch(err => console.error("API error:", err));
   }, []);
 
   console.log("len =", interviews.length);
