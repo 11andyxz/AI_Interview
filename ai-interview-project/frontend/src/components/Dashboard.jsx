@@ -24,8 +24,10 @@ const Dashboard = () => {
       { id: 10, title: "Internet / AI / Backend Development", language: "English", techStack: "JavaScript,Python,Java,Kotlin", date: "2025/05/08" },
       { id: 11, title: "Internet / AI / Backend Development", language: "English", techStack: "JavaScript,Python,Java,Kotlin", date: "2025/05/08" },
     ];
-    setInterviews(mockData);
+    // setInterviews(mockData);
   }, []);
+
+  console.log("len =", interviews.length);
 
   return (
     <div className="p-8 ml-64">
@@ -34,11 +36,24 @@ const Dashboard = () => {
         {/* TO DO: Filter controls can go here */}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {interviews.map((interview) => (
           <InterviewCard key={interview.id} interview={interview} />
         ))}
-      </div>
+      </div>*/}
+      {interviews.length === 0 ? (
+        <div className="mt-16 text-center text-sm text-slate-500">
+          You don’t have any interviews yet. Click “New Interview” to create one.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 auto-rows-fr">
+          {interviews.map((interview) => (
+            <InterviewCard key={interview.id} interview={interview} />
+          ))}
+        </div>
+      )}
+
+
     </div>
   );
 };
