@@ -11,7 +11,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/interviews")
-@CrossOrigin(origins = "http://localhost:3000") // Allow Frontend access
 public class InterviewController {
 
     private final AiService aiService;

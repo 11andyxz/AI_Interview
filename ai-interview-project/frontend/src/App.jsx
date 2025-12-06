@@ -1,25 +1,41 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import InterviewRoom from './components/InterviewRoom';
+import Login from './components/Login';
+
+// 路由保护组件
+const ProtectedRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* 登录页面 */}
+        <Route path="/login" element={<Login />} />
+        
         {/* Dashboard Layout with Sidebar */}
         <Route path="/" element={
-          <div className="min-h-screen bg-gray-50 flex">
-            <Sidebar />
-            <main className="flex-1">
-              <Dashboard />
-            </main>
-          </div>
+          <ProtectedRoute>
+            <div className="min-h-screen bg-gray-50 flex">
+              <Sidebar />
+              <main className="flex-1">
+                <Dashboard />
+              </main>
+            </div>
+          </ProtectedRoute>
         } />
         
         {/* Standalone Interview Room (No Sidebar) */}
-        <Route path="/interview/:id" element={<InterviewRoom />} />
+        <Route path="/interview/:id" element={
+          <ProtectedRoute>
+            <InterviewRoom />
+          </ProtectedRoute>
+        } />
       </Routes>
     </Router>
   );

@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
-import { MessageSquare, FileText, PenTool, Book, Plus, LayoutDashboard, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MessageSquare, FileText, PenTool, Book, Plus, LayoutDashboard, User, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setCurrentUser(JSON.parse(userStr));
+    }
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -13,6 +21,12 @@ const Sidebar = () => {
     // In a real app, this would likely open a modal to select options first
     const mockId = Math.floor(Math.random() * 10000);
     navigate(`/interview/${mockId}`);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    navigate('/login');
   };
 
   return (
@@ -63,9 +77,19 @@ const Sidebar = () => {
             <User size={24} className="text-gray-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">ID: 874255</p>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {currentUser ? currentUser.username : 'User'}
+            </p>
           </div>
         </div>
+        
+        <button
+          onClick={handleLogout}
+          className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
       </div>
     </div>
   );
