@@ -8,6 +8,15 @@ import java.util.Random;
 @Service
 public class AiService {
 
+    private static final String[] GENERIC_RESPONSES = {
+        "That's a great answer. Can you elaborate on the technical challenges you faced?",
+        "Interesting point. How would you approach this if the requirements changed?",
+        "Good. Let's move on to the next topic. How comfortable are you with system design?",
+        "I see. Could you give me a specific example from your past experience?",
+        "Thank you. Now, let's discuss your preferred way of working in a team."
+    };
+
+
     private final Random random = new Random();
 
     /**
@@ -47,7 +56,7 @@ public class AiService {
     /**
      * Simulates a chat response from the AI Interviewer.
      */
-    public String generateAiResponse(String userMessage) {
+    /* public String generateAiResponse(String userMessage) {
         // Simple mock responses to make the interaction feel dynamic
         String[] genericResponses = {
             "That's a great answer. Can you elaborate on the technical challenges you faced?",
@@ -58,13 +67,24 @@ public class AiService {
         };
         
         return genericResponses[random.nextInt(genericResponses.length)];
+    }*/
+    public String generateAiResponse(String userMessage) {
+        return GENERIC_RESPONSES[random.nextInt(GENERIC_RESPONSES.length)];
     }
+
 
     // TO DO: AI Audio Processing
     public String analyzeVoiceResponse(byte[] audioData) {
         // TO DO: Send audio to Speech-to-Text service (e.g., Whisper)
         // TO DO: Analyze sentiment and technical accuracy of the transcript
         return "Voice analysis feature is coming soon...";
+    }
+
+    /**
+     * Mock resume summarization for MVP.
+     */
+    public String generateResumeSummary(String resumeText, String jobDescription) {
+        return "Mock summary: This candidate has relevant experience based on the provided resume.";
     }
 }
 
