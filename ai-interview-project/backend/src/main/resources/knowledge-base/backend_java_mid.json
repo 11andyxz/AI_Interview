@@ -1,0 +1,41 @@
+{
+  "roleId": "backend_java",
+  "level": "mid",
+  "skills": ["java_core", "spring_boot", "sql"],
+  "questions": [
+    {
+      "id": "q_java_001",
+      "text": "Explain the difference between HashMap and ConcurrentHashMap.",
+      "type": "technical",
+      "difficulty": "medium",
+      "skills": ["java_core"],
+      "followUps": [
+        "How does ConcurrentHashMap achieve thread safety?",
+        "What happens under high contention?"
+      ]
+    },
+    {
+      "id": "q_spring_001",
+      "text": "Describe how Spring Boot auto-configuration works.",
+      "type": "technical",
+      "difficulty": "medium",
+      "skills": ["spring_boot"],
+      "followUps": [
+        "How would you disable or customize auto-configuration?",
+        "What are conditional annotations?"
+      ]
+    },
+    {
+      "id": "q_sql_001",
+      "text": "What are the pros and cons of using an index on a frequently updated column?",
+      "type": "technical",
+      "difficulty": "medium",
+      "skills": ["sql"],
+      "followUps": [
+        "How would you detect missing indexes in production?",
+        "How do composite indexes affect query plans?"
+      ]
+    }
+  ]
+}
+

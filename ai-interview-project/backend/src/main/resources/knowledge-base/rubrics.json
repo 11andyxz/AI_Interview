@@ -1,0 +1,23 @@
+{
+  "rubrics": [
+    {
+      "roleId": "backend_java",
+      "skill": "spring_boot",
+      "levels": {
+        "excellent": "Explains auto-config conditions, starters, override patterns; cites @Conditional and property-based toggles.",
+        "average": "Knows starters and basic customization, but misses conditional details.",
+        "poor": "Vague on how auto-config is triggered or overridden."
+      }
+    },
+    {
+      "roleId": "frontend_react",
+      "skill": "performance",
+      "levels": {
+        "excellent": "Mentions virtualization, memoization, key strategy, and profiling tools.",
+        "average": "Covers virtualization or memoization but not both, limited on measurement.",
+        "poor": "Only suggests vague optimizations without tooling or measurable steps."
+      }
+    }
+  ]
+}
+

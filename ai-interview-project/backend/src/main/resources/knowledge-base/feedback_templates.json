@@ -1,0 +1,13 @@
+{
+  "templates": [
+    {
+      "roleId": "backend_java",
+      "pattern": "For {skill}, the candidate showed {assessment}. Next steps: {next_steps}."
+    },
+    {
+      "roleId": "frontend_react",
+      "pattern": "React performance on {skill}: {assessment}. Suggested improvements: {next_steps}."
+    }
+  ]
+}
+

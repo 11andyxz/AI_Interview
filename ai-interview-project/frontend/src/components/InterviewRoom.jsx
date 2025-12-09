@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Send } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -11,11 +11,122 @@ const InterviewRoom = () => {
     { sender: 'ai', text: "Hello! I'm your AI interviewer today. We'll be focusing on your background in Internet / AI / Artificial Intelligence. Ready to begin?" }
   ]);
   const [inputText, setInputText] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [subtitleStatus, setSubtitleStatus] = useState("off"); // off | listening | unavailable
+  const localStreamRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const localVideoRef = useRef(null);
 
   // TO DO: Initialize WebSocket or WebRTC connection here
   // useEffect(() => {
   //   connectToSignalingServer();
   // }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const initMedia = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        localStreamRef.current = stream;
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+          const vid = localVideoRef.current;
+          vid.onloadedmetadata = () => {
+            vid.play().catch(() => {});
+          };
+        }
+        // 默认关闭实际视频画面展示，只用于权限与音轨控制
+        if (!isVideoOn) {
+          stream.getVideoTracks().forEach(t => (t.enabled = false));
+        }
+        if (!isMicOn) {
+          stream.getAudioTracks().forEach(t => (t.enabled = false));
+        }
+        // 自动启动字幕
+        setTimeout(() => {
+          startSubtitle();
+        }, 500);
+      } catch (err) {
+        console.error("getUserMedia error:", err);
+      }
+    };
+    initMedia();
+    return () => {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []); // mount only
+
+  const toggleMic = () => {
+    const next = !isMicOn;
+    setIsMicOn(next);
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach(t => (t.enabled = next));
+    }
+  };
+
+  const toggleVideo = () => {
+    const next = !isVideoOn;
+    setIsVideoOn(next);
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach(t => (t.enabled = next));
+    }
+    if (next && localVideoRef.current) {
+      localVideoRef.current.play().catch(() => {});
+    }
+  };
+
+  const startSubtitle = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSubtitleStatus("unavailable");
+      setSubtitle("Live captions not supported in this browser.");
+      return;
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    const rec = new SpeechRecognition();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    rec.onresult = (event) => {
+      let text = "";
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        text += event.results[i][0].transcript;
+      }
+      setSubtitle(text.trim());
+    };
+    rec.onerror = (e) => {
+      console.error("Speech recognition error:", e);
+      setSubtitleStatus("unavailable");
+    };
+    rec.onend = () => {
+      // 自动重启以保持监听（使用 ref 避免闭包问题）
+      if (recognitionRef.current === rec) {
+        try {
+          rec.start();
+        } catch (err) {
+          console.log("Recognition restart failed:", err);
+        }
+      }
+    };
+    recognitionRef.current = rec;
+    setSubtitleStatus("listening");
+    rec.start();
+  };
+
+  const stopSubtitle = () => {
+    setSubtitleStatus("off");
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
@@ -77,13 +188,20 @@ const InterviewRoom = () => {
           </div>
           
           {/* User Video Overlay (Picture-in-Picture style) */}
-          <div className="absolute bottom-4 right-4 w-48 h-36 bg-black rounded-lg border-2 border-gray-700 flex items-center justify-center overflow-hidden">
+          <div className="absolute bottom-4 right-4 w-64 h-48 bg-black rounded-lg border-2 border-gray-700 flex items-center justify-center overflow-hidden">
              {isVideoOn ? (
-               <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                 <span className="text-xs text-gray-400">Your Camera</span>
-               </div>
+               <video
+                 ref={localVideoRef}
+                 autoPlay
+                 muted
+                 playsInline
+                 className="w-full h-full object-cover bg-black"
+               />
              ) : (
-               <VideoOff size={24} className="text-red-500" />
+               <div className="w-full h-full bg-gray-700 flex flex-col items-center justify-center text-gray-300 text-sm gap-2">
+                 <VideoOff size={28} className="text-red-400" />
+                 <span>Your Camera</span>
+               </div>
              )}
           </div>
         </div>
@@ -91,14 +209,14 @@ const InterviewRoom = () => {
         {/* Controls Bar */}
         <div className="h-20 bg-gray-900 border-t border-gray-800 flex items-center justify-center gap-6">
           <button 
-            onClick={() => setIsMicOn(!isMicOn)}
+            onClick={toggleMic}
             className={`p-4 rounded-full ${isMicOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'} transition-colors`}
           >
             {isMicOn ? <Mic size={24} /> : <MicOff size={24} />}
           </button>
           
           <button 
-            onClick={() => setIsVideoOn(!isVideoOn)}
+            onClick={toggleVideo}
             className={`p-4 rounded-full ${isVideoOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-500 hover:bg-red-600'} transition-colors`}
           >
             {isVideoOn ? <Video size={24} /> : <VideoOff size={24} />}
@@ -135,6 +253,13 @@ const InterviewRoom = () => {
               </div>
             </div>
           ))}
+          {subtitle && (
+            <div className="flex justify-start">
+              <div className="max-w-[85%] p-3 rounded-lg text-sm bg-yellow-50 border border-yellow-200 text-gray-800 shadow-sm">
+                Live captions: {subtitle}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="p-4 border-t border-gray-200 bg-white">
@@ -154,8 +279,24 @@ const InterviewRoom = () => {
               <Send size={18} />
             </button>
           </div>
-          <div className="text-xs text-center text-gray-400 mt-2">
-            Voice input is active (Simulated)
+          <div className="text-xs text-center text-gray-400 mt-2 flex items-center justify-center gap-3">
+            <span>Captions:</span>
+            {subtitleStatus === "listening" ? (
+              <button
+                onClick={stopSubtitle}
+                className="px-3 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 text-xs font-medium"
+              >
+                Stop
+              </button>
+            ) : (
+              <button
+                onClick={startSubtitle}
+                className="px-3 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 text-xs font-medium"
+              >
+                Start
+              </button>
+            )}
+            <span className="text-gray-400">{subtitleStatus}</span>
           </div>
         </div>
       </div>

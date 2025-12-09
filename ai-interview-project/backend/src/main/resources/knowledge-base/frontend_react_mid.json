@@ -1,0 +1,41 @@
+{
+  "roleId": "frontend_react",
+  "level": "mid",
+  "skills": ["react", "typescript", "performance"],
+  "questions": [
+    {
+      "id": "q_react_001",
+      "text": "Explain the difference between controlled and uncontrolled components in React.",
+      "type": "technical",
+      "difficulty": "medium",
+      "skills": ["react"],
+      "followUps": [
+        "When would you pick uncontrolled components?",
+        "How does this affect form validation?"
+      ]
+    },
+    {
+      "id": "q_react_002",
+      "text": "How do you optimize React rendering for a large list?",
+      "type": "technical",
+      "difficulty": "medium",
+      "skills": ["react", "performance"],
+      "followUps": [
+        "Explain react-window or react-virtualized.",
+        "What about key selection and memoization?"
+      ]
+    },
+    {
+      "id": "q_ts_001",
+      "text": "How would you type a higher-order component in TypeScript?",
+      "type": "technical",
+      "difficulty": "medium",
+      "skills": ["typescript"],
+      "followUps": [
+        "How to preserve wrapped component props and refs?",
+        "How do generic constraints help here?"
+      ]
+    }
+  ]
+}
+
