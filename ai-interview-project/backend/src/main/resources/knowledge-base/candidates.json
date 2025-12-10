@@ -1,0 +1,56 @@
+{
+  "candidates": [
+    {
+      "id": "candidate_001",
+      "name": "Andy Zhang",
+      "workExperience": [
+        {
+          "company": "Tech Corp",
+          "role": "Backend Developer",
+          "duration": "2021-2023",
+          "description": "Developed microservices using Spring Boot and MySQL. Implemented RESTful APIs and optimized database queries. Led migration from monolith to microservices architecture."
+        },
+        {
+          "company": "Startup Inc",
+          "role": "Software Engineer Intern",
+          "duration": "2020-2021",
+          "description": "Built web applications using React and Node.js. Participated in agile development and code reviews."
+        }
+      ],
+      "projects": [
+        {
+          "title": "E-commerce Platform",
+          "techStack": ["Java", "Spring Boot", "MySQL", "Redis"],
+          "description": "Built a scalable e-commerce backend handling 10k+ concurrent users. Implemented caching strategies and optimized SQL queries for 50% performance improvement."
+        },
+        {
+          "title": "Real-time Chat Application",
+          "techStack": ["JavaScript", "WebSocket", "React", "Node.js"],
+          "description": "Developed real-time messaging system with WebSocket. Implemented user authentication and message persistence."
+        }
+      ],
+      "rawResumeText": "Andy Zhang\nBackend Developer with 3+ years experience in Java, Spring Boot, and distributed systems.\n\nWork Experience:\n- Tech Corp (2021-2023): Backend Developer\n  * Developed microservices using Spring Boot and MySQL\n  * Implemented RESTful APIs serving 100k+ daily requests\n  * Led migration from monolith to microservices\n- Startup Inc (2020-2021): Software Engineer Intern\n  * Built web applications with React and Node.js\n\nProjects:\n- E-commerce Platform: Java, Spring Boot, MySQL, Redis\n- Real-time Chat: JavaScript, WebSocket, React, Node.js\n\nSkills: Java, Spring Boot, MySQL, Redis, JavaScript, React, Node.js, Docker, Kubernetes"
+    },
+    {
+      "id": "candidate_002",
+      "name": "Sarah Chen",
+      "workExperience": [
+        {
+          "company": "AI Solutions Ltd",
+          "role": "Frontend Developer",
+          "duration": "2022-Present",
+          "description": "Building modern web applications with React and TypeScript. Implemented responsive designs and optimized performance using React best practices."
+        }
+      ],
+      "projects": [
+        {
+          "title": "Dashboard Analytics",
+          "techStack": ["React", "TypeScript", "D3.js", "Redux"],
+          "description": "Created interactive data visualization dashboard. Integrated REST APIs and implemented state management with Redux."
+        }
+      ],
+      "rawResumeText": "Sarah Chen\nFrontend Developer specializing in React and TypeScript.\n\nWork Experience:\n- AI Solutions Ltd (2022-Present): Frontend Developer\n  * Building modern web applications with React and TypeScript\n  * Implemented responsive designs and optimized performance\n\nProjects:\n- Dashboard Analytics: React, TypeScript, D3.js, Redux\n\nSkills: React, TypeScript, JavaScript, HTML, CSS, Redux, Webpack"
+    }
+  ]
+}
+

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, FileText, PenTool, Book, Plus, LayoutDashboard, User, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-const Sidebar = () => {
+const Sidebar = ({ onNewInterview }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
@@ -15,13 +15,6 @@ const Sidebar = () => {
   }, []);
 
   const isActive = (path) => location.pathname === path;
-
-  const handleNewInterview = () => {
-    // For demo purposes, directly generate a random ID and navigate
-    // In a real app, this would likely open a modal to select options first
-    const mockId = Math.floor(Math.random() * 10000);
-    navigate(`/interview/${mockId}`);
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -45,7 +38,7 @@ const Sidebar = () => {
       {/* Create Button */}
       <div className="px-4 mb-6">
         <button 
-          onClick={handleNewInterview}
+          onClick={onNewInterview}
           className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors shadow-sm hover:shadow"
         >
           <Plus size={18} />
