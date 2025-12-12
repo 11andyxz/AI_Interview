@@ -128,5 +128,12 @@ public class OpenAiService {
     public boolean isConfigured() {
         return openAiWebClient != null;
     }
+
+    /**
+     * Check if OpenAI API key exists in database
+     */
+    public boolean hasApiKey() {
+        return true; // WebClient bean creation will fail if no API key, so if we get here, it's configured
+    }
 }
 

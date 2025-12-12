@@ -82,4 +82,25 @@ CREATE TABLE `user` (
   KEY `idx_username` (`username`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ----------------------------
+-- Table structure for api_key_config
+-- ----------------------------
+DROP TABLE IF EXISTS `api_key_config`;
+CREATE TABLE `api_key_config` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `service_name` varchar(50) NOT NULL COMMENT '服务名称，如 openai',
+  `api_key` varchar(500) NOT NULL COMMENT 'API密钥',
+  `is_active` tinyint(1) DEFAULT '1' COMMENT '是否激活',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_service_active` (`service_name`, `is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Records of api_key_config
+-- ----------------------------
+INSERT INTO `api_key_config` (`service_name`, `api_key`, `is_active`) VALUES
+('openai', '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', 1);
+
 SET FOREIGN_KEY_CHECKS = 1;

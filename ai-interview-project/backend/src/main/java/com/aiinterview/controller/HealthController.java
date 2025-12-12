@@ -1,6 +1,7 @@
 package com.aiinterview.controller;
 
 import com.aiinterview.repository.UserRepository;
+import com.aiinterview.service.ApiKeyConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,9 @@ public class HealthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ApiKeyConfigService apiKeyConfigService;
 
     @GetMapping("/db")
     public ResponseEntity<Map<String, Object>> checkDatabase() {
@@ -29,7 +33,11 @@ public class HealthController {
             // Try to find test user
             boolean testUserExists = userRepository.existsByUsername("test");
             response.put("testUserExists", testUserExists);
-            
+
+            // Check API key configuration
+            boolean openaiConfigured = apiKeyConfigService.hasActiveApiKey("openai");
+            response.put("openaiConfigured", openaiConfigured);
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("status", "error");

@@ -50,3 +50,16 @@ CREATE TABLE `interview` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- API Key Config table
+DROP TABLE IF EXISTS `api_key_config`;
+CREATE TABLE `api_key_config` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `service_name` varchar(50) NOT NULL COMMENT '服务名称，如 openai',
+  `api_key` varchar(500) NOT NULL COMMENT 'API密钥',
+  `is_active` tinyint(1) DEFAULT '1' COMMENT '是否激活',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_service_active` (`service_name`, `is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

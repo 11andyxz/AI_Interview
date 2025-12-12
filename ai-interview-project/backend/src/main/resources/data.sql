@@ -1,6 +1,10 @@
 -- Insert test user (only if not exists)
-INSERT IGNORE INTO `user` (`username`, `password`) 
+INSERT IGNORE INTO `user` (`username`, `password`)
 VALUES ('test', '123456');
+
+-- Insert default API key for OpenAI (only if not exists)
+INSERT IGNORE INTO `api_key_config` (`service_name`, `api_key`, `is_active`)
+VALUES ('openai', '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', 1);
 
 -- Seed candidates if not exists
 INSERT IGNORE INTO `candidate` (`id`, `name`, `email`, `phone`, `resume_text`, `skills`, `experience_years`, `education`, `status`)
