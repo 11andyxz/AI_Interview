@@ -27,10 +27,9 @@ const Dashboard = () => {
     // setInterviews(mockData);
   }, []);*/}
   useEffect(() => {
-    fetch('/mockApi.json')
+    fetch('http://localhost:8080/api/interviews')
       .then(res => res.json())
       .then(data => {
-        console.log("Fetched API data:", data);
         setInterviews(data);
       })
       .catch(err => console.error("API error:", err));

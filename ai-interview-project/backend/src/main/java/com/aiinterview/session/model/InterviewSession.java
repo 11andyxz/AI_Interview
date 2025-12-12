@@ -3,6 +3,7 @@ package com.aiinterview.session.model;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class InterviewSession {
     private String id;
@@ -12,6 +13,11 @@ public class InterviewSession {
     private List<QAHistory> history = new ArrayList<>();
     private String status; // ACTIVE / COMPLETED
     private LocalDateTime createdAt;
+    
+    // Enhanced fields for OpenAI integration
+    private String candidateId;
+    private Map<String, Object> candidateInfo; // Store candidate background
+    private List<Map<String, String>> messages = new ArrayList<>(); // Store OpenAI message history
 
     public String getId() {
         return id;
@@ -67,6 +73,30 @@ public class InterviewSession {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getCandidateId() {
+        return candidateId;
+    }
+
+    public void setCandidateId(String candidateId) {
+        this.candidateId = candidateId;
+    }
+
+    public Map<String, Object> getCandidateInfo() {
+        return candidateInfo;
+    }
+
+    public void setCandidateInfo(Map<String, Object> candidateInfo) {
+        this.candidateInfo = candidateInfo;
+    }
+
+    public List<Map<String, String>> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<Map<String, String>> messages) {
+        this.messages = messages;
     }
 }
 

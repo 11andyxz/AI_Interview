@@ -14,8 +14,7 @@ const DashboardLayout = () => {
 
   const handleModalSubmit = async (formData) => {
     try {
-      // Call backend to analyze resume and generate knowledge base
-      const response = await fetch('http://localhost:8080/api/resume/analyze', {
+      const response = await fetch('http://localhost:8080/api/interviews', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -24,16 +23,16 @@ const DashboardLayout = () => {
           candidateId: formData.candidateId,
           positionType: formData.positionType,
           programmingLanguages: formData.programmingLanguages,
-          language: formData.language
+          language: formData.language,
+          useCustomKnowledge: formData.useCustomKnowledge
         }),
       });
 
       if (response.ok) {
-        const knowledgeBase = await response.json();
+        const data = await response.json();
+        const knowledgeBase = data.knowledgeBase;
+        const interviewId = data?.interview?.id || Date.now();
         
-        // TODO: Store knowledge base for this interview session
-        // For now, just navigate to interview room with a new ID
-        const interviewId = Date.now();
         localStorage.setItem(`interview_${interviewId}_kb`, JSON.stringify(knowledgeBase));
         
         navigate(`/interview/${interviewId}`);

@@ -7,15 +7,57 @@ const InterviewRoom = () => {
   const navigate = useNavigate();
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
-  const [messages, setMessages] = useState([
-    { sender: 'ai', text: "Hello! I'm your AI interviewer today. We'll be focusing on your background in Internet / AI / Artificial Intelligence. Ready to begin?" }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [subtitleStatus, setSubtitleStatus] = useState("off"); // off | listening | unavailable
+  const [interviewSession, setInterviewSession] = useState(null);
+  const [conversationHistory, setConversationHistory] = useState([]);
   const localStreamRef = useRef(null);
   const recognitionRef = useRef(null);
   const localVideoRef = useRef(null);
+  const voiceTimerRef = useRef(null);
+  const lastSentTextRef = useRef('');
+
+  // Load interview session and conversation history
+  useEffect(() => {
+    const loadInterviewData = async () => {
+      try {
+        // Load interview session
+        const sessionResponse = await fetch(`http://localhost:8080/api/interviews/${id}/session`);
+        if (sessionResponse.ok) {
+          const sessionData = await sessionResponse.json();
+          setInterviewSession(sessionData);
+
+          // Set initial greeting message based on candidate
+          if (sessionData.candidate) {
+            const greeting = `Hello ${sessionData.candidate.name}! I'm your AI interviewer today. We'll be focusing on your background in ${sessionData.interview.title}. Ready to begin?`;
+            setMessages([{ sender: 'ai', text: greeting }]);
+          }
+        }
+
+        // Load conversation history
+        const historyResponse = await fetch(`http://localhost:8080/api/interviews/${id}/history`);
+        if (historyResponse.ok) {
+          const historyData = await historyResponse.json();
+          setConversationHistory(historyData);
+
+          // Convert history to messages for display
+          const historyMessages = historyData.flatMap(qa => [
+            { sender: 'user', text: qa.questionText },
+            { sender: 'ai', text: qa.answerText }
+          ]);
+          setMessages(prev => [...prev, ...historyMessages]);
+        }
+      } catch (error) {
+        console.error("Error loading interview data:", error);
+        // Fallback greeting
+        setMessages([{ sender: 'ai', text: "Hello! I'm your AI interviewer today. Ready to begin?" }]);
+      }
+    };
+
+    loadInterviewData();
+  }, [id]);
 
   // TO DO: Initialize WebSocket or WebRTC connection here
   // useEffect(() => {
@@ -58,6 +100,10 @@ const InterviewRoom = () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
+      // Clear voice timer
+      if (voiceTimerRef.current) {
+        clearTimeout(voiceTimerRef.current);
+      }
     };
   }, []); // mount only
 
@@ -80,6 +126,20 @@ const InterviewRoom = () => {
     }
   };
 
+  // Reset voice timer for auto-send
+  const resetVoiceTimer = () => {
+    if (voiceTimerRef.current) {
+      clearTimeout(voiceTimerRef.current);
+    }
+    voiceTimerRef.current = setTimeout(() => {
+      const currentText = subtitle.trim();
+      if (currentText.length > 10 && currentText !== lastSentTextRef.current) {
+        console.log("Auto-sending voice message due to timeout:", currentText);
+        handleSendVoiceMessage(currentText);
+      }
+    }, 3000); // 3 seconds of silence
+  };
+
   const startSubtitle = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -99,7 +159,26 @@ const InterviewRoom = () => {
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         text += event.results[i][0].transcript;
       }
-      setSubtitle(text.trim());
+      const trimmedText = text.trim();
+      setSubtitle(trimmedText);
+
+      // Auto-send logic
+      if (trimmedText.length > 0) {
+        // Check for sentence endings (., !, ?)
+        const hasSentenceEnd = trimmedText.includes('.') ||
+                              trimmedText.includes('!') ||
+                              trimmedText.includes('?');
+
+        if (hasSentenceEnd && trimmedText.length > 5) {
+          // Auto-send when sentence ends and has minimum length
+          console.log("Auto-sending voice message due to sentence end:", trimmedText);
+          handleSendVoiceMessage(trimmedText);
+          return;
+        }
+
+        // Reset timer for pause detection
+        resetVoiceTimer();
+      }
     };
     rec.onerror = (e) => {
       console.error("Speech recognition error:", e);
@@ -126,42 +205,142 @@ const InterviewRoom = () => {
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
+    // Clear voice timer
+    if (voiceTimerRef.current) {
+      clearTimeout(voiceTimerRef.current);
+      voiceTimerRef.current = null;
+    }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
+  const handleSendVoiceMessage = async (voiceText) => {
+    if (!voiceText.trim()) return;
 
-    // Add user message
-    const newMessages = [...messages, { sender: 'user', text: inputText }];
+    const userMessage = voiceText.trim();
+
+    // Avoid sending duplicate messages
+    if (userMessage === lastSentTextRef.current) return;
+    lastSentTextRef.current = userMessage;
+
+    // Clear any pending timer
+    if (voiceTimerRef.current) {
+      clearTimeout(voiceTimerRef.current);
+      voiceTimerRef.current = null;
+    }
+
+    // Add user message to display
+    const newMessages = [...messages, { sender: 'user', text: userMessage }];
     setMessages(newMessages);
-    setInputText("");
+
+    // Clear subtitle after sending
+    setSubtitle("");
 
     try {
-      // Call Backend/AI Service
+      // Build ChatRequest object
+      const chatRequest = {
+        userMessage: userMessage,
+        language: interviewSession?.interview?.language || 'English',
+        recentHistory: conversationHistory.slice(-5) // Send last 5 QA pairs for context
+      };
+
+      // Call Backend/AI Service with ChatRequest
       const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'text/plain', // Sending raw string as body
+            'Content-Type': 'application/json',
         },
-        body: inputText
+        body: JSON.stringify(chatRequest)
       });
 
       if (response.ok) {
         const aiResponseText = await response.text();
-        setMessages(prev => [...prev, { 
-          sender: 'ai', 
-          text: aiResponseText 
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: aiResponseText
         }]);
+
+        // Update conversation history
+        const newQA = {
+          questionText: userMessage,
+          answerText: aiResponseText,
+          createdAt: new Date().toISOString()
+        };
+        setConversationHistory(prev => [...prev, newQA]);
       } else {
-        console.error("Failed to get AI response");
+        console.error("Failed to get AI response:", response.status);
+        // Fallback message
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: "抱歉，我暂时无法处理您的回答。请稍后再试。"
+        }]);
       }
     } catch (error) {
       console.error("Error calling AI service:", error);
       // Fallback for demo if backend is not running
       setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          sender: 'ai', 
-          text: "(Offline Mock) That's an interesting point. Can you elaborate more?" 
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: "(离线模式) 这是个很有趣的观点。你能详细说明一下吗？"
+        }]);
+      }, 1500);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+
+    const userMessage = inputText.trim();
+
+    // Add user message to display
+    const newMessages = [...messages, { sender: 'user', text: userMessage }];
+    setMessages(newMessages);
+    setInputText("");
+
+    try {
+      // Build ChatRequest object
+      const chatRequest = {
+        userMessage: userMessage,
+        language: interviewSession?.interview?.language || 'English',
+        recentHistory: conversationHistory.slice(-5) // Send last 5 QA pairs for context
+      };
+
+      // Call Backend/AI Service with ChatRequest
+      const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(chatRequest)
+      });
+
+      if (response.ok) {
+        const aiResponseText = await response.text();
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: aiResponseText
+        }]);
+
+        // Update conversation history
+        const newQA = {
+          questionText: userMessage,
+          answerText: aiResponseText,
+          createdAt: new Date().toISOString()
+        };
+        setConversationHistory(prev => [...prev, newQA]);
+      } else {
+        console.error("Failed to get AI response:", response.status);
+        // Fallback message
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: "抱歉，我暂时无法处理您的回答。请稍后再试。"
+        }]);
+      }
+    } catch (error) {
+      console.error("Error calling AI service:", error);
+      // Fallback for demo if backend is not running
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: "(离线模式) 这是个很有趣的观点。你能详细说明一下吗？"
         }]);
       }, 1500);
     }

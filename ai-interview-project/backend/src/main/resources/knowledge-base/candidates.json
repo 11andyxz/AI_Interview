@@ -2,7 +2,7 @@
   "candidates": [
     {
       "id": "candidate_001",
-      "name": "Andy Zhang",
+      "name": "Andy Xiong",
       "workExperience": [
         {
           "company": "Tech Corp",
@@ -33,7 +33,7 @@
     },
     {
       "id": "candidate_002",
-      "name": "Sarah Chen",
+      "name": "Yukun Song",
       "workExperience": [
         {
           "company": "AI Solutions Ltd",
