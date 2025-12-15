@@ -314,9 +314,9 @@ const InterviewRoom = () => {
 
       if (response.ok) {
         const aiResponseText = await response.text();
-        setMessages(prev => [...prev, {
-          sender: 'ai',
-          text: aiResponseText
+        setMessages(prev => [...prev, { 
+          sender: 'ai', 
+          text: aiResponseText 
         }]);
 
         // Update conversation history
@@ -338,8 +338,8 @@ const InterviewRoom = () => {
       console.error("Error calling AI service:", error);
       // Fallback for demo if backend is not running
       setTimeout(() => {
-        setMessages(prev => [...prev, {
-          sender: 'ai',
+        setMessages(prev => [...prev, { 
+          sender: 'ai', 
           text: "(离线模式) 这是个很有趣的观点。你能详细说明一下吗？"
         }]);
       }, 1500);

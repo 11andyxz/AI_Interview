@@ -37,7 +37,7 @@ public class HealthController {
             // Check API key configuration
             boolean openaiConfigured = apiKeyConfigService.hasActiveApiKey("openai");
             response.put("openaiConfigured", openaiConfigured);
-
+            
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("status", "error");
