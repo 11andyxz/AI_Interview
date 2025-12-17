@@ -1,3 +1,4 @@
+```mermaid
 %% SYSTEM_FLOW_AND_LATENCY (current codebase)
 
 flowchart LR
@@ -32,6 +33,7 @@ resume analysis: mocked / partial"]
   BE -->|SSE streaming implemented| FE
   BE -.->|WebSocket server not implemented| FE
 
+
   %% ======================
   %% LATENCY SOURCES (Current Codebase)
   %% ======================
@@ -61,3 +63,4 @@ resume analysis: mocked / partial"]
   %% SSE streaming is implemented for question generation,
   %% reducing perceived latency (time to first token),
   %% but total completion time is still dominated by LLM processing.
+```
