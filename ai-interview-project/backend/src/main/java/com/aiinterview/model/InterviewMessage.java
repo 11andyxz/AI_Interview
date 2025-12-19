@@ -22,6 +22,37 @@ public class InterviewMessage {
     @Column(name = "message_type", length = 20)
     private String messageType = "chat";
 
+    // Evaluation fields
+    @Column(name = "evaluation_score")
+    private Double evaluationScore;
+
+    @Column(name = "evaluation_rubric_level", length = 20)
+    private String evaluationRubricLevel;
+
+    @Column(name = "technical_accuracy")
+    private Integer technicalAccuracy;
+
+    @Column(name = "depth_score")
+    private Integer depthScore;
+
+    @Column(name = "experience_score")
+    private Integer experienceScore;
+
+    @Column(name = "communication_score")
+    private Integer communicationScore;
+
+    @Column(name = "evaluation_strengths", columnDefinition = "TEXT")
+    private String evaluationStrengths; // JSON array
+
+    @Column(name = "evaluation_improvements", columnDefinition = "TEXT")
+    private String evaluationImprovements; // JSON array
+
+    @Column(name = "follow_up_questions", columnDefinition = "TEXT")
+    private String followUpQuestions; // JSON array
+
+    @Column(name = "evaluation_completed_at")
+    private LocalDateTime evaluationCompletedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -77,6 +108,86 @@ public class InterviewMessage {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Double getEvaluationScore() {
+        return evaluationScore;
+    }
+
+    public void setEvaluationScore(Double evaluationScore) {
+        this.evaluationScore = evaluationScore;
+    }
+
+    public String getEvaluationRubricLevel() {
+        return evaluationRubricLevel;
+    }
+
+    public void setEvaluationRubricLevel(String evaluationRubricLevel) {
+        this.evaluationRubricLevel = evaluationRubricLevel;
+    }
+
+    public Integer getTechnicalAccuracy() {
+        return technicalAccuracy;
+    }
+
+    public void setTechnicalAccuracy(Integer technicalAccuracy) {
+        this.technicalAccuracy = technicalAccuracy;
+    }
+
+    public Integer getDepthScore() {
+        return depthScore;
+    }
+
+    public void setDepthScore(Integer depthScore) {
+        this.depthScore = depthScore;
+    }
+
+    public Integer getExperienceScore() {
+        return experienceScore;
+    }
+
+    public void setExperienceScore(Integer experienceScore) {
+        this.experienceScore = experienceScore;
+    }
+
+    public Integer getCommunicationScore() {
+        return communicationScore;
+    }
+
+    public void setCommunicationScore(Integer communicationScore) {
+        this.communicationScore = communicationScore;
+    }
+
+    public String getEvaluationStrengths() {
+        return evaluationStrengths;
+    }
+
+    public void setEvaluationStrengths(String evaluationStrengths) {
+        this.evaluationStrengths = evaluationStrengths;
+    }
+
+    public String getEvaluationImprovements() {
+        return evaluationImprovements;
+    }
+
+    public void setEvaluationImprovements(String evaluationImprovements) {
+        this.evaluationImprovements = evaluationImprovements;
+    }
+
+    public String getFollowUpQuestions() {
+        return followUpQuestions;
+    }
+
+    public void setFollowUpQuestions(String followUpQuestions) {
+        this.followUpQuestions = followUpQuestions;
+    }
+
+    public LocalDateTime getEvaluationCompletedAt() {
+        return evaluationCompletedAt;
+    }
+
+    public void setEvaluationCompletedAt(LocalDateTime evaluationCompletedAt) {
+        this.evaluationCompletedAt = evaluationCompletedAt;
     }
 }
 

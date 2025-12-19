@@ -13,6 +13,9 @@ public class Interview {
     @Id
     private String id;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Column(name = "candidate_id")
     private Integer candidateId;
 
@@ -85,6 +88,14 @@ public class Interview {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public Integer getCandidateId() {

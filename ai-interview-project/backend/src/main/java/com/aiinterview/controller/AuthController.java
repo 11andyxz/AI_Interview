@@ -2,6 +2,7 @@ package com.aiinterview.controller;
 
 import com.aiinterview.model.User;
 import com.aiinterview.service.JwtService;
+import com.aiinterview.service.SubscriptionService;
 import com.aiinterview.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,12 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private SubscriptionService subscriptionService;
 
     // Debug endpoint to check path
     @RequestMapping("/**")
@@ -38,7 +42,7 @@ public class AuthController {
 
         Map<String, Object> response = new HashMap<>();
 
-        if (username == null || password == null) {
+        if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
             response.put("success", false);
             response.put("message", "Username and password cannot be empty");
             return ResponseEntity.badRequest().body(response);
@@ -78,7 +82,7 @@ public class AuthController {
 
         Map<String, Object> response = new HashMap<>();
 
-        if (username == null || password == null) {
+        if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
             response.put("success", false);
             response.put("message", "Username and password cannot be empty");
             return ResponseEntity.badRequest().body(response);
@@ -86,11 +90,22 @@ public class AuthController {
 
         try {
             User user = userService.createUser(username, password);
-            
+
+            // Start trial period for new user (7 days)
+            try {
+                System.out.println("Starting trial for user: " + user.getId());
+                var trialSubscription = subscriptionService.startTrial(user.getId(), 1); // Plan ID 1 = Pro plan
+                System.out.println("Trial started successfully: " + trialSubscription.getId());
+            } catch (Exception e) {
+                // Log error but don't fail registration
+                System.err.println("Failed to start trial for user " + user.getId() + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+
             // Generate JWT tokens for new user
             String accessToken = jwtService.generateToken(user.getId(), username);
             String refreshToken = jwtService.generateRefreshToken(user.getId(), username);
-            
+
             response.put("success", true);
             response.put("message", "Registration successful");
             response.put("user", Map.of(

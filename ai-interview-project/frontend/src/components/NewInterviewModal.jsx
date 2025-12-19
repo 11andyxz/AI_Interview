@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import LoadingSpinner from './common/LoadingSpinner';
+import { X, FileText, BookOpen } from 'lucide-react';
+import InterviewTemplateModal from './InterviewTemplateModal';
 
 const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   const [candidates, setCandidates] = useState([]);
@@ -10,9 +11,15 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
     useCustomKnowledge: false,
     positionType: '',
     programmingLanguages: [],
-    language: 'English'
+    language: 'English',
+    templateId: null,
+    questionSetId: null
   });
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [showQuestionSetModal, setShowQuestionSetModal] = useState(false);
+  const [selectedQuestionSet, setSelectedQuestionSet] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -64,6 +71,27 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
     }));
   };
 
+  const handleTemplateSelect = (templateConfig) => {
+    setSelectedTemplate(templateConfig);
+    setFormData(prev => ({
+      ...prev,
+      templateId: templateConfig.templateId,
+      positionType: templateConfig.title || prev.positionType,
+      programmingLanguages: templateConfig.techStack ? [templateConfig.techStack] : prev.programmingLanguages,
+      language: templateConfig.language || prev.language
+    }));
+  };
+
+  const handleQuestionSetSelect = (questionSet) => {
+    setSelectedQuestionSet(questionSet);
+    setFormData(prev => ({
+      ...prev,
+      questionSetId: questionSet.id,
+      positionType: questionSet.roleTitle || prev.positionType,
+      programmingLanguages: questionSet.techStack ? [questionSet.techStack] : prev.programmingLanguages
+    }));
+  };
+
   const handleSubmit = () => {
     if (!formData.positionType || formData.programmingLanguages.length === 0) {
       alert('Please fill in required fields');
@@ -91,6 +119,38 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
 
         {/* Title */}
         <h2 className="text-2xl font-bold text-gray-800 mb-6">New Interview</h2>
+
+        {/* Template Selection */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowTemplateModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
+          >
+            <FileText size={20} />
+            {selectedTemplate ? `Using: ${selectedTemplate.title}` : 'Use Interview Template (Optional)'}
+          </button>
+          {selectedTemplate && (
+            <div className="mt-2 text-sm text-gray-600">
+              {selectedTemplate.techStack} • {selectedTemplate.level} • {selectedTemplate.durationMinutes} min
+            </div>
+          )}
+        </div>
+
+        {/* Question Set Selection */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowQuestionSetModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            <BookOpen size={20} />
+            {selectedQuestionSet ? `Using: ${selectedQuestionSet.name}` : 'Use Custom Question Set (Optional)'}
+          </button>
+          {selectedQuestionSet && (
+            <div className="mt-2 text-sm text-gray-600">
+              {selectedQuestionSet.questions?.length || 0} questions • {selectedQuestionSet.techStack} • {selectedQuestionSet.level}
+            </div>
+          )}
+        </div>
 
         {/* Form */}
         <div className="space-y-5">
@@ -227,6 +287,118 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
           >
             + Create
           </button>
+        </div>
+      </div>
+
+      {/* Template Modal */}
+      <InterviewTemplateModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        onSelectTemplate={handleTemplateSelect}
+      />
+
+      {/* Question Set Modal - Simple selection only */}
+      {showQuestionSetModal && (
+        <QuestionSetSelectorModal
+          isOpen={showQuestionSetModal}
+          onClose={() => setShowQuestionSetModal(false)}
+          onSelectQuestionSet={handleQuestionSetSelect}
+        />
+      )}
+    </div>
+  );
+};
+
+// Simple question set selector component
+const QuestionSetSelectorModal = ({ isOpen, onClose, onSelectQuestionSet }) => {
+  const [questionSets, setQuestionSets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadQuestionSets();
+    }
+  }, [isOpen]);
+
+  const loadQuestionSets = async () => {
+    try {
+      setLoading(true);
+      const accessToken = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      const response = await fetch('http://localhost:8080/api/question-sets', { headers });
+      if (response.ok) {
+        const data = await response.json();
+        setQuestionSets(data);
+      }
+    } catch (err) {
+      console.error('Error loading question sets:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelect = (questionSet) => {
+    onSelectQuestionSet(questionSet);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Select Question Set</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner size="md" />
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {questionSets.map(set => (
+                <div
+                  key={set.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 cursor-pointer transition-colors"
+                  onClick={() => handleSelect(set)}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-semibold text-gray-900">{set.name}</h4>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                      {set.questions?.length || 0} questions
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {set.description || `Question set for ${set.techStack}`}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>{set.techStack}</span>
+                    <span className="capitalize">{set.level}</span>
+                  </div>
+                </div>
+              ))}
+
+              {questionSets.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No question sets available. Create some in the Question Sets page.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

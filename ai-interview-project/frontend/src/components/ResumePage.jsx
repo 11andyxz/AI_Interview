@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Download, Trash2, FileText, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Upload, Download, Trash2, FileText, CheckCircle, ArrowLeft } from 'lucide-react';
 import LoadingSpinner from './common/LoadingSpinner';
 import EmptyState from './common/EmptyState';
 import ConfirmDialog from './common/ConfirmDialog';
@@ -7,6 +8,7 @@ import { useToast } from './common/useToast';
 import ToastContainer from './common/ToastContainer';
 
 const ResumePage = () => {
+  const navigate = useNavigate();
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -146,6 +148,16 @@ const ResumePage = () => {
   return (
     <div className="p-8 ml-64">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
+      <div className="mb-8">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft size={20} />
+          Back to Dashboard
+        </button>
+      </div>
       
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-bold text-gray-800">My Resume</h2>

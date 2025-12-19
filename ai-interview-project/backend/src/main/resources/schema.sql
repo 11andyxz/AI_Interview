@@ -37,6 +37,7 @@ CREATE TABLE `candidate` (
 DROP TABLE IF EXISTS `interview`;
 CREATE TABLE `interview` (
   `id` varchar(36) NOT NULL,
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
   `candidate_id` int NOT NULL,
   `title` varchar(255) DEFAULT NULL,
   `language` varchar(50) DEFAULT NULL,
@@ -52,7 +53,9 @@ CREATE TABLE `interview` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   INDEX `idx_status` (`status`),
-  INDEX `idx_candidate_id` (`candidate_id`)
+  INDEX `idx_candidate_id` (`candidate_id`),
+  INDEX `idx_user_id` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- API Key Config table

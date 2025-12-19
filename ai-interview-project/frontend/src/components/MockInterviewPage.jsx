@@ -277,6 +277,16 @@ const MockInterviewPage = () => {
     <div className="p-8 ml-64">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
 
+      <div className="mb-8">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft size={20} />
+          Back to Dashboard
+        </button>
+      </div>
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Mock Interview</h2>

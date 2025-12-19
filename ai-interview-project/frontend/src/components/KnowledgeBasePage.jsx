@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Book, Database } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Edit, Trash2, Book, Database, ArrowLeft } from 'lucide-react';
 import LoadingSpinner from './common/LoadingSpinner';
 import EmptyState from './common/EmptyState';
 import ConfirmDialog from './common/ConfirmDialog';
@@ -7,6 +8,7 @@ import { useToast } from './common/useToast';
 import ToastContainer from './common/ToastContainer';
 
 const KnowledgeBasePage = () => {
+  const navigate = useNavigate();
   const [knowledgeBases, setKnowledgeBases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, user, system
@@ -162,6 +164,16 @@ const KnowledgeBasePage = () => {
   return (
     <div className="p-8 ml-64">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
+      <div className="mb-8">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft size={20} />
+          Back to Dashboard
+        </button>
+      </div>
       
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-bold text-gray-800">Knowledge Base</h2>

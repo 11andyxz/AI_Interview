@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,8 +29,9 @@ class UserProfileServiceTest {
     @Mock
     private UserPointsRepository userPointsRepository;
 
-    @Mock
-    private SubscriptionService subscriptionService;
+    // Use a test implementation instead of @Mock for SubscriptionService
+    // Since Mockito cannot mock SubscriptionService (possibly due to Java 25 limitations)
+    private TestSubscriptionService testSubscriptionService;
 
     @InjectMocks
     private UserProfileService userProfileService;
@@ -43,14 +45,18 @@ class UserProfileServiceTest {
         testUser.setId(userId);
         testUser.setUsername("testuser");
         testUser.setPassword("hashedpassword");
+        
+        // Create test subscription service and inject it using reflection
+        testSubscriptionService = new TestSubscriptionService();
+        ReflectionTestUtils.setField(userProfileService, "subscriptionService", testSubscriptionService);
     }
-
+    
     @Test
     void testGetUserProfile_Success() {
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-        when(subscriptionService.hasActiveSubscription(userId)).thenReturn(false);
-        when(subscriptionService.isInTrialPeriod(userId)).thenReturn(false);
-        when(subscriptionService.getUserSubscription(userId)).thenReturn(Optional.empty());
+        testSubscriptionService.setHasActiveSubscriptionResult(false);
+        testSubscriptionService.setIsInTrialPeriodResult(false);
+        testSubscriptionService.setUserSubscriptionResult(Optional.empty());
         when(userPointsRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
         Map<String, Object> profile = userProfileService.getUserProfile(userId);
@@ -73,7 +79,7 @@ class UserProfileServiceTest {
 
     @Test
     void testGetUserPoints_WithActiveSubscription() {
-        when(subscriptionService.hasActiveSubscription(userId)).thenReturn(true);
+        testSubscriptionService.setHasActiveSubscriptionResult(true);
 
         Integer points = userProfileService.getUserPoints(userId);
 
@@ -83,7 +89,7 @@ class UserProfileServiceTest {
 
     @Test
     void testGetUserPoints_WithoutSubscription_ExistingPoints() {
-        when(subscriptionService.hasActiveSubscription(userId)).thenReturn(false);
+        testSubscriptionService.setHasActiveSubscriptionResult(false);
         UserPoints userPoints = new UserPoints();
         userPoints.setUserId(userId);
         userPoints.setPoints(1000);
@@ -96,7 +102,7 @@ class UserProfileServiceTest {
 
     @Test
     void testGetUserPoints_WithoutSubscription_NoExistingPoints() {
-        when(subscriptionService.hasActiveSubscription(userId)).thenReturn(false);
+        testSubscriptionService.setHasActiveSubscriptionResult(false);
         when(userPointsRepository.findByUserId(userId)).thenReturn(Optional.empty());
         when(userPointsRepository.save(any(UserPoints.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -108,9 +114,9 @@ class UserProfileServiceTest {
 
     @Test
     void testGetSubscriptionStatus_WithActiveSubscription() {
-        when(subscriptionService.hasActiveSubscription(userId)).thenReturn(true);
-        when(subscriptionService.isInTrialPeriod(userId)).thenReturn(false);
-        when(subscriptionService.getUserSubscription(userId)).thenReturn(Optional.empty());
+        testSubscriptionService.setHasActiveSubscriptionResult(true);
+        testSubscriptionService.setIsInTrialPeriodResult(false);
+        testSubscriptionService.setUserSubscriptionResult(Optional.empty());
 
         Map<String, Object> status = userProfileService.getSubscriptionStatus(userId);
 
@@ -122,9 +128,9 @@ class UserProfileServiceTest {
 
     @Test
     void testGetSubscriptionStatus_WithoutSubscription() {
-        when(subscriptionService.hasActiveSubscription(userId)).thenReturn(false);
-        when(subscriptionService.isInTrialPeriod(userId)).thenReturn(false);
-        when(subscriptionService.getUserSubscription(userId)).thenReturn(Optional.empty());
+        testSubscriptionService.setHasActiveSubscriptionResult(false);
+        testSubscriptionService.setIsInTrialPeriodResult(false);
+        testSubscriptionService.setUserSubscriptionResult(Optional.empty());
         when(userPointsRepository.findByUserId(userId)).thenReturn(Optional.empty());
         when(userPointsRepository.save(any(UserPoints.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

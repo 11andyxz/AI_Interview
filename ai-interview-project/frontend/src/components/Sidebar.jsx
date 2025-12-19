@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, FileText, PenTool, Book, Plus, LayoutDashboard, User, LogOut, CreditCard } from 'lucide-react';
+import { MessageSquare, FileText, PenTool, Book, Plus, LayoutDashboard, User, LogOut, CreditCard, TrendingUp, Target, Settings, BookOpen } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ onNewInterview }) => {
@@ -53,7 +53,7 @@ const Sidebar = ({ onNewInterview }) => {
   };
 
   return (
-    <div className="w-64 bg-white h-screen border-r border-gray-200 flex flex-col fixed left-0 top-0 z-10">
+    <div className="sidebar w-64 bg-white h-screen border-r border-gray-200 flex flex-col fixed left-0 top-0 z-10">
       {/* Logo Area */}
       <div className="p-6 flex items-center gap-2">
         <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold">
@@ -67,8 +67,9 @@ const Sidebar = ({ onNewInterview }) => {
 
       {/* Create Button */}
       <div className="px-4 mb-6">
-        <button 
+        <button
           onClick={onNewInterview}
+          data-tour="new-interview"
           className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors shadow-sm hover:shadow"
         >
           <Plus size={18} />
@@ -80,6 +81,18 @@ const Sidebar = ({ onNewInterview }) => {
       <nav className="flex-1 px-2 space-y-1">
         <Link to="/">
           <MenuItem icon={<LayoutDashboard size={20} />} label="My Interviews" active={isActive('/')} />
+        </Link>
+        <Link to="/progress">
+          <MenuItem icon={<TrendingUp size={20} />} label="My Progress" active={isActive('/progress')} />
+        </Link>
+        <Link to="/skills">
+          <MenuItem icon={<Target size={20} />} label="Skill Tracking" active={isActive('/skills')} />
+        </Link>
+        <Link to="/settings">
+          <MenuItem icon={<Settings size={20} />} label="Settings" active={isActive('/settings')} />
+        </Link>
+        <Link to="/question-sets">
+          <MenuItem icon={<BookOpen size={20} />} label="Question Sets" active={isActive('/question-sets')} />
         </Link>
         <Link to="/notes">
           <MenuItem icon={<PenTool size={20} />} label="My Notes" active={isActive('/notes')} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CreditCard, CheckCircle, XCircle, Clock, ArrowLeft } from 'lucide-react';
 import LoadingSpinner from './common/LoadingSpinner';
 import { useToast } from './common/useToast';
 import ToastContainer from './common/ToastContainer';
@@ -158,6 +158,15 @@ const PaymentPage = () => {
     <div className="min-h-screen bg-gray-50 py-8 px-4 ml-64">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          >
+            <ArrowLeft size={20} />
+            Back to Dashboard
+          </button>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Subscription & Payment</h1>
 
         {activeSubscription && (

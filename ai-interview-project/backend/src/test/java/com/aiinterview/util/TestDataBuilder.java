@@ -152,5 +152,46 @@ public class TestDataBuilder {
         config.setCreatedAt(LocalDateTime.now());
         return config;
     }
+    
+    public static InterviewTemplate createTestInterviewTemplate(Long userId, String name) {
+        InterviewTemplate template = new InterviewTemplate();
+        template.setUserId(userId);
+        template.setName(TEST_PREFIX + name);
+        template.setDescription("Test template description");
+        template.setTechStack("Java");
+        template.setLevel("mid");
+        template.setIsPublic(false);
+        template.setUsageCount(0);
+        template.setCreatedAt(LocalDateTime.now());
+        return template;
+    }
+    
+    public static CustomQuestionSet createTestCustomQuestionSet(Long userId, String name) {
+        CustomQuestionSet questionSet = new CustomQuestionSet();
+        questionSet.setUserId(userId);
+        questionSet.setName(TEST_PREFIX + name);
+        questionSet.setDescription("Test question set");
+        questionSet.setTechStack("Java");
+        questionSet.setLevel("mid");
+        questionSet.setIsPublic(false);
+        questionSet.setUsageCount(0);
+        questionSet.setQuestions(java.util.Arrays.asList("Question 1", "Question 2"));
+        questionSet.setCreatedAt(LocalDateTime.now());
+        return questionSet;
+    }
+    
+    public static EvaluationResult createTestEvaluationResult() {
+        EvaluationResult result = new EvaluationResult();
+        result.setScore(85.0);
+        result.setRubricLevel("good");
+        result.setTechnicalAccuracy(8);
+        result.setDepth(8);
+        result.setExperience(9);
+        result.setCommunication(8);
+        result.setStrengths(java.util.Arrays.asList("Good knowledge", "Clear explanation"));
+        result.setImprovements(java.util.Arrays.asList("Could be more detailed"));
+        result.setFollowUpQuestions(java.util.Arrays.asList("Can you elaborate?"));
+        return result;
+    }
 }
 

@@ -1,12 +1,18 @@
 package com.aiinterview.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 public class QAHistory {
     private String questionText;
     private String answerText;
     private String rubricLevel;
     private Double score;
+    private Map<String, Integer> detailedScores;
+    private List<String> strengths;
+    private List<String> improvements;
+    private List<String> followUpQuestions;
     private LocalDateTime createdAt;
 
     public QAHistory() {
@@ -65,5 +71,37 @@ public class QAHistory {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Map<String, Integer> getDetailedScores() {
+        return detailedScores;
+    }
+
+    public void setDetailedScores(Map<String, Integer> detailedScores) {
+        this.detailedScores = detailedScores;
+    }
+
+    public List<String> getStrengths() {
+        return strengths;
+    }
+
+    public void setStrengths(List<String> strengths) {
+        this.strengths = strengths;
+    }
+
+    public List<String> getImprovements() {
+        return improvements;
+    }
+
+    public void setImprovements(List<String> improvements) {
+        this.improvements = improvements;
+    }
+
+    public List<String> getFollowUpQuestions() {
+        return followUpQuestions;
+    }
+
+    public void setFollowUpQuestions(List<String> followUpQuestions) {
+        this.followUpQuestions = followUpQuestions;
     }
 }

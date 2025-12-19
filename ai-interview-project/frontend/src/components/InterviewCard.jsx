@@ -30,7 +30,8 @@ const InterviewCard = ({ interview, onDelete }) => {
   };
 
   return (
-    <div 
+    <div
+      data-tour="interview-card"
       className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
       onClick={handleClick}
     >

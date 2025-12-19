@@ -1,4 +1,5 @@
 // API configuration and utility functions
+import errorHandler, { withRetry } from './errorHandler';
 
 export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 export const WS_BASE_URL = process.env.REACT_APP_WS_BASE_URL || 'http://localhost:8080';
@@ -69,26 +70,57 @@ export const getAuthHeaders = () => {
   return headers;
 };
 
-// Common API call wrapper with error handling
+// Common API call wrapper with error handling and retry
 export const apiCall = async (endpoint, options = {}) => {
   const url = typeof endpoint === 'string' ? buildUrl(endpoint) : buildUrl(endpoint.url);
   const headers = { ...getAuthHeaders(), ...options.headers };
+  const shouldRetry = options.retry !== false; // Default to true
+  const retryOptions = options.retryOptions || {};
 
-  try {
+  const makeRequest = async () => {
     const response = await fetch(url, {
       ...options,
-      headers
+      headers,
+      // Add timeout if specified
+      signal: options.timeout ? AbortSignal.timeout(options.timeout) : undefined
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+      error.status = response.status;
+      error.response = response;
+      throw error;
     }
 
-    return await response.json();
+    // Handle different response types
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    } else if (options.responseType === 'blob') {
+      return await response.blob();
+    } else if (options.responseType === 'text') {
+      return await response.text();
+    } else {
+      return response;
+    }
+  };
+
+  try {
+    if (shouldRetry) {
+      return await withRetry(makeRequest, retryOptions);
+    } else {
+      return await makeRequest();
+    }
   } catch (error) {
-    console.error('API call failed:', error);
-    throw error;
+    // Format error for user display
+    const formattedError = errorHandler.handleApiError(error, { url, options });
+    throw formattedError;
   }
+};
+
+// Simplified API call without retry for cases where it's not needed
+export const apiCallSimple = async (endpoint, options = {}) => {
+  return apiCall(endpoint, { ...options, retry: false });
 };
 
 // WebSocket URL builder

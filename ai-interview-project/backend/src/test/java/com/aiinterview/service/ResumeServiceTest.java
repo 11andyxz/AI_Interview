@@ -72,7 +72,7 @@ class ResumeServiceTest {
 
     @Test
     void testGetResumeById_Success() {
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
 
         Optional<UserResume> result = resumeService.getResumeById(resumeId, userId);
 
@@ -82,8 +82,8 @@ class ResumeServiceTest {
 
     @Test
     void testGetResumeById_WrongUser() {
-        testResume.setUserId(2L); // Different user
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+        // When userId doesn't match, repository returns empty
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.empty());
 
         Optional<UserResume> result = resumeService.getResumeById(resumeId, userId);
 
@@ -92,32 +92,54 @@ class ResumeServiceTest {
 
     @Test
     void testUploadResume() throws IOException {
-        when(mockFile.getOriginalFilename()).thenReturn("resume.pdf");
-        when(mockFile.getBytes()).thenReturn("PDF content".getBytes());
-        when(resumeRepository.save(any(UserResume.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+        Path tempDir = Files.createTempDirectory("test-uploads");
+        try {
+            when(mockFile.getOriginalFilename()).thenReturn("resume.pdf");
+            when(mockFile.getSize()).thenReturn(1000L);
+            when(mockFile.getContentType()).thenReturn("application/pdf");
+            when(mockFile.getInputStream()).thenReturn(
+                new java.io.ByteArrayInputStream("PDF content".getBytes())
+            );
+            when(resumeRepository.save(any(UserResume.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserResume result = resumeService.uploadResume(userId, mockFile, "Additional text");
+            UserResume result = resumeService.uploadResume(userId, mockFile, "Additional text");
 
-        assertNotNull(result);
-        assertEquals(userId, result.getUserId());
-        assertEquals("resume.pdf", result.getOriginalFileName());
-        assertEquals("Additional text", result.getResumeText());
-        verify(resumeRepository).save(any(UserResume.class));
+            assertNotNull(result);
+            assertEquals(userId, result.getUserId());
+            assertEquals("resume.pdf", result.getOriginalFileName());
+            assertEquals("Additional text", result.getResumeText());
+            verify(resumeRepository).save(any(UserResume.class));
+        } finally {
+            // Clean up temp directory
+            try {
+                Files.walk(tempDir)
+                    .sorted((a, b) -> b.compareTo(a))
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            // Ignore
+                        }
+                    });
+            } catch (IOException e) {
+                // Ignore cleanup error
+            }
+        }
     }
 
     @Test
     void testUploadResume_IOException() throws IOException {
         when(mockFile.getOriginalFilename()).thenReturn("resume.pdf");
-        when(mockFile.getBytes()).thenThrow(new IOException("File read error"));
+        when(mockFile.getInputStream()).thenThrow(new IOException("File read error"));
 
-        assertThrows(RuntimeException.class, () ->
+        assertThrows(IOException.class, () ->
             resumeService.uploadResume(userId, mockFile, null));
     }
 
     @Test
     void testUpdateResume() {
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
         when(resumeRepository.save(any(UserResume.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -130,7 +152,7 @@ class ResumeServiceTest {
 
     @Test
     void testUpdateResume_NotFound() {
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.empty());
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
             resumeService.updateResume(resumeId, userId, "Updated content"));
@@ -138,7 +160,7 @@ class ResumeServiceTest {
 
     @Test
     void testDeleteResume_Success() {
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
 
         boolean result = resumeService.deleteResume(resumeId, userId);
 
@@ -148,7 +170,7 @@ class ResumeServiceTest {
 
     @Test
     void testDeleteResume_NotFound() {
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.empty());
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.empty());
 
         boolean result = resumeService.deleteResume(resumeId, userId);
 
@@ -167,7 +189,8 @@ class ResumeServiceTest {
             // Ignore for test
         }
 
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
+        when(mockFile.getInputStream()).thenReturn(Files.newInputStream(mockPath));
         when(aiService.analyzeResumeContent(anyString())).thenReturn("Analysis result");
         when(knowledgeBaseRepository.save(any(KnowledgeBase.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
@@ -191,7 +214,7 @@ class ResumeServiceTest {
 
     @Test
     void testAnalyzeResume_ResumeNotFound() {
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.empty());
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
             resumeService.analyzeResume(resumeId, userId));
@@ -200,7 +223,7 @@ class ResumeServiceTest {
     @Test
     void testAnalyzeResume_TextExtractionError() {
         testResume.setFilePath("/nonexistent/path.pdf");
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
 
         assertThrows(RuntimeException.class, () ->
             resumeService.analyzeResume(resumeId, userId));
@@ -217,7 +240,7 @@ class ResumeServiceTest {
             Files.writeString(filePath, "test content");
 
             testResume.setFilePath(filePath.toString());
-            when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+            when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
 
             Optional<Path> result = resumeService.getResumeFilePath(resumeId, userId);
 
@@ -234,7 +257,7 @@ class ResumeServiceTest {
     @Test
     void testGetResumeFilePath_FileNotFound() {
         testResume.setFilePath("/nonexistent/path.pdf");
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
 
         Optional<Path> result = resumeService.getResumeFilePath(resumeId, userId);
 
@@ -243,7 +266,9 @@ class ResumeServiceTest {
 
     @Test
     void testMarkAsAnalyzed() {
-        when(resumeRepository.findById(resumeId)).thenReturn(Optional.of(testResume));
+        when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
+        when(resumeRepository.save(any(UserResume.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
 
         resumeService.markAsAnalyzed(resumeId, userId);
 

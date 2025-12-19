@@ -12,12 +12,14 @@ import com.aiinterview.model.openai.OpenAiMessage;
 import com.aiinterview.repository.CandidateRepository;
 import com.aiinterview.repository.InterviewMessageRepository;
 import com.aiinterview.repository.InterviewRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -42,6 +44,8 @@ public class InterviewSessionService {
 
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // In-memory cache for active sessions (backed by Redis and DB)
     private final Map<String, List<QAHistory>> sessionHistories = new ConcurrentHashMap<>();
@@ -97,7 +101,46 @@ public class InterviewSessionService {
         // Load from database
         List<InterviewMessage> messages = interviewMessageRepository.findByInterviewIdOrderByCreatedAtAsc(interviewId);
         List<QAHistory> history = messages.stream()
-            .map(msg -> new QAHistory(msg.getUserMessage(), msg.getAiMessage()))
+            .map(msg -> {
+                QAHistory qa = new QAHistory(msg.getUserMessage(), msg.getAiMessage());
+
+                // Load evaluation results if available
+                if (msg.getEvaluationScore() != null) {
+                    qa.setScore(msg.getEvaluationScore());
+                    qa.setRubricLevel(msg.getEvaluationRubricLevel());
+
+                    // Set detailed scores
+                    Map<String, Integer> detailedScores = new HashMap<>();
+                    detailedScores.put("technicalAccuracy", msg.getTechnicalAccuracy() != null ? msg.getTechnicalAccuracy() : 0);
+                    detailedScores.put("depth", msg.getDepthScore() != null ? msg.getDepthScore() : 0);
+                    detailedScores.put("experience", msg.getExperienceScore() != null ? msg.getExperienceScore() : 0);
+                    detailedScores.put("communication", msg.getCommunicationScore() != null ? msg.getCommunicationScore() : 0);
+                    qa.setDetailedScores(detailedScores);
+
+                    // Load lists from JSON
+                    try {
+                        if (msg.getEvaluationStrengths() != null) {
+                            List<String> strengths = objectMapper.readValue(msg.getEvaluationStrengths(),
+                                objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                            qa.setStrengths(strengths);
+                        }
+                        if (msg.getEvaluationImprovements() != null) {
+                            List<String> improvements = objectMapper.readValue(msg.getEvaluationImprovements(),
+                                objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                            qa.setImprovements(improvements);
+                        }
+                        if (msg.getFollowUpQuestions() != null) {
+                            List<String> followUpQuestions = objectMapper.readValue(msg.getFollowUpQuestions(),
+                                objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                            qa.setFollowUpQuestions(followUpQuestions);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Failed to parse evaluation JSON for message " + msg.getId() + ": " + e.getMessage());
+                    }
+                }
+
+                return qa;
+            })
             .collect(Collectors.toList());
         
         // Cache in memory and Redis
@@ -186,6 +229,80 @@ public class InterviewSessionService {
         }
     }
     
+    /**
+     * Update evaluation results for an interview message
+     */
+    public void updateEvaluationResults(String interviewId, String questionText, String answerText,
+                                      Double score, Map<String, Integer> detailedScores,
+                                      List<String> strengths, List<String> improvements,
+                                      List<String> followUpQuestions, String rubricLevel) {
+        try {
+            // Find the interview message by interviewId and content
+            List<InterviewMessage> messages = interviewMessageRepository
+                .findByInterviewIdOrderByCreatedAtAsc(interviewId);
+
+            // Find the message that matches the question and answer
+            Optional<InterviewMessage> targetMessage = messages.stream()
+                .filter(msg -> questionText.equals(msg.getUserMessage()) &&
+                              answerText.equals(msg.getAiMessage()))
+                .findFirst();
+
+            if (targetMessage.isPresent()) {
+                InterviewMessage message = targetMessage.get();
+                message.setEvaluationScore(score);
+                message.setEvaluationRubricLevel(rubricLevel);
+                message.setTechnicalAccuracy(detailedScores.get("technicalAccuracy"));
+                message.setDepthScore(detailedScores.get("depth"));
+                message.setExperienceScore(detailedScores.get("experience"));
+                message.setCommunicationScore(detailedScores.get("communication"));
+
+                // Convert lists to JSON strings
+                if (strengths != null) {
+                    message.setEvaluationStrengths(objectMapper.writeValueAsString(strengths));
+                }
+                if (improvements != null) {
+                    message.setEvaluationImprovements(objectMapper.writeValueAsString(improvements));
+                }
+                if (followUpQuestions != null) {
+                    message.setFollowUpQuestions(objectMapper.writeValueAsString(followUpQuestions));
+                }
+
+                message.setEvaluationCompletedAt(LocalDateTime.now());
+                interviewMessageRepository.save(message);
+
+                // Update in-memory cache if it exists
+                if (sessionHistories.containsKey(interviewId)) {
+                    sessionHistories.get(interviewId).stream()
+                        .filter(qa -> questionText.equals(qa.getQuestionText()) &&
+                                    answerText.equals(qa.getAnswerText()))
+                        .findFirst()
+                        .ifPresent(qa -> {
+                            qa.setScore(score);
+                            qa.setDetailedScores(detailedScores);
+                            qa.setStrengths(strengths);
+                            qa.setImprovements(improvements);
+                            qa.setFollowUpQuestions(followUpQuestions);
+                            qa.setRubricLevel(rubricLevel);
+                        });
+                }
+
+                // Update Redis cache
+                if (redisTemplate != null) {
+                    try {
+                        List<QAHistory> history = sessionHistories.get(interviewId);
+                        if (history != null) {
+                            redisTemplate.opsForValue().set("session:history:" + interviewId, history, Duration.ofHours(24));
+                        }
+                    } catch (Exception e) {
+                        // Redis unavailable, continue without caching
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to update evaluation results: " + e.getMessage());
+        }
+    }
+
     /**
      * 从知识库选择下一个问题（合并自SessionService）
      */
@@ -352,5 +469,115 @@ public class InterviewSessionService {
         }
 
         return prompt.toString();
+    }
+
+    /**
+     * Compare multiple interviews for progress analysis
+     */
+    public Map<String, Object> compareInterviews(List<String> interviewIds) {
+        Map<String, Object> result = new HashMap<>();
+
+        List<Map<String, Object>> interviewComparisons = new ArrayList<>();
+        List<Map<String, Object>> skillProgression = new ArrayList<>();
+        Map<String, Object> overallStats = new HashMap<>();
+
+        // Process each interview
+        for (String interviewId : interviewIds) {
+            try {
+                Optional<Interview> interviewOpt = interviewRepository.findById(interviewId);
+                if (interviewOpt.isEmpty()) continue;
+
+                Interview interview = interviewOpt.get();
+                List<QAHistory> history = getChatHistory(interviewId);
+
+                // Calculate interview statistics
+                Map<String, Object> interviewStats = new HashMap<>();
+                interviewStats.put("interviewId", interviewId);
+                interviewStats.put("title", interview.getTitle());
+                interviewStats.put("date", interview.getDate());
+                interviewStats.put("questionCount", history.size());
+
+                // Calculate average scores
+                double avgScore = history.stream()
+                    .mapToDouble(qa -> qa.getScore() != null ? qa.getScore() : 0)
+                    .average().orElse(0.0);
+
+                interviewStats.put("averageScore", Math.round(avgScore * 100.0) / 100.0);
+
+                // Calculate skill averages
+                Map<String, Double> skillAverages = calculateSkillAverages(history);
+                interviewStats.put("skills", skillAverages);
+
+                interviewComparisons.add(interviewStats);
+
+                // Add to skill progression data
+                Map<String, Object> progressionData = new HashMap<>();
+                progressionData.put("interviewId", interviewId);
+                progressionData.put("title", interview.getTitle());
+                progressionData.put("date", interview.getDate());
+                progressionData.put("skills", skillAverages);
+                skillProgression.add(progressionData);
+
+            } catch (Exception e) {
+                System.err.println("Error processing interview " + interviewId + ": " + e.getMessage());
+            }
+        }
+
+        // Sort by date
+        interviewComparisons.sort((a, b) ->
+            ((java.time.LocalDate) a.get("date")).compareTo((java.time.LocalDate) b.get("date")));
+        skillProgression.sort((a, b) ->
+            ((java.time.LocalDate) a.get("date")).compareTo((java.time.LocalDate) b.get("date")));
+
+        // Calculate overall improvements
+        if (interviewComparisons.size() >= 2) {
+            Map<String, Object> first = interviewComparisons.get(0);
+            Map<String, Object> last = interviewComparisons.get(interviewComparisons.size() - 1);
+
+            double scoreImprovement = (Double) last.get("averageScore") - (Double) first.get("averageScore");
+
+            overallStats.put("scoreImprovement", Math.round(scoreImprovement * 100.0) / 100.0);
+            overallStats.put("totalInterviews", interviewComparisons.size());
+            overallStats.put("averageScore", interviewComparisons.stream()
+                .mapToDouble(stats -> (Double) stats.get("averageScore"))
+                .average().orElse(0.0));
+        }
+
+        result.put("interviews", interviewComparisons);
+        result.put("skillProgression", skillProgression);
+        result.put("overallStats", overallStats);
+
+        return result;
+    }
+
+    /**
+     * Calculate average scores for each skill across all Q&A pairs
+     */
+    private Map<String, Double> calculateSkillAverages(List<QAHistory> history) {
+        Map<String, Double> skillSums = new HashMap<>();
+        Map<String, Integer> skillCounts = new HashMap<>();
+
+        String[] skills = {"technicalAccuracy", "depth", "experience", "communication"};
+
+        for (QAHistory qa : history) {
+            if (qa.getDetailedScores() != null) {
+                for (String skill : skills) {
+                    Integer score = qa.getDetailedScores().get(skill);
+                    if (score != null) {
+                        skillSums.put(skill, skillSums.getOrDefault(skill, 0.0) + score);
+                        skillCounts.put(skill, skillCounts.getOrDefault(skill, 0) + 1);
+                    }
+                }
+            }
+        }
+
+        Map<String, Double> averages = new HashMap<>();
+        for (String skill : skills) {
+            double sum = skillSums.getOrDefault(skill, 0.0);
+            int count = skillCounts.getOrDefault(skill, 0);
+            averages.put(skill, count > 0 ? Math.round((sum / count) * 100.0) / 100.0 : 0.0);
+        }
+
+        return averages;
     }
 }

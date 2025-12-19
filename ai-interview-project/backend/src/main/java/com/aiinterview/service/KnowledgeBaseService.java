@@ -5,6 +5,7 @@ import com.aiinterview.repository.KnowledgeBaseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,8 +27,9 @@ public class KnowledgeBaseService {
         // Return both user and system
         List<KnowledgeBase> userKb = knowledgeBaseRepository.findByUserIdAndTypeAndIsActiveTrueOrderByCreatedAtDesc(userId, "user");
         List<KnowledgeBase> systemKb = knowledgeBaseRepository.findByTypeAndIsActiveTrueOrderByCreatedAtDesc("system");
-        userKb.addAll(systemKb);
-        return userKb;
+        List<KnowledgeBase> result = new ArrayList<>(userKb);
+        result.addAll(systemKb);
+        return result;
     }
     
     /**

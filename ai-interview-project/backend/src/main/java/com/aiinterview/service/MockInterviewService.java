@@ -112,7 +112,9 @@ public class MockInterviewService {
         // Get current question from messages
         List<MockInterviewMessage> messages = getMockInterviewMessages(mockInterviewId);
         if (messages.isEmpty() || questionIndex >= messages.size()) {
-            return "Think about fundamental concepts in " + mockInterview.getPositionType() + " development.";
+            String positionType = mockInterview.getPositionType();
+            String positionDesc = positionType != null ? positionType : "software";
+            return "Think about fundamental concepts in " + positionDesc + " development.";
         }
 
         MockInterviewMessage currentQuestion = messages.get(questionIndex.intValue());
@@ -127,7 +129,8 @@ public class MockInterviewService {
      */
     private String generateContextualHint(String questionText, String positionType, String programmingLanguages) {
         if (questionText == null || questionText.isEmpty()) {
-            return "Consider the core principles and best practices for " + positionType + " development.";
+            String positionDesc = positionType != null ? positionType : "software";
+            return "Consider the core principles and best practices for " + positionDesc + " development.";
         }
 
         String lowerQuestion = questionText.toLowerCase();
@@ -162,16 +165,19 @@ public class MockInterviewService {
         }
 
         // Default contextual hint based on position type
-        if ("backend".equalsIgnoreCase(positionType) || positionType.toLowerCase().contains("backend")) {
-            return "Focus on server-side logic, APIs, databases, and scalability. Consider error handling and logging.";
-        }
+        if (positionType != null) {
+            String lowerPositionType = positionType.toLowerCase();
+            if ("backend".equalsIgnoreCase(positionType) || lowerPositionType.contains("backend")) {
+                return "Focus on server-side logic, APIs, databases, and scalability. Consider error handling and logging.";
+            }
 
-        if ("frontend".equalsIgnoreCase(positionType) || positionType.toLowerCase().contains("frontend")) {
-            return "Consider user experience, browser compatibility, and responsive design. Think about state management.";
-        }
+            if ("frontend".equalsIgnoreCase(positionType) || lowerPositionType.contains("frontend")) {
+                return "Consider user experience, browser compatibility, and responsive design. Think about state management.";
+            }
 
-        if ("fullstack".equalsIgnoreCase(positionType) || positionType.toLowerCase().contains("full")) {
-            return "Think about both client and server perspectives. Consider end-to-end user experience.";
+            if ("fullstack".equalsIgnoreCase(positionType) || lowerPositionType.contains("full")) {
+                return "Think about both client and server perspectives. Consider end-to-end user experience.";
+            }
         }
 
         // Generic hint

@@ -1,0 +1,89 @@
+{
+  "roles": {
+    "backend_java": {
+      "name": "Java后端开发工程师",
+      "description": "专注于Java后端开发，包括Spring Boot、微服务、数据库等",
+      "focus_areas": [
+        "Java核心知识（集合框架、并发、JVM）",
+        "Spring Boot框架及微服务架构",
+        "数据库设计和性能优化",
+        "系统设计和架构能力",
+        "代码质量和最佳实践"
+      ],
+      "levels": {
+        "junior": {
+          "name": "初级",
+          "expectations": "能够独立完成基础功能开发，理解基本的技术概念和最佳实践，有学习意愿和成长潜力。问题可以适当简化，注重基础知识的掌握。",
+          "question_style": "侧重基础概念理解和简单应用，例如：基本语法、常用API、简单的设计模式"
+        },
+        "mid": {
+          "name": "中级",
+          "expectations": "具备独立设计和开发模块的能力，深入理解技术原理和使用场景，有实际项目优化经验，能够解决复杂技术问题。",
+          "question_style": "侧重原理理解、性能优化、实际项目经验，例如：并发处理、性能调优、架构设计"
+        },
+        "senior": {
+          "name": "高级",
+          "expectations": "具备系统架构设计能力，是技术专家能指导团队，有大规模系统经验和最佳实践，能够做技术选型和架构决策。问题应该更深入，考察架构思维和trade-offs。",
+          "question_style": "侧重架构设计、技术决策、系统优化，例如：分布式系统、高可用架构、技术选型权衡"
+        }
+      }
+    },
+    "frontend_react": {
+      "name": "React前端开发工程师",
+      "description": "专注于React前端开发和现代Web技术",
+      "focus_areas": [
+        "React生态系统和现代前端开发",
+        "JavaScript/TypeScript核心概念",
+        "性能优化和用户体验",
+        "组件设计和状态管理",
+        "前端工程化和工具链"
+      ],
+      "levels": {
+        "junior": {
+          "name": "初级",
+          "expectations": "熟悉React基础，能够实现基本组件和页面，理解HTML/CSS/JavaScript基础，有学习热情。",
+          "question_style": "侧重React基础、组件生命周期、基本状态管理"
+        },
+        "mid": {
+          "name": "中级",
+          "expectations": "精通React及其生态，能够独立设计组件架构，有性能优化经验，了解前端工程化。",
+          "question_style": "侧重组件设计、性能优化、状态管理方案、工程化实践"
+        },
+        "senior": {
+          "name": "高级",
+          "expectations": "能够设计前端架构，制定技术方案，优化大型应用性能，指导团队技术发展。",
+          "question_style": "侧重架构设计、性能优化方案、技术选型、团队协作"
+        }
+      }
+    },
+    "fullstack": {
+      "name": "全栈开发工程师",
+      "description": "掌握前后端技术栈，能够独立完成全栈开发",
+      "focus_areas": [
+        "前后端技术栈的综合应用",
+        "API设计和前后端协作",
+        "全栈项目架构经验",
+        "数据库到UI的完整流程",
+        "DevOps和部署经验"
+      ],
+      "levels": {
+        "junior": {
+          "name": "初级",
+          "expectations": "了解前后端基础知识，能够在指导下完成全栈功能开发。",
+          "question_style": "侧重前后端基础、API使用、基本部署"
+        },
+        "mid": {
+          "name": "中级",
+          "expectations": "能够独立完成全栈功能，有前后端协作经验，了解部署流程。",
+          "question_style": "侧重API设计、前后端集成、部署优化"
+        },
+        "senior": {
+          "name": "高级",
+          "expectations": "能够设计全栈架构，制定技术方案，优化整体性能，有DevOps经验。",
+          "question_style": "侧重架构设计、技术选型、性能优化、DevOps实践"
+        }
+      }
+    }
+  }
+}
+

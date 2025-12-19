@@ -5,6 +5,7 @@ import com.aiinterview.repository.UserSubscriptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -65,6 +66,7 @@ public class SubscriptionService {
     /**
      * Start trial period for new user
      */
+    @Transactional
     public UserSubscription startTrial(Long userId, Integer planId) {
         UserSubscription subscription = new UserSubscription();
         subscription.setUserId(userId);

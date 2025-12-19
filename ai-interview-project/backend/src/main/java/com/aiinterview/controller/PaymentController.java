@@ -113,10 +113,7 @@ public class PaymentController {
         if (subscription.getStripeSubscriptionId() != null) {
             cancelled = stripeService.cancelSubscription(subscription.getStripeSubscriptionId());
         } else if (subscription.getAlipaySubscriptionId() != null) {
-            // TODO: Implement Alipay cancellation
-            subscription.setStatus("cancelled");
-            userSubscriptionRepository.save(subscription);
-            cancelled = true;
+            cancelled = alipayService.cancelSubscription(subscription.getAlipaySubscriptionId());
         } else {
             subscription.setStatus("cancelled");
             userSubscriptionRepository.save(subscription);
