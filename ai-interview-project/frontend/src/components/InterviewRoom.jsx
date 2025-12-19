@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Send } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
+import LoadingSpinner from './common/LoadingSpinner';
+import ConfirmDialog from './common/ConfirmDialog';
+import { useToast } from './common/useToast';
+import ToastContainer from './common/ToastContainer';
 
 const InterviewRoom = () => {
   const { id } = useParams();
@@ -13,31 +19,59 @@ const InterviewRoom = () => {
   const [subtitleStatus, setSubtitleStatus] = useState("off"); // off | listening | unavailable
   const [interviewSession, setInterviewSession] = useState(null);
   const [conversationHistory, setConversationHistory] = useState([]);
+  const [interviewDuration, setInterviewDuration] = useState(0); // in seconds
+  const [streamingResponse, setStreamingResponse] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [endConfirmOpen, setEndConfirmOpen] = useState(false);
   const localStreamRef = useRef(null);
   const recognitionRef = useRef(null);
   const localVideoRef = useRef(null);
   const voiceTimerRef = useRef(null);
   const lastSentTextRef = useRef('');
+  const stompClientRef = useRef(null);
+  const durationIntervalRef = useRef(null);
+  const interviewStartTimeRef = useRef(null);
+  const currentAiMessageRef = useRef(null);
+  const { toasts, removeToast, success, error } = useToast();
 
   // Load interview session and conversation history
   useEffect(() => {
     const loadInterviewData = async () => {
       try {
+        const accessToken = localStorage.getItem('accessToken');
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
         // Load interview session
-        const sessionResponse = await fetch(`http://localhost:8080/api/interviews/${id}/session`);
+        const sessionResponse = await fetch(`http://localhost:8080/api/interviews/${id}/session`, {
+          headers
+        });
         if (sessionResponse.ok) {
           const sessionData = await sessionResponse.json();
           setInterviewSession(sessionData);
 
+          // Check if interview is in progress and can be resumed
+          const canResume = sessionData.interview && sessionData.interview.status === 'In Progress';
+          if (canResume && sessionData.conversationHistory && sessionData.conversationHistory.length > 0) {
+            // Resume automatically, no confirmation needed
+          }
+
           // Set initial greeting message based on candidate
-          if (sessionData.candidate) {
+          if (sessionData.candidate && (!sessionData.conversationHistory || sessionData.conversationHistory.length === 0)) {
             const greeting = `Hello ${sessionData.candidate.name}! I'm your AI interviewer today. We'll be focusing on your background in ${sessionData.interview.title}. Ready to begin?`;
             setMessages([{ sender: 'ai', text: greeting }]);
           }
         }
 
         // Load conversation history
-        const historyResponse = await fetch(`http://localhost:8080/api/interviews/${id}/history`);
+        const historyResponse = await fetch(`http://localhost:8080/api/interviews/${id}/history`, {
+          headers
+        });
         if (historyResponse.ok) {
           const historyData = await historyResponse.json();
           setConversationHistory(historyData);
@@ -47,17 +81,125 @@ const InterviewRoom = () => {
             { sender: 'user', text: qa.questionText },
             { sender: 'ai', text: qa.answerText }
           ]);
-          setMessages(prev => [...prev, ...historyMessages]);
+          if (historyMessages.length > 0) {
+            setMessages(prev => {
+              // Avoid duplicates
+              const existing = prev.map(m => m.text).join('|');
+              const newTexts = historyMessages.map(m => m.text).join('|');
+              if (existing.includes(newTexts)) {
+                return prev;
+              }
+              return [...prev, ...historyMessages];
+            });
+          }
         }
-      } catch (error) {
-        console.error("Error loading interview data:", error);
+      } catch (err) {
+        console.error("Error loading interview data:", err);
+        error('Failed to load interview data');
         // Fallback greeting
         setMessages([{ sender: 'ai', text: "Hello! I'm your AI interviewer today. Ready to begin?" }]);
+      } finally {
+        setLoading(false);
       }
     };
 
     loadInterviewData();
   }, [id]);
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    const connectWebSocket = () => {
+      const socket = new SockJS('http://localhost:8080/ws');
+      const stompClient = new Client({
+        webSocketFactory: () => socket,
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+        onConnect: () => {
+          console.log('WebSocket connected');
+          
+          // Subscribe to AI response stream
+          stompClient.subscribe(`/topic/interview/${id}/response`, (message) => {
+            const response = JSON.parse(message.body);
+            
+            if (response.type === 'chunk') {
+              // Streaming chunk
+              setIsStreaming(true);
+              setStreamingResponse(prev => prev + response.content);
+              currentAiMessageRef.current = (currentAiMessageRef.current || '') + response.content;
+            } else if (response.type === 'complete') {
+              // Stream complete
+              setIsStreaming(false);
+              if (currentAiMessageRef.current) {
+                setMessages(prev => [...prev, {
+                  sender: 'ai',
+                  text: currentAiMessageRef.current
+                }]);
+                // Update conversation history
+                const lastUserMessage = messages[messages.length - 1];
+                if (lastUserMessage && lastUserMessage.sender === 'user') {
+                  setConversationHistory(prev => [...prev, {
+                    questionText: lastUserMessage.text,
+                    answerText: currentAiMessageRef.current,
+                    createdAt: new Date().toISOString()
+                  }]);
+                }
+                currentAiMessageRef.current = '';
+                setStreamingResponse('');
+              }
+            } else if (response.type === 'error') {
+              setIsStreaming(false);
+              setMessages(prev => [...prev, {
+                sender: 'ai',
+                text: response.content || 'An error occurred'
+              }]);
+              setStreamingResponse('');
+              currentAiMessageRef.current = '';
+            }
+          });
+        },
+        onStompError: (frame) => {
+          console.error('WebSocket STOMP error:', frame);
+        },
+        onWebSocketClose: () => {
+          console.log('WebSocket closed');
+        }
+      });
+      
+      stompClient.activate();
+      stompClientRef.current = stompClient;
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (stompClientRef.current) {
+        stompClientRef.current.deactivate();
+      }
+    };
+  }, [id, messages]);
+
+  // Track interview duration
+  useEffect(() => {
+    interviewStartTimeRef.current = Date.now();
+    durationIntervalRef.current = setInterval(() => {
+      if (interviewStartTimeRef.current) {
+        const elapsed = Math.floor((Date.now() - interviewStartTimeRef.current) / 1000);
+        setInterviewDuration(elapsed);
+        
+        // Show warning if over 2 hours (7200 seconds)
+        if (elapsed > 7200 && elapsed % 300 === 0) { // Warn every 5 minutes after 2 hours
+          console.warn('Interview duration exceeds 2 hours');
+        }
+      }
+    }, 1000);
+
+    return () => {
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
+    };
+  }, []);
 
   // TO DO: Initialize WebSocket or WebRTC connection here
   // useEffect(() => {
@@ -162,21 +304,9 @@ const InterviewRoom = () => {
       const trimmedText = text.trim();
       setSubtitle(trimmedText);
 
-      // Auto-send logic
+      // Auto-send logic - use pause detection (3 seconds of silence)
       if (trimmedText.length > 0) {
-        // Check for sentence endings (., !, ?)
-        const hasSentenceEnd = trimmedText.includes('.') ||
-                              trimmedText.includes('!') ||
-                              trimmedText.includes('?');
-
-        if (hasSentenceEnd && trimmedText.length > 5) {
-          // Auto-send when sentence ends and has minimum length
-          console.log("Auto-sending voice message due to sentence end:", trimmedText);
-          handleSendVoiceMessage(trimmedText);
-          return;
-        }
-
-        // Reset timer for pause detection
+        // Reset timer for pause detection (will auto-send after 3 seconds of silence)
         resetVoiceTimer();
       }
     };
@@ -228,60 +358,68 @@ const InterviewRoom = () => {
     }
 
     // Add user message to display
-    const newMessages = [...messages, { sender: 'user', text: userMessage }];
-    setMessages(newMessages);
+    setMessages(prev => [...prev, { sender: 'user', text: userMessage }]);
 
     // Clear subtitle after sending
     setSubtitle("");
+    setStreamingResponse('');
+    currentAiMessageRef.current = '';
+    setIsStreaming(true);
 
-    try {
-      // Build ChatRequest object
-      const chatRequest = {
-        userMessage: userMessage,
+    // Send via WebSocket
+    if (stompClientRef.current && stompClientRef.current.connected) {
+      const transcriptMessage = {
+        interviewId: id,
+        text: userMessage,
         language: interviewSession?.interview?.language || 'English',
-        recentHistory: conversationHistory.slice(-5) // Send last 5 QA pairs for context
+        isFinal: true
       };
-
-      // Call Backend/AI Service with ChatRequest
-      const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(chatRequest)
+      stompClientRef.current.publish({
+        destination: '/app/transcript',
+        body: JSON.stringify(transcriptMessage)
       });
-
-      if (response.ok) {
-        const aiResponseText = await response.text();
-        setMessages(prev => [...prev, {
-          sender: 'ai',
-          text: aiResponseText
-        }]);
-
-        // Update conversation history
-        const newQA = {
-          questionText: userMessage,
-          answerText: aiResponseText,
-          createdAt: new Date().toISOString()
+    } else {
+      // Fallback to HTTP if WebSocket not connected
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        const headers = {
+          'Content-Type': 'application/json',
         };
-        setConversationHistory(prev => [...prev, newQA]);
-      } else {
-        console.error("Failed to get AI response:", response.status);
-        // Fallback message
-        setMessages(prev => [...prev, {
-          sender: 'ai',
-          text: "抱歉，我暂时无法处理您的回答。请稍后再试。"
-        }]);
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
+        const chatRequest = {
+          userMessage: userMessage,
+          language: interviewSession?.interview?.language || 'English',
+          recentHistory: conversationHistory.slice(-5)
+        };
+
+        const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(chatRequest)
+        });
+
+        if (response.ok) {
+          const aiResponseText = await response.text();
+          setIsStreaming(false);
+          setMessages(prev => [...prev, {
+            sender: 'ai',
+            text: aiResponseText
+          }]);
+
+          const newQA = {
+            questionText: userMessage,
+            answerText: aiResponseText,
+            createdAt: new Date().toISOString()
+          };
+          setConversationHistory(prev => [...prev, newQA]);
+        }
+      } catch (error) {
+        console.error("Error calling AI service:", error);
+        setIsStreaming(false);
       }
-    } catch (error) {
-      console.error("Error calling AI service:", error);
-      // Fallback for demo if backend is not running
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
-          sender: 'ai',
-          text: "(离线模式) 这是个很有趣的观点。你能详细说明一下吗？"
-        }]);
-      }, 1500);
     }
   };
 
@@ -304,11 +442,17 @@ const InterviewRoom = () => {
       };
 
       // Call Backend/AI Service with ChatRequest
+      const accessToken = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
       const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(chatRequest)
       });
 
@@ -347,14 +491,71 @@ const InterviewRoom = () => {
   };
 
   const handleEndInterview = () => {
-    // TO DO: Call backend to finalize interview session
-    if (window.confirm("Are you sure you want to end the interview?")) {
-      navigate('/');
+    setEndConfirmOpen(true);
+  };
+
+  const confirmEndInterview = async () => {
+    setEndConfirmOpen(false);
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      // Call backend to end interview and generate report
+      const response = await fetch(`http://localhost:8080/api/interviews/${id}/end`, {
+        method: 'POST',
+        headers
+      });
+
+        if (response.ok) {
+          const data = await response.json();
+          success('Interview ended successfully. Report generated.');
+          
+          // Close WebSocket connection
+          if (stompClientRef.current) {
+            stompClientRef.current.deactivate();
+          }
+
+          // Navigate to report page
+          setTimeout(() => {
+            navigate(`/report/${id}`);
+          }, 1500);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          error(errorData.message || 'Failed to end interview');
+        }
+    } catch (err) {
+      console.error("Error ending interview:", err);
+      error('Error ending interview');
     }
   };
 
+  // Format duration as HH:MM:SS
+  const formatDuration = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-gray-900 text-white items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="xl" className="mx-auto mb-4" />
+          <p className="text-gray-300">Loading interview...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       {/* Main Video Area */}
       <div className="flex-1 flex flex-col relative">
         {/* AI Avatar / Video Placeholder */}
@@ -364,6 +565,10 @@ const InterviewRoom = () => {
               AI
             </div>
             <p className="text-gray-300">AI Interviewer is listening...</p>
+            <p className="text-gray-400 text-sm mt-2">Duration: {formatDuration(interviewDuration)}</p>
+            {interviewDuration > 7200 && (
+              <p className="text-yellow-400 text-xs mt-1">Interview duration exceeds 2 hours</p>
+            )}
           </div>
           
           {/* User Video Overlay (Picture-in-Picture style) */}
@@ -432,6 +637,14 @@ const InterviewRoom = () => {
               </div>
             </div>
           ))}
+          {isStreaming && streamingResponse && (
+            <div className="flex justify-start">
+              <div className="max-w-[85%] p-3 rounded-lg text-sm bg-blue-50 border border-blue-200 text-gray-800 rounded-bl-none shadow-sm">
+                {streamingResponse}
+                <span className="animate-pulse">▋</span>
+              </div>
+            </div>
+          )}
           {subtitle && (
             <div className="flex justify-start">
               <div className="max-w-[85%] p-3 rounded-lg text-sm bg-yellow-50 border border-yellow-200 text-gray-800 shadow-sm">
@@ -479,6 +692,17 @@ const InterviewRoom = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={endConfirmOpen}
+        onClose={() => setEndConfirmOpen(false)}
+        onConfirm={confirmEndInterview}
+        title="End Interview"
+        message="Are you sure you want to end this interview? A report will be generated."
+        confirmText="End Interview"
+        cancelText="Cancel"
+        type="warning"
+      />
     </div>
   );
 };

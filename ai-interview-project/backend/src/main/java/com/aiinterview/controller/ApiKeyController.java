@@ -23,7 +23,7 @@ public class ApiKeyController {
      * Check API key status (public endpoint for frontend)
      */
     @GetMapping("/status")
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<Map<String, Object>> getApiKeyStatus() {
         boolean openaiConfigured = apiKeyConfigService.hasActiveApiKey("openai");
 

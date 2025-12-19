@@ -28,6 +28,15 @@ function Login() {
         // Save user info to localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('isAuthenticated', 'true');
+        
+        // Save JWT tokens
+        if (data.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+        }
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        
         // Navigate to home page
         navigate('/');
       } else {
@@ -96,7 +105,13 @@ function Login() {
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Test Account: test / 123456</p>
+          <p>
+            Don't have an account?{' '}
+            <a href="/register" className="text-indigo-600 hover:underline font-medium">
+              Sign up
+            </a>
+          </p>
+          <p className="mt-2">Test Account: test / 123456</p>
         </div>
       </div>
     </div>

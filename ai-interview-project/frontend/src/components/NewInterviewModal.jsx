@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import LoadingSpinner from './common/LoadingSpinner';
 
 const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     candidateId: '',
     useCustomKnowledge: false,
@@ -14,18 +16,42 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
 
   useEffect(() => {
     if (isOpen) {
-      // Fetch candidates list
-      fetch('http://localhost:8080/api/resume/candidates')
-        .then(res => res.json())
-        .then(data => {
-          setCandidates(data.candidates || []);
-          if (data.candidates && data.candidates.length > 0) {
-            setFormData(prev => ({ ...prev, candidateId: data.candidates[0].id }));
-          }
-        })
-        .catch(err => console.error('Failed to load candidates:', err));
+      loadCandidates();
     }
   }, [isOpen]);
+
+  const loadCandidates = async () => {
+    try {
+      setLoading(true);
+      const accessToken = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      const response = await fetch('http://localhost:8080/api/resume/candidates', { headers });
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('Unauthorized: Token may be expired');
+          return;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setCandidates(data.candidates || []);
+      if (data.candidates && data.candidates.length > 0) {
+        setFormData(prev => ({ ...prev, candidateId: data.candidates[0].id }));
+      }
+    } catch (err) {
+      console.error('Failed to load candidates:', err);
+      setCandidates([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const availableLanguages = ['JavaScript', 'Python', 'Java', 'Kotlin', 'TypeScript', 'Go', 'C++', 'Ruby'];
 
@@ -48,7 +74,6 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
     onSubmit(formData);
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -74,15 +99,22 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Interview Resume
             </label>
-            <select
-              value={formData.candidateId}
-              onChange={(e) => setFormData({ ...formData, candidateId: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-            >
-              {candidates.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <LoadingSpinner size="sm" />
+                <span className="text-sm text-gray-500">Loading candidates...</span>
+              </div>
+            ) : (
+              <select
+                value={formData.candidateId}
+                onChange={(e) => setFormData({ ...formData, candidateId: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+              >
+                {candidates.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Custom Knowledge Base */}

@@ -86,5 +86,92 @@ public class AiService {
     public String generateResumeSummary(String resumeText, String jobDescription) {
         return "Mock summary: This candidate has relevant experience based on the provided resume.";
     }
+
+    /**
+     * Analyze resume content and extract key information
+     */
+    public String analyzeResumeContent(String resumeText) {
+        if (resumeText == null || resumeText.trim().isEmpty()) {
+            return "No resume content available for analysis.";
+        }
+
+        // This is a simplified analysis - in a real implementation, you would:
+        // 1. Use NLP to extract entities (skills, experience, education)
+        // 2. Analyze technical proficiency levels
+        // 3. Generate insights about candidate fit for various roles
+
+        StringBuilder analysis = new StringBuilder();
+        analysis.append("Resume Analysis Results:\n\n");
+
+        // Extract potential skills (basic keyword matching)
+        String[] technicalSkills = {"Java", "Python", "JavaScript", "React", "Spring", "SQL", "Git", "Docker", "AWS", "Kubernetes"};
+        String[] foundSkills = java.util.Arrays.stream(technicalSkills)
+            .filter(skill -> resumeText.toLowerCase().contains(skill.toLowerCase()))
+            .toArray(String[]::new);
+
+        if (foundSkills.length > 0) {
+            analysis.append("Technical Skills Identified: ").append(String.join(", ", foundSkills)).append("\n\n");
+        }
+
+        // Extract potential experience areas
+        String[] experienceAreas = {"Backend Development", "Frontend Development", "Full Stack", "API Development", "Database", "System Design"};
+        String[] foundExperiences = java.util.Arrays.stream(experienceAreas)
+            .filter(area -> resumeText.toLowerCase().contains(area.toLowerCase()) ||
+                   resumeText.toLowerCase().contains(area.toLowerCase().replace(" ", "")))
+            .toArray(String[]::new);
+
+        if (foundExperiences.length > 0) {
+            analysis.append("Experience Areas: ").append(String.join(", ", foundExperiences)).append("\n\n");
+        }
+
+        // Basic content analysis
+        String[] lines = resumeText.split("\n");
+        int totalLines = lines.length;
+        analysis.append("Resume Statistics:\n");
+        analysis.append("- Total content lines: ").append(totalLines).append("\n");
+        analysis.append("- Estimated experience level: ").append(estimateExperienceLevel(resumeText)).append("\n\n");
+
+        analysis.append("Recommendations:\n");
+        analysis.append("- Consider highlighting key achievements and quantifiable results\n");
+        analysis.append("- Ensure technical skills are clearly listed and up-to-date\n");
+        analysis.append("- Include specific examples of project work and technologies used\n");
+
+        return analysis.toString();
+    }
+
+    /**
+     * Estimate experience level based on resume content
+     */
+    private String estimateExperienceLevel(String resumeText) {
+        String lowerText = resumeText.toLowerCase();
+
+        // Count keywords that indicate seniority
+        int seniorKeywords = 0;
+        String[] seniorIndicators = {"senior", "lead", "architect", "principal", "manager", "director", "10+", "years"};
+
+        for (String keyword : seniorIndicators) {
+            if (lowerText.contains(keyword)) {
+                seniorKeywords++;
+            }
+        }
+
+        // Count technologies and frameworks
+        int techCount = 0;
+        String[] technologies = {"java", "python", "javascript", "react", "spring", "docker", "kubernetes", "aws", "azure"};
+
+        for (String tech : technologies) {
+            if (lowerText.contains(tech)) {
+                techCount++;
+            }
+        }
+
+        if (seniorKeywords >= 2 || techCount >= 5) {
+            return "Senior Level";
+        } else if (techCount >= 3) {
+            return "Mid Level";
+        } else {
+            return "Junior Level";
+        }
+    }
 }
 

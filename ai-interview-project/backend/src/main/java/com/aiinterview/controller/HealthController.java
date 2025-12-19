@@ -12,6 +12,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/health")
 public class HealthController {
+    
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> health() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "UP");
+        response.put("service", "ai-interview-backend");
+        return ResponseEntity.ok(response);
+    }
 
     @Autowired
     private UserRepository userRepository;

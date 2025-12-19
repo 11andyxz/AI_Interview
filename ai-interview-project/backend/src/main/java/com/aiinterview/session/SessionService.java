@@ -5,6 +5,7 @@ import com.aiinterview.knowledge.model.QuestionItem;
 import com.aiinterview.knowledge.model.RubricItem;
 import com.aiinterview.session.model.InterviewSession;
 import com.aiinterview.session.model.QAHistory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,7 +20,7 @@ public class SessionService {
     private final KnowledgeBaseService knowledgeBaseService;
     private final Random random = new Random();
 
-    public SessionService(KnowledgeBaseService knowledgeBaseService) {
+    public SessionService(@Qualifier("questionKnowledgeBaseService") KnowledgeBaseService knowledgeBaseService) {
         this.knowledgeBaseService = knowledgeBaseService;
     }
 

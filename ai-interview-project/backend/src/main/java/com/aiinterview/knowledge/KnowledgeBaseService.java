@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service
+@Service("questionKnowledgeBaseService")
 public class KnowledgeBaseService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
