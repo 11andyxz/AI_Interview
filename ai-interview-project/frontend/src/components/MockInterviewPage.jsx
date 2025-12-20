@@ -210,6 +210,7 @@ const MockInterviewPage = () => {
             <button
               onClick={getHints}
               disabled={hintLoading}
+              data-testid="get-hint-button"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
             >
               <Lightbulb size={18} />
@@ -294,6 +295,7 @@ const MockInterviewPage = () => {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
+          data-testid="create-mock-interview-button"
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
         >
           <Plus size={20} />

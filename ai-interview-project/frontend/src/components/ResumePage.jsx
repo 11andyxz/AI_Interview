@@ -232,7 +232,7 @@ const ResumePage = () => {
             />
             Auto-analyze after upload
           </label>
-          <label className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 cursor-pointer">
+          <label data-testid="upload-resume-button" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 cursor-pointer">
             <Upload size={20} />
             {uploading ? 'Uploading...' : 'Upload Resume'}
             <input
@@ -259,7 +259,7 @@ const ResumePage = () => {
           onAction={() => document.querySelector('input[type="file"]')?.click()}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div data-testid="resumes-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {resumes.map((resume) => (
             <div key={resume.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
@@ -294,6 +294,7 @@ const ResumePage = () => {
               <div className="flex gap-2 mt-4">
                 <button
                   onClick={() => handleDownload(resume.id)}
+                  data-testid="download-resume-button"
                   className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 flex items-center justify-center gap-2 text-sm"
                 >
                   <Download size={16} />
@@ -311,6 +312,7 @@ const ResumePage = () => {
                   <button
                     onClick={() => handleAnalyze(resume.id)}
                     disabled={analyzingResumeId === resume.id}
+                    data-testid="analyze-resume-button"
                     className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 flex items-center justify-center gap-2 text-sm disabled:opacity-50"
                   >
                     {analyzingResumeId === resume.id ? (

@@ -3,6 +3,16 @@ const { loginAsAndy } = require('./helpers/test-helpers');
 
 test.describe('Error Handling E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
+    // Listen to console messages
+    page.on('console', msg => {
+      console.log(`PAGE CONSOLE [${msg.type()}]: ${msg.text()}`);
+    });
+
+    // Listen to page errors
+    page.on('pageerror', error => {
+      console.log(`PAGE ERROR: ${error.message}`);
+    });
+
     await loginAsAndy(page);
   });
 
@@ -22,19 +32,19 @@ test.describe('Error Handling E2E Tests', () => {
 
   test('2. Invalid Form Submission', async ({ page }) => {
     await page.goto('http://localhost:3000/');
-    
+
     // Try to create interview with empty form
-    const newInterviewBtn = page.locator('button:has-text("New Interview")');
+    const newInterviewBtn = page.locator('[data-testid="sidebar-new-interview-button"]');
     if (await newInterviewBtn.count() > 0) {
       await newInterviewBtn.click();
       await page.waitForTimeout(1000);
-      
+
       // Try to submit without filling required fields
-      const createButton = page.locator('button:has-text("Create")');
+      const createButton = page.locator('[data-testid="create-interview-button"]');
       if (await createButton.count() > 0) {
         await createButton.click();
         await page.waitForTimeout(1000);
-        
+
         // Should show validation error
         const validationError = page.locator('text=/required|please|invalid/i');
         const hasValidationError = await validationError.count() > 0;

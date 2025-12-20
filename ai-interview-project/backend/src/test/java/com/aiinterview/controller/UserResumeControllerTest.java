@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -180,5 +181,114 @@ class UserResumeControllerTest {
     void testAnalyzeResume_Unauthorized() throws Exception {
         mockMvc.perform(post("/api/user/resume/{id}/analyze", resumeId))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testUploadResume_InvalidFileType_BadRequest() throws Exception {
+        MockMultipartFile invalidFile = new MockMultipartFile(
+            "file", "resume.exe", "application/octet-stream", "invalid content".getBytes());
+
+        mockMvc.perform(multipart("/api/user/resume")
+                .file(invalidFile)
+                .requestAttr("userId", userId))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testUploadResume_EmptyFile_BadRequest() throws Exception {
+        MockMultipartFile emptyFile = new MockMultipartFile(
+            "file", "empty.pdf", "application/pdf", new byte[0]);
+
+        mockMvc.perform(multipart("/api/user/resume")
+                .file(emptyFile)
+                .requestAttr("userId", userId))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testUploadResume_FileTooLarge_BadRequest() throws Exception {
+        // Create a file larger than typical limits (simulate)
+        byte[] largeContent = new byte[50 * 1024 * 1024]; // 50MB
+        Arrays.fill(largeContent, (byte) 'x');
+
+        MockMultipartFile largeFile = new MockMultipartFile(
+            "file", "large.pdf", "application/pdf", largeContent);
+
+        mockMvc.perform(multipart("/api/user/resume")
+                .file(largeFile)
+                .requestAttr("userId", userId))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testGetResume_NotFound_Returns404() throws Exception {
+        when(resumeService.getResumeById(999L, userId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/user/resume/{id}", 999L)
+                .requestAttr("userId", userId))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testAnalyzeResume_ResumeNotFound_Returns404() throws Exception {
+        when(resumeService.getResumeById(999L, userId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/user/resume/{id}/analyze", 999L)
+                .requestAttr("userId", userId))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testAnalyzeResume_AlreadyAnalyzed_Returns400() throws Exception {
+        mockResume.setAnalyzed(true);
+        when(resumeService.getResumeById(resumeId, userId)).thenReturn(Optional.of(mockResume));
+
+        mockMvc.perform(post("/api/user/resume/{id}/analyze", resumeId)
+                .requestAttr("userId", userId))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Resume already analyzed"));
+    }
+
+    @Test
+    void testDownloadResume_ResumeNotFound_Returns404() throws Exception {
+        when(resumeService.getResumeById(999L, userId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/user/resume/{id}/download", 999L)
+                .requestAttr("userId", userId))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testDeleteResume_NotFound_Returns404() throws Exception {
+        when(resumeService.getResumeById(999L, userId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(delete("/api/user/resume/{id}", 999L)
+                .requestAttr("userId", userId))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetUserResumes_NoResumes_ReturnsEmptyArray() throws Exception {
+        when(resumeService.getUserResumes(userId)).thenReturn(Arrays.asList());
+
+        mockMvc.perform(get("/api/user/resume")
+                .requestAttr("userId", userId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void testUploadResume_TextOnly_Success() throws Exception {
+        MockMultipartFile textFile = new MockMultipartFile(
+            "resumeText", "", "text/plain", "Resume text content".getBytes());
+
+        when(resumeService.uploadResume(eq(userId), any(), any()))
+            .thenReturn(mockResume);
+
+        mockMvc.perform(multipart("/api/user/resume")
+                .file(textFile)
+                .requestAttr("userId", userId))
+            .andExpect(status().isOk());
     }
 }

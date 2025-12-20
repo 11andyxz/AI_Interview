@@ -39,7 +39,11 @@ const DashboardLayout = () => {
           positionType: formData.positionType,
           programmingLanguages: formData.programmingLanguages,
           language: formData.language,
-          useCustomKnowledge: formData.useCustomKnowledge
+          useCustomKnowledge: formData.useCustomKnowledge,
+          interviewType: formData.interviewType,
+          resumeId: formData.resumeId,
+          templateId: formData.templateId,
+          questionSetId: formData.questionSetId
         }),
       });
 

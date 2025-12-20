@@ -284,12 +284,14 @@ const Dashboard = () => {
               ref={(el) => setSearchInputRef(el)}
               type="text"
               placeholder="Search interviews..."
+              data-testid="interview-search"
               className="pl-3 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
+            data-testid="interview-filter"
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
           >
             <option value="all">All Status</option>
@@ -299,6 +301,7 @@ const Dashboard = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
+            data-testid="interview-sort"
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
           >
             <option value="date">Sort by Date</option>
@@ -322,10 +325,10 @@ const Dashboard = () => {
           message="Click 'New Interview' to create your first interview"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 auto-rows-fr">
+        <div data-testid="interview-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 auto-rows-fr">
           {interviews.map((interview) => (
-            <InterviewCard 
-              key={interview.id} 
+            <InterviewCard
+              key={interview.id}
               interview={interview}
               onDelete={(id) => setDeleteConfirm(id)}
             />

@@ -70,6 +70,7 @@ const Sidebar = ({ onNewInterview }) => {
         <button
           onClick={onNewInterview}
           data-tour="new-interview"
+          data-testid="sidebar-new-interview-button"
           className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors shadow-sm hover:shadow"
         >
           <Plus size={18} />
@@ -79,37 +80,37 @@ const Sidebar = ({ onNewInterview }) => {
 
       {/* Navigation */}
       <nav className="flex-1 px-2 space-y-1">
-        <Link to="/">
+        <Link to="/" data-testid="nav-dashboard">
           <MenuItem icon={<LayoutDashboard size={20} />} label="My Interviews" active={isActive('/')} />
         </Link>
-        <Link to="/progress">
+        <Link to="/progress" data-testid="nav-progress">
           <MenuItem icon={<TrendingUp size={20} />} label="My Progress" active={isActive('/progress')} />
         </Link>
-        <Link to="/skills">
+        <Link to="/skills" data-testid="nav-skills">
           <MenuItem icon={<Target size={20} />} label="Skill Tracking" active={isActive('/skills')} />
         </Link>
-        <Link to="/settings">
+        <Link to="/settings" data-testid="nav-settings">
           <MenuItem icon={<Settings size={20} />} label="Settings" active={isActive('/settings')} />
         </Link>
-        <Link to="/question-sets">
+        <Link to="/question-sets" data-testid="nav-question-sets">
           <MenuItem icon={<BookOpen size={20} />} label="Question Sets" active={isActive('/question-sets')} />
         </Link>
-        <Link to="/notes">
+        <Link to="/notes" data-testid="nav-notes">
           <MenuItem icon={<PenTool size={20} />} label="My Notes" active={isActive('/notes')} />
         </Link>
-        <Link to="/mock-interview">
+        <Link to="/mock-interview" data-testid="nav-mock-interview">
           <MenuItem icon={<MessageSquare size={20} />} label="Mock Interview" active={isActive('/mock-interview')} />
         </Link>
-        <Link to="/resume">
+        <Link to="/resume" data-testid="nav-resume">
           <MenuItem icon={<FileText size={20} />} label="My Resume" active={isActive('/resume')} />
         </Link>
-        <Link to="/knowledge-base">
+        <Link to="/knowledge-base" data-testid="nav-knowledge-base">
           <MenuItem icon={<Book size={20} />} label="Knowledge Base" active={isActive('/knowledge-base')} badge="New" />
         </Link>
-        <Link to="/payment">
+        <Link to="/payment" data-testid="nav-payment">
           <MenuItem icon={<CreditCard size={20} />} label="Subscription" active={isActive('/payment')} />
         </Link>
-        <Link to="/profile">
+        <Link to="/profile" data-testid="nav-profile">
           <MenuItem icon={<User size={20} />} label="Profile" active={isActive('/profile')} />
         </Link>
       </nav>

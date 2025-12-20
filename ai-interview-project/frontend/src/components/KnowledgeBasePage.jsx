@@ -183,6 +183,7 @@ const KnowledgeBasePage = () => {
             setFormData({ name: '', description: '', content: '' });
             setShowCreateModal(true);
           }}
+          data-testid="create-knowledge-base-button"
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
         >
           <Plus size={20} />
@@ -224,7 +225,7 @@ const KnowledgeBasePage = () => {
           onAction={() => setShowCreateModal(true)}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div data-testid="knowledge-bases-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {knowledgeBases.map((kb) => (
             <div key={kb.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">

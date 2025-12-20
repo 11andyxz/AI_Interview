@@ -182,6 +182,7 @@ const NotesPage = () => {
             setFormData({ title: '', content: '', type: 'general', interviewId: '' });
             setShowCreateModal(true);
           }}
+          data-testid="new-note-button"
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
         >
           <Plus size={20} />
@@ -223,7 +224,7 @@ const NotesPage = () => {
           onAction={() => setShowCreateModal(true)}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div data-testid="notes-list" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {notes.map((note) => (
             <div key={note.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
@@ -240,12 +241,14 @@ const NotesPage = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => openEditModal(note)}
+                    data-testid="edit-note-button"
                     className="text-gray-400 hover:text-blue-600"
                   >
                     <Edit size={18} />
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(note.id)}
+                    data-testid="delete-note-button"
                     className="text-gray-400 hover:text-red-600"
                   >
                     <Trash2 size={18} />
@@ -266,7 +269,7 @@ const NotesPage = () => {
 
       {/* Create/Edit Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="modal-backdrop">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6">
             <h3 className="text-xl font-bold mb-4">
               {editingNote ? 'Edit Note' : 'Create New Note'}

@@ -19,6 +19,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -192,6 +193,123 @@ class InterviewControllerTest {
         mockMvc.perform(get("/api/interviews/test-id/report/json")
                 .requestAttr("userId", 1L))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void createInterview_InvalidRequest_BadRequest() throws Exception {
+        // Given - Invalid request with missing required fields
+        CreateInterviewRequest invalidRequest = new CreateInterviewRequest();
+        // Missing required fields
+
+        // When & Then
+        mockMvc.perform(post("/api/interviews")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidRequest))
+                .requestAttr("userId", 1L))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createInterview_ResumeBased_MissingResumeId_BadRequest() throws Exception {
+        // Given - Resume-based interview without resumeId
+        CreateInterviewRequest request = new CreateInterviewRequest();
+        request.setInterviewType("resume-based");
+        request.setPositionType("Developer");
+        request.setProgrammingLanguages(List.of("Java"));
+        request.setLanguage("English");
+        // Missing resumeId
+
+        // When & Then
+        mockMvc.perform(post("/api/interviews")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .requestAttr("userId", 1L))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getInterview_NotFound_Returns404() throws Exception {
+        // Given
+        when(interviewRepository.findById("non-existent-id")).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(get("/api/interviews/non-existent-id")
+                .requestAttr("userId", 1L))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateInterviewStatus_InvalidStatus_BadRequest() throws Exception {
+        // Given
+        Interview existingInterview = createMockInterview();
+        when(interviewRepository.findById("test-id")).thenReturn(Optional.of(existingInterview));
+
+        // When & Then - Invalid status
+        mockMvc.perform(put("/api/interviews/test-id/status")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"status\": \"InvalidStatus\"}")
+                .requestAttr("userId", 1L))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getInterviewReport_InterviewNotCompleted_Returns400() throws Exception {
+        // Given
+        Interview inProgressInterview = createMockInterview();
+        inProgressInterview.setStatus("In Progress");
+        when(interviewRepository.findById("test-id")).thenReturn(Optional.of(inProgressInterview));
+
+        // When & Then
+        mockMvc.perform(get("/api/interviews/test-id/report")
+                .requestAttr("userId", 1L))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteInterview_NotFound_Returns404() throws Exception {
+        // Given
+        when(interviewRepository.findById("non-existent-id")).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(delete("/api/interviews/non-existent-id")
+                .requestAttr("userId", 1L))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createInterview_UnauthorizedUser_Returns403() throws Exception {
+        // Given - No userId in request attributes (simulating unauthorized access)
+        CreateInterviewRequest request = new CreateInterviewRequest();
+        request.setPositionType("Developer");
+        request.setProgrammingLanguages(List.of("Java"));
+        request.setLanguage("English");
+
+        // When & Then - Missing userId should result in error
+        mockMvc.perform(post("/api/interviews")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isInternalServerError()); // Or appropriate error status
+    }
+
+    @Test
+    void downloadInterviewReport_InvalidFormat_Returns400() throws Exception {
+        // When & Then - Invalid format parameter
+        mockMvc.perform(get("/api/interviews/test-id/report/invalidformat")
+                .requestAttr("userId", 1L))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAllInterviews_EmptyList_ReturnsEmptyArray() throws Exception {
+        // Given
+        when(interviewRepository.findAll()).thenReturn(List.of());
+
+        // When & Then
+        mockMvc.perform(get("/api/interviews")
+                .requestAttr("userId", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test

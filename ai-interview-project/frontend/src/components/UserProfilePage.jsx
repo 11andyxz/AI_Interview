@@ -123,6 +123,7 @@ const UserProfilePage = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  data-testid="username-input"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 />
               ) : (
@@ -156,6 +157,7 @@ const UserProfilePage = () => {
             ) : (
               <button
                 onClick={() => setEditing(true)}
+                data-testid="edit-profile-button"
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
               >
                 Edit Profile

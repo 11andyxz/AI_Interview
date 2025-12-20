@@ -53,12 +53,12 @@ const InterviewRoom = () => {
   // Keyboard shortcuts handlers
   const handleSendMessageShortcut = () => {
     if (inputText.trim() && !isStreaming && inputRef.current) {
-      handleSend();
+      handleSendMessage();
     }
   };
 
   const handleExitInterview = () => {
-    if (preparationComplete) {
+    if (!showPreparation) {
       handleEndInterview();
     } else {
       handleBackToDashboard();
@@ -66,7 +66,7 @@ const InterviewRoom = () => {
   };
 
   const handleTogglePause = () => {
-    if (preparationComplete) {
+    if (!showPreparation) {
       setIsPaused(!isPaused);
       success(isPaused ? 'Interview resumed' : 'Interview paused');
     }
@@ -186,9 +186,9 @@ const InterviewRoom = () => {
       };
 
       reader.readAsDataURL(audioBlob);
-    } catch (error) {
-      console.error('Error uploading recording:', error);
-      showError('Failed to save recording');
+    } catch (err) {
+      console.error('Error uploading recording:', err);
+      error('Failed to save recording');
     }
   };
 
@@ -915,6 +915,7 @@ const InterviewRoom = () => {
 
           <button
             onClick={handleEndInterview}
+            data-testid="end-interview-button"
             className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors px-8 flex items-center gap-2"
           >
             <PhoneOff size={24} />
@@ -973,16 +974,19 @@ const InterviewRoom = () => {
             <input
               ref={inputRef}
               type="text"
+              name="message"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={(e) => !isPaused && e.key === 'Enter' && handleSendMessage()}
               placeholder={isPaused ? "Interview is paused..." : "Type your answer..."}
               disabled={isPaused}
+              data-testid="chat-input"
               className={`flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${isPaused ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
             />
             <button
               onClick={handleSendMessage}
               disabled={isPaused}
+              data-testid="send-message-button"
               className={`p-2 rounded-lg transition-colors ${isPaused ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 text-white hover:bg-purple-700'}`}
             >
               <Send size={18} />

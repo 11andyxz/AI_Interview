@@ -264,10 +264,10 @@ const ReportPage = () => {
         }
         success(`Report downloaded as ${format.toUpperCase()}`);
       } else {
-        error('Failed to download report');
+        showError('Failed to download report');
       }
     } catch (err) {
-      error('Error downloading report');
+      showError('Error downloading report');
     }
   };
 
@@ -311,6 +311,7 @@ const ReportPage = () => {
           <div className="flex gap-3" data-tour="download-buttons">
             <button
               onClick={() => handleDownload('json')}
+              data-testid="download-json-button"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
             >
               <Download size={18} />
@@ -318,6 +319,7 @@ const ReportPage = () => {
             </button>
             <button
               onClick={() => handleDownload('pdf')}
+              data-testid="download-pdf-button"
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
             >
               <Download size={18} />

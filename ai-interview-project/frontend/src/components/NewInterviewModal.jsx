@@ -97,6 +97,11 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
       positionType: '',
       programmingLanguages: []
     }));
+    
+    // If switching to general and no candidate selected, try to set default after candidates load
+    if (interviewType === 'general' && candidates.length > 0 && !formData.candidateId) {
+      setFormData(prev => ({ ...prev, candidateId: candidates[0].id }));
+    }
   };
 
   const handleResumeChange = async (resumeId) => {
@@ -204,18 +209,23 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" data-testid="modal-backdrop" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col relative" onClick={(e) => e.stopPropagation()}>
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
         >
           <X size={24} />
         </button>
 
         {/* Title */}
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">New Interview</h2>
+        <div className="p-6 pb-4 flex-shrink-0">
+          <h2 className="text-2xl font-bold text-gray-800">New Interview</h2>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
 
         {/* Interview Type Selection */}
         <div className="mb-6">
@@ -293,12 +303,20 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
                   <LoadingSpinner size="sm" />
                   <span className="text-sm text-gray-500">Loading candidates...</span>
                 </div>
+              ) : candidates.length === 0 ? (
+                <div className="text-sm text-gray-500 p-3 border border-gray-300 rounded-lg bg-gray-50">
+                  No candidates available. Please add candidates first.
+                </div>
               ) : (
                 <select
-                  value={formData.candidateId}
+                  name="candidateId"
+                  value={formData.candidateId || ''}
                   onChange={(e) => setFormData({ ...formData, candidateId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white cursor-pointer appearance-none relative z-10"
+                  style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")", backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
+                  data-testid="candidate-select"
                 >
+                  <option value="">Select a candidate...</option>
                   {candidates.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -316,6 +334,7 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
                 </div>
               ) : (
                 <select
+                  name="resumeId"
                   value={formData.resumeId || ''}
                   onChange={(e) => handleResumeChange(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
@@ -360,9 +379,11 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
             </label>
             <input
               type="text"
+              name="positionType"
               value={formData.positionType}
               onChange={(e) => setFormData({ ...formData, positionType: e.target.value })}
               placeholder="e.g., Internet/AI > Artificial Intelligence"
+              data-testid="position-type-input"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
             />
           </div>
@@ -393,6 +414,7 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
                 <button
                   key={lang}
                   onClick={() => toggleLanguage(lang)}
+                  data-testid="language-button"
                   className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:bg-gray-50 text-gray-700"
                 >
                   + {lang}
@@ -407,8 +429,10 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
               Language <span className="text-red-500">*</span>
             </label>
             <select
+              name="language"
               value={formData.language}
               onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+              data-testid="interview-language"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
             >
               <option value="English">English</option>
@@ -444,10 +468,12 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
           {/* Submit Button */}
           <button
             onClick={handleSubmit}
+            data-testid="create-interview-button"
             className="w-full bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition"
           >
-            + Create
+            Create
           </button>
+        </div>
         </div>
       </div>
 

@@ -32,6 +32,7 @@ const InterviewCard = ({ interview, onDelete }) => {
   return (
     <div
       data-tour="interview-card"
+      data-testid="interview-card"
       className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
       onClick={handleClick}
     >
@@ -71,6 +72,7 @@ const InterviewCard = ({ interview, onDelete }) => {
           {interview.status === 'Completed' && (
             <button
               onClick={() => navigate(`/report/${interview.id}`)}
+              data-testid="view-report-button"
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               title="View Report"
             >
@@ -79,6 +81,7 @@ const InterviewCard = ({ interview, onDelete }) => {
           )}
           <button
             onClick={handleDeleteClick}
+            data-testid="delete-interview-button"
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             title="Delete"
           >

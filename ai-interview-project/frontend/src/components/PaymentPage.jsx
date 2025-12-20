@@ -193,7 +193,7 @@ const PaymentPage = () => {
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Subscription Plans */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div data-testid="subscription-plans" className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Available Plans</h2>
             {plans.length === 0 ? (
               <p className="text-gray-500">No plans available. Please configure subscription plans.</p>
@@ -306,7 +306,7 @@ const PaymentPage = () => {
         </div>
 
         {/* Payment History */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div data-testid="payment-history" className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Payment History</h2>
           {paymentHistory.length === 0 ? (
             <p className="text-gray-500">No payment history</p>
