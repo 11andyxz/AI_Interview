@@ -23,11 +23,18 @@ window.fetch = async function(...args) {
     if (!isPublic) {
       const accessToken = localStorage.getItem('accessToken');
       
+      // Check if body is FormData - if so, don't set Content-Type (let browser set it)
+      const isFormData = options.body instanceof FormData;
+      
       // Add token to headers
       const headers = {
         ...options.headers,
-        'Content-Type': 'application/json',
       };
+      
+      // Only set Content-Type if not FormData and not already set
+      if (!isFormData && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
       
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;

@@ -4,6 +4,7 @@ import com.aiinterview.model.MockInterview;
 import com.aiinterview.model.MockInterviewMessage;
 import com.aiinterview.repository.MockInterviewRepository;
 import com.aiinterview.repository.MockInterviewMessageRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +18,15 @@ public class MockInterviewService {
     
     @Autowired
     private MockInterviewRepository mockInterviewRepository;
-    
+
     @Autowired
     private MockInterviewMessageRepository messageRepository;
+
+    @Autowired
+    private ResumeService resumeService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
     
     /**
      * Get all mock interviews for a user
@@ -41,8 +48,17 @@ public class MockInterviewService {
     /**
      * Create a new mock interview
      */
-    public MockInterview createMockInterview(Long userId, String title, String positionType, 
+    public MockInterview createMockInterview(Long userId, String title, String positionType,
                                             String programmingLanguages, String language) {
+        return createMockInterview(userId, title, positionType, programmingLanguages, language, null, "general");
+    }
+
+    /**
+     * Create a new mock interview with resume support
+     */
+    public MockInterview createMockInterview(Long userId, String title, String positionType,
+                                            String programmingLanguages, String language,
+                                            Long resumeId, String interviewType) {
         MockInterview mockInterview = new MockInterview();
         mockInterview.setId(UUID.randomUUID().toString());
         mockInterview.setUserId(userId);
@@ -50,9 +66,44 @@ public class MockInterviewService {
         mockInterview.setPositionType(positionType);
         mockInterview.setProgrammingLanguages(programmingLanguages);
         mockInterview.setLanguage(language);
+        mockInterview.setResumeId(resumeId);
+        mockInterview.setInterviewType(interviewType != null ? interviewType : "general");
         mockInterview.setStatus("practice");
         mockInterview.setCurrentQuestionIndex(0);
         return mockInterviewRepository.save(mockInterview);
+    }
+
+    /**
+     * Create mock interview from resume analysis
+     */
+    public MockInterview createMockInterviewFromResume(Long userId, Long resumeId, String language) {
+        // Get resume analysis data
+        var analysisOpt = resumeService.getResumeAnalysisData(resumeId, userId);
+        if (analysisOpt.isEmpty()) {
+            throw new RuntimeException("Resume analysis data not found");
+        }
+
+        var analysis = analysisOpt.get();
+
+        // Auto-generate title and position type from analysis
+        String title = "Mock Interview: " + (analysis.getMainSkillAreas() != null && !analysis.getMainSkillAreas().isEmpty()
+            ? analysis.getMainSkillAreas().get(0) : "General Development");
+        String positionType = analysis.getMainSkillAreas() != null && !analysis.getMainSkillAreas().isEmpty()
+            ? analysis.getMainSkillAreas().get(0) + " Developer"
+            : "Software Developer";
+
+        // Convert tech stack list to JSON string
+        String programmingLanguages = null;
+        try {
+            if (analysis.getTechStack() != null && !analysis.getTechStack().isEmpty()) {
+                programmingLanguages = objectMapper.writeValueAsString(analysis.getTechStack());
+            }
+        } catch (Exception e) {
+            // ignore and leave null
+        }
+
+        return createMockInterview(userId, title, positionType, programmingLanguages,
+                                 language != null ? language : "English", resumeId, "resume-based");
     }
     
     /**

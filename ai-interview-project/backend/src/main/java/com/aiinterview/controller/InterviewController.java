@@ -8,11 +8,13 @@ import com.aiinterview.model.Interview;
 import com.aiinterview.repository.InterviewRepository;
 import com.aiinterview.service.AiService;
 import com.aiinterview.service.CandidateService;
+import com.aiinterview.service.InterviewService;
 import com.aiinterview.service.InterviewSessionService;
 import com.aiinterview.service.LlmEvaluationService;
 import com.aiinterview.service.PdfReportService;
 import com.aiinterview.service.ReportService;
 import com.aiinterview.service.AudioService;
+import com.aiinterview.service.ResumeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,31 +39,37 @@ public class InterviewController {
 
     private final AiService aiService;
     private final InterviewRepository interviewRepository;
+    private final InterviewService interviewService;
     private final CandidateService candidateService;
     private final InterviewSessionService interviewSessionService;
     private final ReportService reportService;
     private final PdfReportService pdfReportService;
     private final LlmEvaluationService llmEvaluationService;
     private final AudioService audioService;
+    private final ResumeService resumeService;
     private final ObjectMapper objectMapper;
 
     public InterviewController(AiService aiService,
                                InterviewRepository interviewRepository,
+                               InterviewService interviewService,
                                CandidateService candidateService,
                                InterviewSessionService interviewSessionService,
                                ReportService reportService,
                                PdfReportService pdfReportService,
                                LlmEvaluationService llmEvaluationService,
                                AudioService audioService,
+                               ResumeService resumeService,
                                ObjectMapper objectMapper) {
         this.aiService = aiService;
         this.interviewRepository = interviewRepository;
+        this.interviewService = interviewService;
         this.candidateService = candidateService;
         this.interviewSessionService = interviewSessionService;
         this.reportService = reportService;
         this.pdfReportService = pdfReportService;
         this.llmEvaluationService = llmEvaluationService;
         this.audioService = audioService;
+        this.resumeService = resumeService;
         this.objectMapper = objectMapper;
     }
 
@@ -72,7 +80,7 @@ public class InterviewController {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
 
-        List<Interview> interviews = interviewRepository.findByUserId(userId);
+        List<Interview> interviews = interviewService.getInterviewsByUserId(userId);
         return ResponseEntity.ok(interviews);
     }
 
@@ -83,14 +91,9 @@ public class InterviewController {
             return ResponseEntity.status(401).build();
         }
 
-        Optional<Interview> interview = interviewRepository.findById(id);
+        Optional<Interview> interview = interviewService.getInterviewByIdAndUserId(id, userId);
         if (interview.isEmpty()) {
             return ResponseEntity.notFound().build();
-        }
-
-        // Check if user owns this interview
-        if (!interview.get().getUserId().equals(userId)) {
-            return ResponseEntity.status(403).body(null);
         }
 
         return ResponseEntity.ok(interview.get());
@@ -103,48 +106,80 @@ public class InterviewController {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
 
-        if (request.getCandidateId() == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "candidateId is required"));
+        // Validate interview type
+        String interviewType = request.getInterviewType() != null ? request.getInterviewType() : "general";
+        if (!"general".equals(interviewType) && !"resume-based".equals(interviewType)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid interview type. Must be 'general' or 'resume-based'"));
         }
 
-        Optional<Candidate> candidateOpt = candidateService.findById(request.getCandidateId());
-        if (candidateOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "candidate not found"));
-        }
-        Candidate candidate = candidateOpt.get();
-
-        Interview interview = new Interview();
-        interview.setId(UUID.randomUUID().toString());
-        interview.setUserId(userId);
-        interview.setCandidateId(candidate.getId());
-        interview.setTitle(request.getPositionType());
-        interview.setLanguage(request.getLanguage());
-        interview.setTechStack(String.join(",", request.getProgrammingLanguages() != null ? request.getProgrammingLanguages() : List.of()));
-        interview.setDate(LocalDate.now());
-        interview.setStatus("In Progress");
-        interview.setUseCustomKnowledge(request.isUseCustomKnowledge());
-        interview.setStartedAt(java.time.LocalDateTime.now());
-        try {
-            if (request.getProgrammingLanguages() != null) {
-                interview.setProgrammingLanguages(objectMapper.writeValueAsString(request.getProgrammingLanguages()));
+        // For resume-based interviews, validate resume exists and is analyzed
+        if ("resume-based".equals(interviewType)) {
+            if (request.getResumeId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "resumeId is required for resume-based interviews"));
             }
-        } catch (IOException e) {
-            // ignore and leave null
+
+            // Check if resume exists and belongs to user
+            var resumeOpt = resumeService.getResumeById(request.getResumeId(), userId);
+            if (resumeOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Resume not found or access denied"));
+            }
+
+            // Check if resume is analyzed
+            var resume = resumeOpt.get();
+            if (!Boolean.TRUE.equals(resume.getAnalyzed())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Resume must be analyzed before creating resume-based interview"));
+            }
+        } else {
+            // For general interviews, candidateId is still required
+            if (request.getCandidateId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "candidateId is required for general interviews"));
+            }
         }
 
-        Interview saved = interviewRepository.save(interview);
+        // Set default values if not provided
+        if (request.getLanguage() == null) {
+            request.setLanguage("English");
+        }
 
-        Map<String, Object> knowledgeBase = candidateService.buildKnowledgeBase(
-            candidate,
-            request.getPositionType(),
-            request.getProgrammingLanguages(),
-            request.getLanguage()
-        );
+        try {
+            // Create interview using service
+            Interview saved = interviewService.createInterview(request, userId);
 
-        return ResponseEntity.ok(Map.of(
-            "interview", saved,
-            "knowledgeBase", knowledgeBase
-        ));
+            Map<String, Object> response = new HashMap<>();
+            response.put("interview", saved);
+
+            // Build knowledge base based on interview type
+            if ("resume-based".equals(interviewType) && request.getResumeId() != null) {
+                // For resume-based interviews, build knowledge base from resume analysis
+                var analysisOpt = resumeService.getResumeAnalysisData(request.getResumeId(), userId);
+                if (analysisOpt.isPresent()) {
+                    Map<String, Object> knowledgeBase = Map.of(
+                        "type", "resume-based",
+                        "resumeAnalysis", analysisOpt.get(),
+                        "techStack", analysisOpt.get().getTechStack(),
+                        "experienceLevel", analysisOpt.get().getLevel()
+                    );
+                    response.put("knowledgeBase", knowledgeBase);
+                }
+            } else {
+                // For general interviews, use candidate-based knowledge base
+                Optional<Candidate> candidateOpt = candidateService.findById(request.getCandidateId());
+                if (candidateOpt.isPresent()) {
+                    Map<String, Object> knowledgeBase = candidateService.buildKnowledgeBase(
+                        candidateOpt.get(),
+                        request.getPositionType(),
+                        request.getProgrammingLanguages(),
+                        request.getLanguage()
+                    );
+                    response.put("knowledgeBase", knowledgeBase);
+                }
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to create interview: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/start")
@@ -187,12 +222,7 @@ public class InterviewController {
      * Check if user owns the interview
      */
     private ResponseEntity<?> checkInterviewOwnership(String interviewId, Long userId) {
-        Optional<Interview> interview = interviewRepository.findById(interviewId);
-        if (interview.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        if (!interview.get().getUserId().equals(userId)) {
+        if (!interviewService.isInterviewOwnedByUser(interviewId, userId)) {
             return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
         }
 

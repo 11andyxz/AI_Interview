@@ -19,6 +19,9 @@ public class Interview {
     @Column(name = "candidate_id")
     private Integer candidateId;
 
+    @Column(name = "resume_id")
+    private Long resumeId; // Associated resume for resume-based interviews
+
     private String title; // e.g., "Internet / AI / Artificial Intelligence"
     private String language; // e.g., "English"
     @Column(name = "tech_stack")
@@ -32,6 +35,9 @@ public class Interview {
 
     @Column(name = "use_custom_knowledge")
     private boolean useCustomKnowledge;
+
+    @Column(name = "interview_type", length = 20)
+    private String interviewType = "general"; // "general" or "resume-based"
 
     @Column(name = "started_at")
     private LocalDateTime startedAt;
@@ -104,6 +110,22 @@ public class Interview {
 
     public void setCandidateId(Integer candidateId) {
         this.candidateId = candidateId;
+    }
+
+    public Long getResumeId() {
+        return resumeId;
+    }
+
+    public void setResumeId(Long resumeId) {
+        this.resumeId = resumeId;
+    }
+
+    public String getInterviewType() {
+        return interviewType;
+    }
+
+    public void setInterviewType(String interviewType) {
+        this.interviewType = interviewType;
     }
 
     public String getTitle() {

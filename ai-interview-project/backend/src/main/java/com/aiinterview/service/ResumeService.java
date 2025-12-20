@@ -1,9 +1,12 @@
 package com.aiinterview.service;
 
+import com.aiinterview.dto.ResumeAnalysisResult;
 import com.aiinterview.model.KnowledgeBase;
 import com.aiinterview.model.UserResume;
 import com.aiinterview.repository.KnowledgeBaseRepository;
 import com.aiinterview.repository.UserResumeRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -32,7 +35,13 @@ public class ResumeService {
 
     @Autowired
     private AiService aiService;
-    
+
+    @Autowired
+    private ResumeAnalysisService resumeAnalysisService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private static final String UPLOAD_DIR = "uploads/resumes/";
     
     /**
@@ -73,7 +82,8 @@ public class ResumeService {
         // Create resume record
         UserResume resume = new UserResume();
         resume.setUserId(userId);
-        resume.setFileName(originalFilename);
+        resume.setFileName(uniqueFilename);
+        resume.setOriginalFileName(originalFilename);
         resume.setFilePath(filePath.toString());
         resume.setFileSize(file.getSize());
         resume.setFileType(file.getContentType());
@@ -155,20 +165,134 @@ public class ResumeService {
             // Extract text from resume file
             String resumeText = extractResumeText(resume);
 
-            // Analyze resume content using AI
-            String analysis = analyzeResumeContent(resumeText);
+            // Analyze resume content using OpenAI for structured data
+            ResumeAnalysisResult structuredAnalysis = resumeAnalysisService.analyzeResumeWithOpenAI(resumeText);
 
-            // Generate knowledge base entries based on analysis
+            // Store structured analysis data as JSON
+            String analysisDataJson = objectMapper.writeValueAsString(structuredAnalysis);
+            resume.setAnalysisData(analysisDataJson);
+
+            // Generate text-based analysis for backward compatibility
+            String textAnalysis = generateTextAnalysisFromStructuredData(structuredAnalysis);
+
+            // Generate knowledge base entries based on structured analysis
             String sourceFileName = resume.getOriginalFileName() != null ? resume.getOriginalFileName() : resume.getFileName();
-            generateKnowledgeBaseEntries(userId, analysis, sourceFileName);
+            generateKnowledgeBaseEntriesFromStructuredData(userId, structuredAnalysis, sourceFileName);
 
-            // Mark resume as analyzed
+            // Mark resume as analyzed and store results
             resume.setAnalyzed(true);
-            resume.setAnalysisResult(analysis);
+            resume.setAnalysisResult(textAnalysis);
             resumeRepository.save(resume);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to analyze resume: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get structured analysis data for a resume
+     */
+    public Optional<ResumeAnalysisResult> getResumeAnalysisData(Long id, Long userId) {
+        Optional<UserResume> resumeOpt = getResumeById(id, userId);
+        if (resumeOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        UserResume resume = resumeOpt.get();
+        String analysisDataJson = resume.getAnalysisData();
+
+        if (analysisDataJson == null || analysisDataJson.trim().isEmpty()) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(objectMapper.readValue(analysisDataJson, ResumeAnalysisResult.class));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse analysis data: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Generate text-based analysis from structured data for backward compatibility
+     */
+    private String generateTextAnalysisFromStructuredData(ResumeAnalysisResult analysis) {
+        StringBuilder textAnalysis = new StringBuilder();
+        textAnalysis.append("Resume Analysis Results:\n\n");
+
+        if (analysis.getTechStack() != null && !analysis.getTechStack().isEmpty()) {
+            textAnalysis.append("Technical Skills Identified: ").append(String.join(", ", analysis.getTechStack())).append("\n\n");
+        }
+
+        if (analysis.getMainSkillAreas() != null && !analysis.getMainSkillAreas().isEmpty()) {
+            textAnalysis.append("Experience Areas: ").append(String.join(", ", analysis.getMainSkillAreas())).append("\n\n");
+        }
+
+        textAnalysis.append("Resume Statistics:\n");
+        textAnalysis.append("- Experience Level: ").append(analysis.getLevel()).append("\n");
+        textAnalysis.append("- Estimated Experience Years: ").append(analysis.getExperienceYears()).append("\n");
+        textAnalysis.append("- Education: ").append(analysis.getEducation()).append("\n\n");
+
+        if (analysis.getSummary() != null && !analysis.getSummary().isEmpty()) {
+            textAnalysis.append("Professional Summary: ").append(analysis.getSummary()).append("\n\n");
+        }
+
+        textAnalysis.append("Recommendations:\n");
+        textAnalysis.append("- Consider highlighting key achievements and quantifiable results\n");
+        textAnalysis.append("- Ensure technical skills are clearly listed and up-to-date\n");
+        textAnalysis.append("- Include specific examples of project work and technologies used\n");
+
+        return textAnalysis.toString();
+    }
+
+    /**
+     * Generate knowledge base entries from structured analysis data
+     */
+    private void generateKnowledgeBaseEntriesFromStructuredData(Long userId, ResumeAnalysisResult analysis, String sourceFileName) {
+        // Create knowledge base entries for technical skills
+        if (analysis.getTechStack() != null) {
+            for (String tech : analysis.getTechStack()) {
+                if (tech != null && !tech.trim().isEmpty()) {
+                    KnowledgeBase kb = new KnowledgeBase();
+                    kb.setUserId(userId);
+                    kb.setType("user");
+                    kb.setCategory("skill");
+                    kb.setName("Tech Skill: " + tech.trim());
+                    kb.setTitle("Technical Skill: " + tech.trim());
+                    kb.setDescription("Technical skill extracted from resume analysis");
+                    kb.setTags("skill,technical,resume," + tech.toLowerCase().trim());
+                    knowledgeBaseRepository.save(kb);
+                }
+            }
+        }
+
+        // Create knowledge base entries for main skill areas
+        if (analysis.getMainSkillAreas() != null) {
+            for (String area : analysis.getMainSkillAreas()) {
+                if (area != null && !area.trim().isEmpty()) {
+                    KnowledgeBase kb = new KnowledgeBase();
+                    kb.setUserId(userId);
+                    kb.setType("user");
+                    kb.setCategory("experience");
+                    kb.setName("Skill Area: " + area.trim());
+                    kb.setTitle("Experience Area: " + area.trim());
+                    kb.setDescription("Skill area extracted from resume analysis");
+                    kb.setTags("experience,area,resume," + area.toLowerCase().trim());
+                    knowledgeBaseRepository.save(kb);
+                }
+            }
+        }
+
+        // Create knowledge base entry for experience level
+        if (analysis.getLevel() != null && !analysis.getLevel().trim().isEmpty()) {
+            KnowledgeBase kb = new KnowledgeBase();
+            kb.setUserId(userId);
+            kb.setType("user");
+            kb.setCategory("level");
+            kb.setName("Experience Level: " + analysis.getLevel());
+            kb.setTitle("Experience Level: " + analysis.getLevel());
+            kb.setDescription("Experience level determined from resume analysis");
+            kb.setTags("level,experience,resume," + analysis.getLevel().toLowerCase());
+            knowledgeBaseRepository.save(kb);
         }
     }
 

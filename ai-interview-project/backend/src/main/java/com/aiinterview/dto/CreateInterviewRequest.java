@@ -8,6 +8,8 @@ public class CreateInterviewRequest {
     private List<String> programmingLanguages;
     private String language;
     private boolean useCustomKnowledge;
+    private Long resumeId; // For resume-based interviews
+    private String interviewType; // "general" or "resume-based"
 
     public Integer getCandidateId() {
         return candidateId;
@@ -47,6 +49,22 @@ public class CreateInterviewRequest {
 
     public void setUseCustomKnowledge(boolean useCustomKnowledge) {
         this.useCustomKnowledge = useCustomKnowledge;
+    }
+
+    public Long getResumeId() {
+        return resumeId;
+    }
+
+    public void setResumeId(Long resumeId) {
+        this.resumeId = resumeId;
+    }
+
+    public String getInterviewType() {
+        return interviewType;
+    }
+
+    public void setInterviewType(String interviewType) {
+        this.interviewType = interviewType;
     }
 }
 

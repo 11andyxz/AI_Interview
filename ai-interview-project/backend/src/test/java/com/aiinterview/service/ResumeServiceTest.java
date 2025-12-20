@@ -1,5 +1,6 @@
 package com.aiinterview.service;
 
+import com.aiinterview.dto.ResumeAnalysisResult;
 import com.aiinterview.model.KnowledgeBase;
 import com.aiinterview.model.UserResume;
 import com.aiinterview.repository.KnowledgeBaseRepository;
@@ -11,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,6 +39,12 @@ class ResumeServiceTest {
 
     @Mock
     private AiService aiService;
+
+    @Mock
+    private ResumeAnalysisService resumeAnalysisService;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @Mock
     private MultipartFile mockFile;
@@ -189,20 +197,28 @@ class ResumeServiceTest {
             // Ignore for test
         }
 
+        // Mock ResumeAnalysisService
+        ResumeAnalysisResult mockAnalysis = new ResumeAnalysisResult();
+        mockAnalysis.setLevel("mid");
+        mockAnalysis.setTechStack(Arrays.asList("Java", "Spring"));
+        mockAnalysis.setExperienceYears(5);
+        mockAnalysis.setMainSkillAreas(Arrays.asList("Backend Development"));
+
         when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
-        when(mockFile.getInputStream()).thenReturn(Files.newInputStream(mockPath));
-        when(aiService.analyzeResumeContent(anyString())).thenReturn("Analysis result");
+        when(resumeAnalysisService.analyzeResumeWithOpenAI(anyString())).thenReturn(mockAnalysis);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"level\":\"mid\",\"techStack\":[\"Java\",\"Spring\"]}");
         when(knowledgeBaseRepository.save(any(KnowledgeBase.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
 
         resumeService.analyzeResume(resumeId, userId);
 
-        verify(aiService).analyzeResumeContent(anyString());
+        verify(resumeAnalysisService).analyzeResumeWithOpenAI(anyString());
         verify(knowledgeBaseRepository, atLeastOnce()).save(any(KnowledgeBase.class));
         verify(resumeRepository).save(testResume);
 
         assertTrue(testResume.getAnalyzed());
-        assertEquals("Analysis result", testResume.getAnalysisResult());
+        assertNotNull(testResume.getAnalysisResult());
+        assertNotNull(testResume.getAnalysisData());
 
         // Clean up
         try {
@@ -265,8 +281,19 @@ class ResumeServiceTest {
     }
 
     @Test
-    void testMarkAsAnalyzed() {
+    void testMarkAsAnalyzed() throws Exception {
+        // Mock ResumeAnalysisService for analyzeResume call
+        ResumeAnalysisResult mockAnalysis = new ResumeAnalysisResult();
+        mockAnalysis.setLevel("mid");
+        mockAnalysis.setTechStack(Arrays.asList("Java", "Spring"));
+        mockAnalysis.setExperienceYears(5);
+        mockAnalysis.setMainSkillAreas(Arrays.asList("Backend Development"));
+
         when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
+        when(resumeAnalysisService.analyzeResumeWithOpenAI(anyString())).thenReturn(mockAnalysis);
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"level\":\"mid\",\"techStack\":[\"Java\",\"Spring\"]}");
+        when(knowledgeBaseRepository.save(any(KnowledgeBase.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
         when(resumeRepository.save(any(UserResume.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
 

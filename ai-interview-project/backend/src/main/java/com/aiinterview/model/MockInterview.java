@@ -13,6 +13,9 @@ public class MockInterview {
     
     @Column(name = "user_id", nullable = false)
     private Long userId;
+
+    @Column(name = "resume_id")
+    private Long resumeId; // Associated resume for resume-based interviews
     
     @Column(name = "title", length = 255)
     private String title;
@@ -25,6 +28,9 @@ public class MockInterview {
     
     @Column(name = "language", length = 50)
     private String language;
+
+    @Column(name = "interview_type", length = 20)
+    private String interviewType = "general"; // "general" or "resume-based"
     
     @Column(name = "status", length = 50)
     private String status = "practice"; // practice/completed
@@ -79,6 +85,22 @@ public class MockInterview {
     
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getResumeId() {
+        return resumeId;
+    }
+
+    public void setResumeId(Long resumeId) {
+        this.resumeId = resumeId;
+    }
+
+    public String getInterviewType() {
+        return interviewType;
+    }
+
+    public void setInterviewType(String interviewType) {
+        this.interviewType = interviewType;
     }
     
     public String getTitle() {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Download, Trash2, FileText, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Upload, Download, Trash2, FileText, CheckCircle, ArrowLeft, X } from 'lucide-react';
 import LoadingSpinner from './common/LoadingSpinner';
 import EmptyState from './common/EmptyState';
 import ConfirmDialog from './common/ConfirmDialog';
@@ -13,6 +13,9 @@ const ResumePage = () => {
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [autoAnalyze, setAutoAnalyze] = useState(true);
+  const [analyzingResumeId, setAnalyzingResumeId] = useState(null);
+  const [analysisModal, setAnalysisModal] = useState(null);
   const { toasts, removeToast, success, error } = useToast();
 
   useEffect(() => {
@@ -58,6 +61,9 @@ const ResumePage = () => {
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
+
+      // Add autoAnalyze parameter
+      formData.append('autoAnalyze', autoAnalyze.toString());
 
       const response = await fetch('http://localhost:8080/api/user/resume', {
         method: 'POST',
@@ -137,6 +143,61 @@ const ResumePage = () => {
     }
   };
 
+  const handleAnalyze = async (resumeId) => {
+    try {
+      setAnalyzingResumeId(resumeId);
+      const accessToken = localStorage.getItem('accessToken');
+      const headers = {
+        'Authorization': accessToken ? `Bearer ${accessToken}` : undefined,
+      };
+
+      const response = await fetch(`http://localhost:8080/api/user/resume/${resumeId}/analyze`, {
+        method: 'POST',
+        headers
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        success('Resume analysis completed successfully');
+        loadResumes(); // Refresh the list
+        // Show analysis modal with results
+        if (data.analysisData) {
+          setAnalysisModal(data.analysisData);
+        }
+      } else {
+        error('Failed to analyze resume');
+      }
+    } catch (err) {
+      error('Error analyzing resume');
+    } finally {
+      setAnalyzingResumeId(null);
+    }
+  };
+
+  const handleViewAnalysis = async (resumeId) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const headers = {
+        'Authorization': accessToken ? `Bearer ${accessToken}` : undefined,
+      };
+
+      const response = await fetch(`http://localhost:8080/api/user/resume/${resumeId}/analysis`, { headers });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.analysisData) {
+          setAnalysisModal(data.analysisData);
+        } else {
+          error('Analysis data not available');
+        }
+      } else {
+        error('Failed to load analysis data');
+      }
+    } catch (err) {
+      error('Error loading analysis data');
+    }
+  };
+
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -161,17 +222,28 @@ const ResumePage = () => {
       
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl font-bold text-gray-800">My Resume</h2>
-        <label className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 cursor-pointer">
-          <Upload size={20} />
-          {uploading ? 'Uploading...' : 'Upload Resume'}
-          <input
-            type="file"
-            className="hidden"
-            onChange={handleUpload}
-            accept=".pdf,.doc,.docx"
-            disabled={uploading}
-          />
-        </label>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={autoAnalyze}
+              onChange={(e) => setAutoAnalyze(e.target.checked)}
+              className="rounded"
+            />
+            Auto-analyze after upload
+          </label>
+          <label className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 cursor-pointer">
+            <Upload size={20} />
+            {uploading ? 'Uploading...' : 'Upload Resume'}
+            <input
+              type="file"
+              className="hidden"
+              onChange={handleUpload}
+              accept=".pdf,.doc,.docx"
+              disabled={uploading}
+            />
+          </label>
+        </div>
       </div>
 
       {loading ? (
@@ -200,10 +272,24 @@ const ResumePage = () => {
                     </p>
                   </div>
                 </div>
-                {resume.analyzed && (
-                  <CheckCircle size={20} className="text-green-600" title="Analyzed" />
-                )}
+                <div className="flex items-center gap-2">
+                  {resume.analyzed ? (
+                    <CheckCircle size={20} className="text-green-600" title="Analyzed" />
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full" title="Not analyzed"></div>
+                  )}
+                </div>
               </div>
+
+              {/* Analysis summary */}
+              {resume.analyzed && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="text-sm text-green-800">
+                    <div className="font-medium">Analysis Complete</div>
+                    <div className="text-xs mt-1">Click "View Analysis" to see detailed results</div>
+                  </div>
+                </div>
+              )}
               
               <div className="flex gap-2 mt-4">
                 <button
@@ -213,6 +299,33 @@ const ResumePage = () => {
                   <Download size={16} />
                   Download
                 </button>
+                {resume.analyzed ? (
+                  <button
+                    onClick={() => handleViewAnalysis(resume.id)}
+                    className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 flex items-center justify-center gap-2 text-sm"
+                  >
+                    <FileText size={16} />
+                    View Analysis
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleAnalyze(resume.id)}
+                    disabled={analyzingResumeId === resume.id}
+                    className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                  >
+                    {analyzingResumeId === resume.id ? (
+                      <>
+                        <LoadingSpinner size="sm" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <FileText size={16} />
+                        Analyze
+                      </>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={() => setDeleteConfirm(resume.id)}
                   className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center justify-center gap-2 text-sm"
@@ -226,6 +339,79 @@ const ResumePage = () => {
               </p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Analysis Results Modal */}
+      {analysisModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Resume Analysis Results</h3>
+              <button
+                onClick={() => setAnalysisModal(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-sm font-medium text-blue-800">Experience Level</div>
+                    <div className="text-lg font-bold text-blue-900">{analysisModal.level || 'N/A'}</div>
+                  </div>
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="text-sm font-medium text-green-800">Years of Experience</div>
+                    <div className="text-lg font-bold text-green-900">{analysisModal.experienceYears || 'N/A'}</div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="text-sm font-medium text-purple-800 mb-2">Technical Skills</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(analysisModal.techStack || []).map((tech, index) => (
+                      <span key={index} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="text-sm font-medium text-yellow-800 mb-2">Main Skill Areas</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(analysisModal.mainSkillAreas || []).map((area, index) => (
+                      <span key={index} className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="text-sm font-medium text-gray-800 mb-2">Education</div>
+                  <div className="text-gray-900">{analysisModal.education || 'Not specified'}</div>
+                </div>
+
+                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                  <div className="text-sm font-medium text-indigo-800 mb-2">Professional Summary</div>
+                  <div className="text-indigo-900">{analysisModal.summary || 'No summary available'}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+              <button
+                onClick={() => setAnalysisModal(null)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

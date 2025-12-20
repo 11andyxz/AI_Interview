@@ -36,6 +36,9 @@ public class UserResume {
 
     @Column(name = "analysis_result", columnDefinition = "TEXT")
     private String analysisResult;
+
+    @Column(name = "analysis_data", columnDefinition = "JSON")
+    private String analysisData; // Structured analysis data (level, techStack, skills, etc.)
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -133,6 +136,14 @@ public class UserResume {
 
     public void setAnalysisResult(String analysisResult) {
         this.analysisResult = analysisResult;
+    }
+
+    public String getAnalysisData() {
+        return analysisData;
+    }
+
+    public void setAnalysisData(String analysisData) {
+        this.analysisData = analysisData;
     }
     
     public LocalDateTime getCreatedAt() {

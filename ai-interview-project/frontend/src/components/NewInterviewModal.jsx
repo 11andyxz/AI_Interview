@@ -5,6 +5,7 @@ import InterviewTemplateModal from './InterviewTemplateModal';
 
 const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   const [candidates, setCandidates] = useState([]);
+  const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     candidateId: '',
@@ -13,7 +14,9 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
     programmingLanguages: [],
     language: 'English',
     templateId: null,
-    questionSetId: null
+    questionSetId: null,
+    interviewType: 'general', // 'general' or 'resume-based'
+    resumeId: null
   });
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -24,6 +27,7 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   useEffect(() => {
     if (isOpen) {
       loadCandidates();
+      loadResumes();
     }
   }, [isOpen]);
 
@@ -60,6 +64,91 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
     }
   };
 
+  const loadResumes = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      const response = await fetch('http://localhost:8080/api/user/resume', { headers });
+      if (response.ok) {
+        const resumesData = await response.json();
+        // Filter only analyzed resumes for resume-based interviews
+        const analyzedResumes = resumesData.filter(resume => resume.analyzed);
+        setResumes(analyzedResumes);
+      }
+    } catch (err) {
+      console.error('Failed to load resumes:', err);
+      setResumes([]);
+    }
+  };
+
+  const handleInterviewTypeChange = (interviewType) => {
+    setFormData(prev => ({
+      ...prev,
+      interviewType,
+      // Reset fields when switching types
+      candidateId: interviewType === 'general' ? (candidates.length > 0 ? candidates[0].id : '') : '',
+      resumeId: interviewType === 'resume-based' ? (resumes.length > 0 ? resumes[0].id : null) : null,
+      positionType: '',
+      programmingLanguages: []
+    }));
+  };
+
+  const handleResumeChange = async (resumeId) => {
+    setFormData(prev => ({ ...prev, resumeId }));
+
+    if (resumeId) {
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+
+        const response = await fetch(`http://localhost:8080/api/user/resume/${resumeId}/analysis`, { headers });
+        if (response.ok) {
+          const analysisData = await response.json();
+
+          if (analysisData.analysisData) {
+            const analysis = analysisData.analysisData;
+
+            // Auto-fill position type and programming languages from resume analysis
+            setFormData(prev => ({
+              ...prev,
+              positionType: generatePositionTypeFromAnalysis(analysis),
+              programmingLanguages: analysis.techStack || []
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load resume analysis:', err);
+      }
+    }
+  };
+
+  const generatePositionTypeFromAnalysis = (analysis) => {
+    if (!analysis) return '';
+
+    const mainSkillAreas = analysis.mainSkillAreas || [];
+    if (mainSkillAreas.length > 0) {
+      return `${mainSkillAreas[0]} Developer`;
+    }
+
+    const techStack = analysis.techStack || [];
+    if (techStack.length > 0) {
+      return `${techStack[0]} Developer`;
+    }
+
+    return 'Software Developer';
+  };
+
   const availableLanguages = ['JavaScript', 'Python', 'Java', 'Kotlin', 'TypeScript', 'Go', 'C++', 'Ruby'];
 
   const toggleLanguage = (lang) => {
@@ -93,6 +182,14 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   };
 
   const handleSubmit = () => {
+    if (formData.interviewType === 'general' && !formData.candidateId) {
+      alert('Please select a candidate for general interviews');
+      return;
+    }
+    if (formData.interviewType === 'resume-based' && !formData.resumeId) {
+      alert('Please select a resume for resume-based interviews');
+      return;
+    }
     if (!formData.positionType || formData.programmingLanguages.length === 0) {
       alert('Please fill in required fields');
       return;
@@ -119,6 +216,37 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
 
         {/* Title */}
         <h2 className="text-2xl font-bold text-gray-800 mb-6">New Interview</h2>
+
+        {/* Interview Type Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Interview Type <span className="text-red-500">*</span>
+          </label>
+          <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="interviewType"
+                value="general"
+                checked={formData.interviewType === 'general'}
+                onChange={(e) => handleInterviewTypeChange(e.target.value)}
+                className="mr-2"
+              />
+              <span className="text-sm">General Interview</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="interviewType"
+                value="resume-based"
+                checked={formData.interviewType === 'resume-based'}
+                onChange={(e) => handleInterviewTypeChange(e.target.value)}
+                className="mr-2"
+              />
+              <span className="text-sm">Resume-based Interview</span>
+            </label>
+          </div>
+        </div>
 
         {/* Template Selection */}
         <div className="mb-6">
@@ -154,28 +282,61 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
 
         {/* Form */}
         <div className="space-y-5">
-          {/* Candidate Resume */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Interview Resume
-            </label>
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <LoadingSpinner size="sm" />
-                <span className="text-sm text-gray-500">Loading candidates...</span>
-              </div>
-            ) : (
-              <select
-                value={formData.candidateId}
-                onChange={(e) => setFormData({ ...formData, candidateId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-              >
-                {candidates.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            )}
-          </div>
+          {/* Candidate/Resume Selection */}
+          {formData.interviewType === 'general' ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Interview Candidate <span className="text-red-500">*</span>
+              </label>
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  <span className="text-sm text-gray-500">Loading candidates...</span>
+                </div>
+              ) : (
+                <select
+                  value={formData.candidateId}
+                  onChange={(e) => setFormData({ ...formData, candidateId: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                >
+                  {candidates.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Resume for Analysis <span className="text-red-500">*</span>
+              </label>
+              {resumes.length === 0 ? (
+                <div className="text-sm text-gray-500 p-3 border border-gray-300 rounded-lg">
+                  No analyzed resumes available. Please upload and analyze a resume first.
+                </div>
+              ) : (
+                <select
+                  value={formData.resumeId || ''}
+                  onChange={(e) => handleResumeChange(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                >
+                  <option value="">Select a resume...</option>
+                  {resumes.map(resume => (
+                    <option key={resume.id} value={resume.id}>
+                      {resume.fileName} (Analyzed)
+                    </option>
+                  ))}
+                </select>
+              )}
+              {formData.resumeId && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-sm text-blue-800">
+                    Resume selected. Position and technologies will be auto-filled based on analysis.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Custom Knowledge Base */}
           <div>

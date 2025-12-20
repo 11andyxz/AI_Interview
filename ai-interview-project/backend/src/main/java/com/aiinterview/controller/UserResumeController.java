@@ -64,17 +64,32 @@ public class UserResumeController {
     public ResponseEntity<Map<String, Object>> uploadResume(
             HttpServletRequest request,
             @RequestParam("file") MultipartFile file,
-            @RequestParam(required = false) String resumeText) {
+            @RequestParam(required = false) String resumeText,
+            @RequestParam(required = false, defaultValue = "false") boolean autoAnalyze) {
         Long userId = (Long) request.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
-        
+
         try {
             UserResume resume = resumeService.uploadResume(userId, file, resumeText);
+
+            // Auto-analyze if requested
+            if (autoAnalyze) {
+                try {
+                    resumeService.analyzeResume(resume.getId(), userId);
+                    // Re-fetch resume to get updated analysis data
+                    resume = resumeService.getResumeById(resume.getId(), userId).orElse(resume);
+                } catch (Exception e) {
+                    // Log error but don't fail the upload
+                    System.err.println("Auto-analysis failed for resume " + resume.getId() + ": " + e.getMessage());
+                }
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("resume", resume);
+            response.put("autoAnalyzed", autoAnalyze && resume.getAnalyzed());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
@@ -160,7 +175,7 @@ public class UserResumeController {
     }
     
     /**
-     * Analyze resume (generate knowledge base)
+     * Analyze resume using OpenAI (generate structured analysis and knowledge base)
      */
     @PostMapping("/{id}/analyze")
     public ResponseEntity<Map<String, Object>> analyzeResume(
@@ -170,14 +185,67 @@ public class UserResumeController {
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
-        
+
         try {
-            resumeService.markAsAnalyzed(id, userId);
-            // TODO: Implement actual resume analysis and knowledge base generation
+            resumeService.analyzeResume(id, userId);
+
+            // Get the updated resume with analysis data
+            var resumeOpt = resumeService.getResumeById(id, userId);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Resume analysis completed");
+            response.put("message", "Resume analysis completed successfully");
+
+            if (resumeOpt.isPresent()) {
+                UserResume resume = resumeOpt.get();
+                response.put("resume", resume);
+
+                // Include analysis data if available
+                var analysisOpt = resumeService.getResumeAnalysisData(id, userId);
+                if (analysisOpt.isPresent()) {
+                    response.put("analysisData", analysisOpt.get());
+                }
+            }
+
             return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Get resume analysis data
+     */
+    @GetMapping("/{id}/analysis")
+    public ResponseEntity<Map<String, Object>> getResumeAnalysis(
+            HttpServletRequest request,
+            @PathVariable Long id) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+
+        try {
+            var resumeOpt = resumeService.getResumeById(id, userId);
+            if (resumeOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            UserResume resume = resumeOpt.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put("resumeId", id);
+            response.put("analyzed", resume.getAnalyzed());
+            response.put("analysisResult", resume.getAnalysisResult());
+
+            // Include structured analysis data if available
+            var analysisOpt = resumeService.getResumeAnalysisData(id, userId);
+            if (analysisOpt.isPresent()) {
+                response.put("analysisData", analysisOpt.get());
+            } else if (!resume.getAnalyzed()) {
+                response.put("message", "Resume has not been analyzed yet");
+            }
+
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
