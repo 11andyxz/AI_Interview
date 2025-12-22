@@ -207,7 +207,7 @@ class InterviewTemplateServiceTest {
     void addQuestionsToSet_Success() {
         // Given
         List<String> existingQuestions = List.of("Question 1");
-        mockTemplate1.setQuestions(existingQuestions);
+        mockTemplate1.setQuestions(new java.util.ArrayList<>(existingQuestions));
 
         List<String> newQuestions = List.of("Question 2", "Question 3");
 
@@ -230,7 +230,7 @@ class InterviewTemplateServiceTest {
     void removeQuestionsFromSet_Success() {
         // Given
         List<String> existingQuestions = List.of("Question 1", "Question 2", "Question 3");
-        mockTemplate1.setQuestions(existingQuestions);
+        mockTemplate1.setQuestions(new java.util.ArrayList<>(existingQuestions));
 
         List<String> questionsToRemove = List.of("Question 2");
 
@@ -258,7 +258,7 @@ class InterviewTemplateServiceTest {
         template.setIsPublic(isPublic);
         template.setUserId(1L);
         template.setRoleTitle(name + " Role");
-        template.setQuestions(List.of("Sample question"));
+        template.setQuestions(new java.util.ArrayList<>(List.of("Sample question")));
         template.setUsageCount(0);
         return template;
     }

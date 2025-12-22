@@ -131,18 +131,23 @@ public class AudioService {
      */
     public void deleteRecording(Long recordingId, Long userId) throws IOException {
         Optional<InterviewRecording> recording = recordingRepository.findById(recordingId);
-        if (recording.isPresent() && recording.get().getUserId().equals(userId)) {
-            InterviewRecording rec = recording.get();
-
-            // Delete file from filesystem
-            Path filePath = Paths.get(rec.getFilePath());
-            if (Files.exists(filePath)) {
-                Files.delete(filePath);
-            }
-
-            // Delete record from database
-            recordingRepository.delete(rec);
+        if (recording.isEmpty()) {
+            throw new RuntimeException("Recording not found");
         }
+
+        InterviewRecording rec = recording.get();
+        if (!rec.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized: Cannot delete recording of another user");
+        }
+
+        // Delete file from filesystem
+        Path filePath = Paths.get(rec.getFilePath());
+        if (Files.exists(filePath)) {
+            Files.delete(filePath);
+        }
+
+        // Delete record from database
+        recordingRepository.delete(rec);
     }
 
     /**

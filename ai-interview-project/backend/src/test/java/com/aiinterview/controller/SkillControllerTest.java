@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import com.aiinterview.config.TestWebMvcConfig;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -18,6 +20,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestWebMvcConfig.class)
 @WebMvcTest(SkillController.class)
 class SkillControllerTest {
     
@@ -29,11 +32,17 @@ class SkillControllerTest {
 
     @MockBean
     private AuthInterceptor authInterceptor;
-    
+
+    @MockBean
+    private com.aiinterview.config.WebMvcConfig webMvcConfig;
+
+    @MockBean
+    private com.aiinterview.service.JwtService jwtService;
+
     private Map<String, Object> testProgress;
     private Map<String, Object> testRecommendations;
     private Map<String, Object> testTrends;
-    
+
     @BeforeEach
     void setUp() {
         testProgress = new HashMap<>();
@@ -52,13 +61,9 @@ class SkillControllerTest {
     @Test
     void testGetSkillProgress() throws Exception {
         when(skillTrackingService.getSkillProgress(100L)).thenReturn(testProgress);
-        when(authInterceptor.preHandle(any(), any(), any())).then(invocation -> {
-            HttpServletRequest request = invocation.getArgument(0);
-            request.setAttribute("userId", 100L);
-            return true;
-        });
 
         mockMvc.perform(get("/api/skills/progress")
+                .requestAttr("userId", 100L)
                 .header("Authorization", "Bearer valid.jwt.token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalSkills").value(10))
@@ -70,30 +75,22 @@ class SkillControllerTest {
     @Test
     void testGetSkillRecommendations() throws Exception {
         when(skillTrackingService.getSkillRecommendations(100L)).thenReturn(testRecommendations);
-        when(authInterceptor.preHandle(any(), any(), any())).then(invocation -> {
-            HttpServletRequest request = invocation.getArgument(0);
-            request.setAttribute("userId", 100L);
-            return true;
-        });
 
         mockMvc.perform(get("/api/skills/recommendations")
+                .requestAttr("userId", 100L)
                 .header("Authorization", "Bearer valid.jwt.token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.recommendedSkills").isArray());
 
         verify(skillTrackingService).getSkillRecommendations(100L);
     }
-    
+
     @Test
     void testGetSkillTrends() throws Exception {
         when(skillTrackingService.getSkillTrends(100L)).thenReturn(testTrends);
-        when(authInterceptor.preHandle(any(), any(), any())).then(invocation -> {
-            HttpServletRequest request = invocation.getArgument(0);
-            request.setAttribute("userId", 100L);
-            return true;
-        });
 
         mockMvc.perform(get("/api/skills/trends")
+                .requestAttr("userId", 100L)
                 .header("Authorization", "Bearer valid.jwt.token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.improvementRate").value(15.5))
@@ -101,18 +98,14 @@ class SkillControllerTest {
 
         verify(skillTrackingService).getSkillTrends(100L);
     }
-    
+
     @Test
     void testGetSkillProgress_Error() throws Exception {
         when(skillTrackingService.getSkillProgress(100L))
             .thenThrow(new RuntimeException("Service error"));
-        when(authInterceptor.preHandle(any(), any(), any())).then(invocation -> {
-            HttpServletRequest request = invocation.getArgument(0);
-            request.setAttribute("userId", 100L);
-            return true;
-        });
 
         mockMvc.perform(get("/api/skills/progress")
+                .requestAttr("userId", 100L)
                 .header("Authorization", "Bearer valid.jwt.token"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.error").exists());

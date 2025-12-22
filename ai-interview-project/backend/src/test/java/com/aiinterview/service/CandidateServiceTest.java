@@ -33,13 +33,17 @@ class CandidateServiceTest {
     private Candidate testCandidate;
     
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         testCandidate = new Candidate();
         testCandidate.setId(1);
         testCandidate.setName("John Doe");
         testCandidate.setEmail("john@example.com");
         testCandidate.setResumeText("Java developer with 5 years experience in Spring Boot");
         testCandidate.setSkills("[\"Java\", \"Spring Boot\", \"MySQL\"]");
+        
+        // Lenient stubbing to avoid UnnecessaryStubbingException in tests that don't use it
+        lenient().when(objectMapper.readValue(anyString(), any(com.fasterxml.jackson.core.type.TypeReference.class)))
+            .thenReturn(Arrays.asList("Java", "Spring Boot", "MySQL"));
     }
     
     @Test
@@ -81,8 +85,8 @@ class CandidateServiceTest {
         String positionType = "Backend Developer";
         String language = "English";
         
-        when(objectMapper.readValue(anyString(), any(com.fasterxml.jackson.core.type.TypeReference.class)))
-            .thenReturn(Arrays.asList("Java", "Spring Boot", "MySQL"));
+        // Already stubbed in setUp, but if we need specific return:
+        // when(objectMapper.readValue(...)).thenReturn(...);
         
         Map<String, Object> result = candidateService.buildKnowledgeBase(
             testCandidate, positionType, programmingLanguages, language
@@ -128,7 +132,7 @@ class CandidateServiceTest {
     void testBuildKnowledgeBase_WithInvalidJsonSkills() throws Exception {
         testCandidate.setSkills("invalid json");
         when(objectMapper.readValue(anyString(), any(com.fasterxml.jackson.core.type.TypeReference.class)))
-            .thenThrow(new Exception("Invalid JSON"));
+            .thenThrow(new com.fasterxml.jackson.core.JsonParseException(null, "Invalid JSON"));
         
         Map<String, Object> result = candidateService.buildKnowledgeBase(
             testCandidate, "Backend Developer", Arrays.asList("Java"), "English"

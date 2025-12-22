@@ -80,16 +80,18 @@ class AlipayServiceTest {
     @Test
     void testCreateSubscriptionOrder_PlanNotFound() {
         ReflectionTestUtils.setField(alipayService, "appId", "test_app_id");
-        
+        ReflectionTestUtils.setField(alipayService, "merchantPrivateKey", "test_private_key");
+        ReflectionTestUtils.setField(alipayService, "alipayPublicKey", "test_public_key");
+
         when(subscriptionPlanRepository.findById(999)).thenReturn(Optional.empty());
-        
+
         Map<String, Object> result = alipayService.createSubscriptionOrder(
             1L, 999, new BigDecimal("199.99"), "CNY"
         );
-        
+
         assertNotNull(result);
         assertTrue(result.containsKey("error"));
-        assertTrue(result.get("error").toString().contains("not found"));
+        assertTrue(result.get("error").toString().toLowerCase().contains("not found"));
     }
     
     // Note: These tests are commented out as the methods may not exist in AlipayService

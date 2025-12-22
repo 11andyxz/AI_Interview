@@ -4,6 +4,7 @@ import com.aiinterview.dto.CreateInterviewRequest;
 import com.aiinterview.model.*;
 import com.aiinterview.repository.InterviewRepository;
 import com.aiinterview.repository.UserRepository;
+import com.aiinterview.repository.UserResumeRepository;
 import com.aiinterview.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,9 @@ class InterviewFlowIntegrationTest extends BaseIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private UserResumeRepository userResumeRepository;
+
+    @Autowired
     private InterviewSessionService interviewSessionService;
 
     @Autowired
@@ -49,7 +53,7 @@ class InterviewFlowIntegrationTest extends BaseIntegrationTest {
         assertNotNull(user);
         assertNotNull(user.getId());
 
-        // Create interview via API
+        // Create interview via API - set both requestAttr and session attribute
         CreateInterviewRequest request = new CreateInterviewRequest();
         request.setCandidateId(1);
         request.setPositionType("Backend Java Developer");
@@ -62,7 +66,8 @@ class InterviewFlowIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(post("/api/interviews")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
-                .requestAttr("userId", user.getId()))
+                .requestAttr("userId", user.getId())
+                .sessionAttr("userId", user.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.interview").exists())
                 .andExpect(jsonPath("$.interview.title").value("Backend Java Developer"));
@@ -82,7 +87,8 @@ class InterviewFlowIntegrationTest extends BaseIntegrationTest {
 
         // Test getting interviews via API
         mockMvc.perform(get("/api/interviews")
-                .requestAttr("userId", user.getId()))
+                .requestAttr("userId", user.getId())
+                .sessionAttr("userId", user.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -93,10 +99,22 @@ class InterviewFlowIntegrationTest extends BaseIntegrationTest {
         String username = "resumeuser_" + System.currentTimeMillis();
         User user = userService.createUser(username, "password123");
 
+        // Create and save a resume first
+        UserResume resume = new UserResume();
+        resume.setUserId(user.getId());
+        resume.setFileName("test-resume.pdf");
+        resume.setOriginalFileName("test-resume.pdf");
+        resume.setFileType("application/pdf");
+        resume.setFileSize(1024L);
+        resume.setFilePath("/uploads/resumes/test-resume.pdf");
+        resume.setAnalyzed(true); // Mark as analyzed
+        resume.setAnalysisData("{}"); // Add empty JSON analysis
+        resume = userResumeRepository.save(resume);
+
         // Create interview with resume-based type
         CreateInterviewRequest request = new CreateInterviewRequest();
         request.setInterviewType("resume-based");
-        request.setResumeId(1L);
+        request.setResumeId(resume.getId());
         request.setPositionType("Full Stack Developer");
         request.setProgrammingLanguages(List.of("JavaScript", "React", "Node.js"));
         request.setLanguage("English");

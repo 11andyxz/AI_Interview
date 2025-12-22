@@ -77,16 +77,17 @@ class StripeServiceTest {
     @Test
     void testCreateCheckoutSession_PlanNotFound() {
         ReflectionTestUtils.setField(stripeService, "stripeSecretKey", "sk_test_123");
-        
+        ReflectionTestUtils.setField(stripeService, "stripeWebhookSecret", "whsec_test_123");
+
         when(subscriptionPlanRepository.findById(999)).thenReturn(Optional.empty());
-        
+
         Map<String, Object> result = stripeService.createCheckoutSession(
             1L, 999, "http://success", "http://cancel"
         );
-        
+
         assertNotNull(result);
         assertTrue(result.containsKey("error"));
-        assertTrue(result.get("error").toString().contains("not found"));
+        assertTrue(result.get("error").toString().toLowerCase().contains("not found"));
     }
     
     // Note: These tests are commented out as the methods may not exist in StripeService

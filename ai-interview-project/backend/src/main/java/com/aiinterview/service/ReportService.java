@@ -72,19 +72,19 @@ public class ReportService {
         report.put("conversationHistory", history);
 
         // Generate comprehensive feedback using OpenAI
+        String feedback = null;
         try {
             Map<String, Object> comprehensiveFeedback = generateComprehensiveFeedback(interview, history);
             report.put("comprehensiveFeedback", comprehensiveFeedback);
         } catch (Exception e) {
-            // Fallback to basic feedback
-            String feedback = interviewSessionService.buildFeedback(interviewId,
-                interview.getTitle() != null ? interview.getTitle() : "general");
-            report.put("feedback", feedback);
+            // Fallback to basic feedback - generate it once
         }
 
-        // Legacy feedback for backward compatibility
-        String feedback = interviewSessionService.buildFeedback(interviewId,
-            interview.getTitle() != null ? interview.getTitle() : "general");
+        // Legacy feedback for backward compatibility (generate only once)
+        if (feedback == null) {
+            feedback = interviewSessionService.buildFeedback(interviewId,
+                interview.getTitle() != null ? interview.getTitle() : "general");
+        }
         report.put("feedback", feedback);
 
         // Calculate statistics

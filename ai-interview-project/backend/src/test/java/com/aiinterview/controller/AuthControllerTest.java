@@ -35,7 +35,10 @@ class AuthControllerTest {
     
     @MockBean
     private JwtService jwtService;
-    
+
+    @MockBean
+    private com.aiinterview.service.SubscriptionService subscriptionService;
+
     @MockBean
     private com.aiinterview.service.ApiKeyConfigService apiKeyConfigService;
     

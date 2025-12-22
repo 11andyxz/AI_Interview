@@ -40,6 +40,7 @@ class ReportGenerationIntegrationTest extends BaseIntegrationTest {
         // Create and complete an interview
         Interview interview = new Interview();
         interview.setId("report-test-" + System.currentTimeMillis());
+        interview.setUserId(user.getId());
         interview.setCandidateId(1);
         interview.setTitle("Report Test Interview");
         interview.setStatus("Completed");
@@ -69,6 +70,7 @@ class ReportGenerationIntegrationTest extends BaseIntegrationTest {
         // Create completed interview
         Interview interview = new Interview();
         interview.setId("pdf-test-" + System.currentTimeMillis());
+        interview.setUserId(user.getId());
         interview.setCandidateId(1);
         interview.setTitle("PDF Report Test");
         interview.setStatus("Completed");
@@ -99,6 +101,7 @@ class ReportGenerationIntegrationTest extends BaseIntegrationTest {
         // Create completed interview
         Interview interview = new Interview();
         interview.setId("json-test-" + System.currentTimeMillis());
+        interview.setUserId(user.getId());
         interview.setCandidateId(1);
         interview.setTitle("JSON Report Test");
         interview.setStatus("Completed");
@@ -152,6 +155,7 @@ class ReportGenerationIntegrationTest extends BaseIntegrationTest {
         // Create interview with detailed data
         Interview interview = new Interview();
         interview.setId("complete-test-" + System.currentTimeMillis());
+        interview.setUserId(user.getId());
         interview.setCandidateId(1);
         interview.setTitle("Complete Report Test");
         interview.setStatus("Completed");

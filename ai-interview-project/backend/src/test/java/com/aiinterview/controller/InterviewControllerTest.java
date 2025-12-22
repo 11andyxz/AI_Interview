@@ -38,6 +38,9 @@ class InterviewControllerTest {
     private InterviewRepository interviewRepository;
 
     @Mock
+    private InterviewService interviewService;
+
+    @Mock
     private CandidateService candidateService;
 
     @Mock
@@ -54,6 +57,9 @@ class InterviewControllerTest {
 
     @Mock
     private AudioService audioService;
+
+    @Mock
+    private ResumeService resumeService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -86,14 +92,18 @@ class InterviewControllerTest {
         } catch (Exception e) {
             // ignore
         }
+
+        // Set up default mocks for InterviewService (lenient to avoid UnnecessaryStubbing exceptions)
+        lenient().when(interviewService.isInterviewOwnedByUser(anyString(), anyLong())).thenReturn(true);
+        lenient().when(interviewService.getInterviewsByUserId(anyLong())).thenReturn(List.of());
+        lenient().when(interviewService.getInterviewByIdAndUserId(anyString(), anyLong())).thenReturn(Optional.empty());
     }
 
     @Test
     void getInterviews_Success() throws Exception {
         // Given
         List<Interview> interviews = List.of(createMockInterview());
-        // Mock the service call - using a simplified approach
-        when(interviewRepository.findAll()).thenReturn(interviews);
+        when(interviewService.getInterviewsByUserId(1L)).thenReturn(interviews);
 
         // When & Then
         mockMvc.perform(get("/api/interviews")
@@ -132,7 +142,7 @@ class InterviewControllerTest {
     void getInterviewById_Success() throws Exception {
         // Given
         Interview interview = createMockInterview();
-        when(interviewRepository.findById("test-id")).thenReturn(java.util.Optional.of(interview));
+        when(interviewService.getInterviewByIdAndUserId("test-id", 1L)).thenReturn(Optional.of(interview));
 
         // When & Then
         mockMvc.perform(get("/api/interviews/test-id")
@@ -144,6 +154,7 @@ class InterviewControllerTest {
     void updateInterview_Success() throws Exception {
         // Given
         Interview interview = createMockInterview();
+        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
         when(interviewRepository.findById("test-id")).thenReturn(java.util.Optional.of(interview));
         when(interviewRepository.save(any(Interview.class))).thenReturn(interview);
 
@@ -161,6 +172,7 @@ class InterviewControllerTest {
     void deleteInterview_Success() throws Exception {
         // Given
         Interview interview = createMockInterview();
+        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
         when(interviewRepository.findById("test-id")).thenReturn(java.util.Optional.of(interview));
 
         // When & Then
@@ -178,6 +190,7 @@ class InterviewControllerTest {
             "totalQuestions", 10,
             "conversationHistory", List.of()
         );
+        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
         when(reportService.generateReport("test-id")).thenReturn(report);
 
         // When & Then
@@ -189,6 +202,11 @@ class InterviewControllerTest {
 
     @Test
     void getInterviewReportJson_Success() throws Exception {
+        // Given
+        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
+        Map<String, Object> report = Map.of("score", 85);
+        when(reportService.generateReport("test-id")).thenReturn(report);
+
         // When & Then
         mockMvc.perform(get("/api/interviews/test-id/report/json")
                 .requestAttr("userId", 1L))
@@ -230,7 +248,7 @@ class InterviewControllerTest {
     @Test
     void getInterview_NotFound_Returns404() throws Exception {
         // Given
-        when(interviewRepository.findById("non-existent-id")).thenReturn(Optional.empty());
+        when(interviewService.getInterviewByIdAndUserId("non-existent-id", 1L)).thenReturn(Optional.empty());
 
         // When & Then
         mockMvc.perform(get("/api/interviews/non-existent-id")
@@ -257,6 +275,7 @@ class InterviewControllerTest {
         // Given
         Interview inProgressInterview = createMockInterview();
         inProgressInterview.setStatus("In Progress");
+        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
         when(interviewRepository.findById("test-id")).thenReturn(Optional.of(inProgressInterview));
 
         // When & Then
@@ -268,7 +287,7 @@ class InterviewControllerTest {
     @Test
     void deleteInterview_NotFound_Returns404() throws Exception {
         // Given
-        when(interviewRepository.findById("non-existent-id")).thenReturn(Optional.empty());
+        when(interviewService.isInterviewOwnedByUser("non-existent-id", 1L)).thenReturn(false);
 
         // When & Then
         mockMvc.perform(delete("/api/interviews/non-existent-id")
@@ -302,7 +321,7 @@ class InterviewControllerTest {
     @Test
     void getAllInterviews_EmptyList_ReturnsEmptyArray() throws Exception {
         // Given
-        when(interviewRepository.findAll()).thenReturn(List.of());
+        when(interviewService.getInterviewsByUserId(1L)).thenReturn(List.of());
 
         // When & Then
         mockMvc.perform(get("/api/interviews")
@@ -315,6 +334,7 @@ class InterviewControllerTest {
     @Test
     void downloadInterviewReport_Success() throws Exception {
         // Given
+        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
         byte[] pdfData = "PDF content".getBytes();
         when(pdfReportService.generatePdfReport("test-id")).thenReturn(pdfData);
 

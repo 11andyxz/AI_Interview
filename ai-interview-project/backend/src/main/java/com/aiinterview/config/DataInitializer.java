@@ -4,9 +4,11 @@ import com.aiinterview.model.User;
 import com.aiinterview.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("!test")
 public class DataInitializer implements CommandLineRunner {
 
     @Autowired

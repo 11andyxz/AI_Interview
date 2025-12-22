@@ -184,8 +184,10 @@ public class CustomQuestionSetService {
         CustomQuestionSet set = questionSet.get();
         List<String> existingQuestions = set.getQuestions();
         if (existingQuestions != null) {
-            existingQuestions.removeAll(questionsToRemove);
-            set.setQuestions(existingQuestions);
+            // Create a mutable copy to avoid UnsupportedOperationException
+            List<String> questionsList = new ArrayList<>(existingQuestions);
+            questionsList.removeAll(questionsToRemove);
+            set.setQuestions(questionsList);
         }
 
         return questionSetRepository.save(set);

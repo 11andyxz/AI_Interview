@@ -111,6 +111,7 @@ class AudioServiceTest {
         byte[] audioData = "audio content".getBytes();
         InterviewRecording savedRecording = new InterviewRecording();
         savedRecording.setId(1L);
+        savedRecording.setDurationSeconds(120);
         when(recordingRepository.save(any(InterviewRecording.class))).thenReturn(savedRecording);
 
         // When

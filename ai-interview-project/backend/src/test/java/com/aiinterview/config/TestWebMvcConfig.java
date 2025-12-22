@@ -5,7 +5,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,14 +14,14 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 @TestConfiguration
 public class TestWebMvcConfig {
-    
+
     @Bean
     @Primary
     public RedisConnectionFactory testRedisConnectionFactory() {
         // Return a mock RedisConnectionFactory for tests
         return Mockito.mock(RedisConnectionFactory.class);
     }
-    
+
     @Bean
     @Primary
     @SuppressWarnings("unchecked")
@@ -33,7 +32,7 @@ public class TestWebMvcConfig {
         Mockito.when(mockTemplate.opsForValue()).thenReturn(mockValueOps);
         return mockTemplate;
     }
-    
+
     @Bean
     @Primary
     public WebClient testOpenAiWebClient() {

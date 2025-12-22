@@ -36,9 +36,9 @@ class WebSocketControllerTest {
     
     @InjectMocks
     private WebSocketController webSocketController;
-    
+
     private TranscriptMessage testMessage;
-    
+
     @BeforeEach
     void setUp() {
         testMessage = new TranscriptMessage();
