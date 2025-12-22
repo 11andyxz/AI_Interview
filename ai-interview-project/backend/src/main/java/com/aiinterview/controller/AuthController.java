@@ -4,7 +4,6 @@ import com.aiinterview.model.User;
 import com.aiinterview.service.JwtService;
 import com.aiinterview.service.SubscriptionService;
 import com.aiinterview.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +25,6 @@ public class AuthController {
 
     @Autowired
     private SubscriptionService subscriptionService;
-
-    // Debug endpoint to check path
-    @RequestMapping("/**")
-    public ResponseEntity<String> debug(HttpServletRequest request) {
-        System.out.println("Received request: " + request.getMethod() + " " + request.getRequestURI());
-        return ResponseEntity.ok("Received: " + request.getRequestURI());
-    }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {

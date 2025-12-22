@@ -29,3 +29,41 @@ yarn-error.log*
 # Cursor
 .cursor/
 
+# Test output files
+test_output*.txt
+test_results*.txt
+test_run*.txt
+test_final_status.txt
+final_test_results.txt
+test_sprint.txt
+
+# Test reports (temporary)
+TEST_FIX_*.md
+TEST_OPENAI.md
+FINAL_TEST_SUMMARY.md
+TEST_FIX_STATUS.md
+TEST_FIX_PROGRESS_REPORT.md
+COMPREHENSIVE_TEST_REPORT.md
+STARTUP_SUCCESS_REPORT.md
+IMPLEMENTATION_REPORT.md
+IMPLEMENTATION_SUMMARY.md
+
+# Test report directories
+playwright-report/
+test-results/
+
+# Backup files
+*.bak
+
+# Log files
+*.log
+frontend.log
+
+# Uploads (user-generated content)
+uploads/
+**/uploads/**
+
+# Temporary test scripts
+quick-test-*.sh
+test-*-integration.sh
+

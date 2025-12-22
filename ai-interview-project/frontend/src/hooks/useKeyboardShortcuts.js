@@ -24,10 +24,19 @@ export const KEYBOARD_SHORTCUTS = {
 
 // Utility function to check if event matches shortcut
 export const matchesShortcut = (event, shortcut) => {
+  // Guard against undefined values
+  if (!event || !shortcut || !event.key || !shortcut.key) {
+    return false;
+  }
+
   const { key, ctrl = false, shift = false, alt = false, meta = false } = shortcut;
 
+  // Convert keys to lowercase for comparison, handling special keys
+  const eventKey = event.key.toLowerCase();
+  const shortcutKey = key.toLowerCase();
+
   return (
-    event.key.toLowerCase() === key.toLowerCase() &&
+    eventKey === shortcutKey &&
     event.ctrlKey === ctrl &&
     event.shiftKey === shift &&
     event.altKey === alt &&
@@ -138,6 +147,10 @@ export const useGlobalShortcuts = (handlers = {}) => {
 
 // Utility functions
 export const formatShortcut = (shortcut) => {
+  if (!shortcut || !shortcut.key) {
+    return '';
+  }
+
   const parts = [];
 
   if (shortcut.ctrl) parts.push('Ctrl');

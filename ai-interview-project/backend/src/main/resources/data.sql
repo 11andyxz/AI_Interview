@@ -1,6 +1,8 @@
--- Insert test user (only if not exists)
+-- Insert test user with BCrypt encrypted password (only if not exists)
+-- Password: 123456
+-- Note: If user already exists with plain text password, it needs to be updated via DataInitializer or manually
 INSERT IGNORE INTO `user` (`username`, `password`) 
-VALUES ('test', '123456');
+VALUES ('test', '$2a$10$Y7/QSWztMrGrys099pDDzuo.BifShDoCl.H9d82muW5aWQ9HkSXUu');
 
 -- Insert default API key for OpenAI (only if not exists)
 INSERT IGNORE INTO `api_key_config` (`service_name`, `api_key`, `is_active`)

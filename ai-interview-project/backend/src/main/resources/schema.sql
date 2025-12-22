@@ -13,8 +13,10 @@ CREATE TABLE `user` (
     INDEX `idx_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Insert test user with BCrypt encrypted password
+-- Password: 123456
 INSERT INTO `user` (`username`, `password`) 
-VALUES ('test', '123456');
+VALUES ('test', '$2a$10$Y7/QSWztMrGrys099pDDzuo.BifShDoCl.H9d82muW5aWQ9HkSXUu');
 
 -- Candidate table
 DROP TABLE IF EXISTS `candidate`;
