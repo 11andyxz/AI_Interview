@@ -88,16 +88,23 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   };
 
   const handleInterviewTypeChange = (interviewType) => {
+    const defaultResumeId = resumes.length > 0 ? parseInt(resumes[0].id, 10) : null;
+
     setFormData(prev => ({
       ...prev,
       interviewType,
       // Reset fields when switching types
       candidateId: interviewType === 'general' ? (candidates.length > 0 ? candidates[0].id : '') : '',
-      resumeId: interviewType === 'resume-based' ? (resumes.length > 0 ? resumes[0].id : null) : null,
+      resumeId: interviewType === 'resume-based' ? defaultResumeId : null,
       positionType: '',
       programmingLanguages: []
     }));
-    
+
+    // If switching to resume-based and we have a default resume, load its analysis
+    if (interviewType === 'resume-based' && defaultResumeId) {
+      handleResumeChange(defaultResumeId);
+    }
+
     // If switching to general and no candidate selected, try to set default after candidates load
     if (interviewType === 'general' && candidates.length > 0 && !formData.candidateId) {
       setFormData(prev => ({ ...prev, candidateId: candidates[0].id }));
@@ -105,9 +112,11 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   };
 
   const handleResumeChange = async (resumeId) => {
-    setFormData(prev => ({ ...prev, resumeId }));
+    // Convert to number if it's a string
+    const numericResumeId = resumeId ? parseInt(resumeId, 10) : null;
+    setFormData(prev => ({ ...prev, resumeId: numericResumeId }));
 
-    if (resumeId) {
+    if (numericResumeId) {
       try {
         const accessToken = localStorage.getItem('accessToken');
         const headers = {
@@ -117,7 +126,7 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
           headers['Authorization'] = `Bearer ${accessToken}`;
         }
 
-        const response = await fetch(`http://localhost:8080/api/user/resume/${resumeId}/analysis`, { headers });
+        const response = await fetch(`http://localhost:8080/api/user/resume/${numericResumeId}/analysis`, { headers });
         if (response.ok) {
           const analysisData = await response.json();
 
@@ -130,7 +139,11 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
               positionType: generatePositionTypeFromAnalysis(analysis),
               programmingLanguages: analysis.techStack || []
             }));
+          } else {
+            console.warn('Resume analysis data not available');
           }
+        } else {
+          console.error(`Failed to load resume analysis: HTTP ${response.status}`);
         }
       } catch (err) {
         console.error('Failed to load resume analysis:', err);

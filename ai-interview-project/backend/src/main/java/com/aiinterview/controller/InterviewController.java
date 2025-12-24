@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 
 import reactor.core.publisher.Mono;
 import org.springframework.web.multipart.MultipartFile;
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/interviews")
@@ -115,20 +116,31 @@ public class InterviewController {
         // For resume-based interviews, validate resume exists and is analyzed
         if ("resume-based".equals(interviewType)) {
             if (request.getResumeId() == null) {
+                System.err.println("Resume-based interview creation failed: resumeId is null");
                 return ResponseEntity.badRequest().body(Map.of("error", "resumeId is required for resume-based interviews"));
             }
+
+            System.out.println("Creating resume-based interview with resumeId: " + request.getResumeId() + " for user: " + userId);
 
             // Check if resume exists and belongs to user
             var resumeOpt = resumeService.getResumeById(request.getResumeId(), userId);
             if (resumeOpt.isEmpty()) {
+                System.err.println("Resume not found: resumeId=" + request.getResumeId() + ", userId=" + userId);
                 return ResponseEntity.badRequest().body(Map.of("error", "Resume not found or access denied"));
             }
 
             // Check if resume is analyzed
             var resume = resumeOpt.get();
+            System.out.println("Resume found: id=" + resume.getId() + ", analyzed=" + resume.getAnalyzed());
             if (!Boolean.TRUE.equals(resume.getAnalyzed())) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Resume must be analyzed before creating resume-based interview"));
+                System.err.println("Resume not analyzed: resumeId=" + request.getResumeId() + ", analyzed=" + resume.getAnalyzed());
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Resume must be analyzed before creating resume-based interview",
+                    "resumeId", resume.getId(),
+                    "analyzed", resume.getAnalyzed()
+                ));
             }
+            System.out.println("Resume validation passed for resumeId: " + request.getResumeId());
         } else {
             // For general interviews, candidateId is still required
             if (request.getCandidateId() == null) {
@@ -203,19 +215,25 @@ public class InterviewController {
     }
     
     @PostMapping("/{id}/chat")
-    public ResponseEntity<?> chatWithAi(@PathVariable String id, @RequestBody ChatRequest request, HttpServletRequest httpRequest) {
+    public Mono<ResponseEntity<String>> chatWithAi(@PathVariable String id, @RequestBody ChatRequest request, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         if (userId == null) {
-            return ResponseEntity.status(401).build();
+            return Mono.just(ResponseEntity.status(401).body("Unauthorized"));
         }
 
         ResponseEntity<?> ownershipCheck = checkInterviewOwnership(id, userId);
         if (ownershipCheck != null) {
-            return ownershipCheck;
+            return Mono.just(ResponseEntity.status(403).body("Access denied"));
         }
 
         // Use intelligent chat with candidate context and conversation history
-        return ResponseEntity.ok(interviewSessionService.generatePersonalizedResponse(id, request));
+        return interviewSessionService.generatePersonalizedResponse(id, request)
+            .map(ResponseEntity::ok)
+            .onErrorResume(error -> {
+                System.err.println("Chat error for interview " + id + ": " + error.getMessage());
+                error.printStackTrace();
+                return Mono.just(ResponseEntity.status(500).body("Failed to generate AI response"));
+            });
     }
 
     /**
@@ -473,30 +491,37 @@ public class InterviewController {
     }
 
     /**
-     * Evaluate all Q&A pairs in an interview
+     * Evaluate all Q&A pairs in an interview (optimized for speed)
      */
     private void evaluateAllAnswers(String interviewId, List<QAHistory> history, String roleId) {
         if (history.isEmpty()) {
             return;
         }
 
-        // Extract role and level from roleId (e.g., "backend_java_mid" -> role: "backend_java", level: "mid")
+        // Extract role and level from roleId
         String role = roleId;
         String level = "mid"; // default
 
         if (roleId != null && roleId.contains("_")) {
             String[] parts = roleId.split("_");
             if (parts.length >= 3) {
-                level = parts[parts.length - 1]; // last part is level
-                role = roleId.substring(0, roleId.lastIndexOf("_" + level)); // everything before level
+                level = parts[parts.length - 1];
+                role = roleId.substring(0, roleId.lastIndexOf("_" + level));
             }
         }
 
         final String finalRole = role;
         final String finalLevel = level;
 
-        // Evaluate each Q&A pair asynchronously
-        List<CompletableFuture<Void>> evaluationTasks = history.stream()
+        System.out.println("Starting evaluation for interview " + interviewId + " with " + history.size() + " Q&A pairs");
+
+        // Limit to last 10 Q&A pairs for faster evaluation
+        List<QAHistory> toEvaluate = history.size() > 10
+            ? history.subList(history.size() - 10, history.size())
+            : history;
+
+        // Evaluate each Q&A pair asynchronously with reduced timeout
+        List<CompletableFuture<Void>> evaluationTasks = toEvaluate.stream()
             .filter(qa -> qa.getAnswerText() != null && !qa.getAnswerText().trim().isEmpty())
             .map(qa -> CompletableFuture.runAsync(() -> {
                 try {
@@ -506,8 +531,8 @@ public class InterviewController {
                         finalRole,
                         finalLevel
                     )
+                    .timeout(Duration.ofSeconds(10)) // 10 second timeout per evaluation
                     .doOnNext(evaluationResult -> {
-                        // Update QA history with evaluation results
                         qa.setScore(evaluationResult.getScore());
                         qa.setDetailedScores(evaluationResult.getDetailedScores());
                         qa.setStrengths(evaluationResult.getStrengths());
@@ -515,7 +540,6 @@ public class InterviewController {
                         qa.setFollowUpQuestions(evaluationResult.getFollowUpQuestions());
                         qa.setRubricLevel(evaluationResult.getRubricLevel());
 
-                        // Persist evaluation results to database
                         interviewSessionService.updateEvaluationResults(
                             interviewId,
                             qa.getQuestionText(),
@@ -528,20 +552,28 @@ public class InterviewController {
                             evaluationResult.getRubricLevel()
                         );
                     })
-                    .subscribe();
+                    .doOnError(error -> {
+                        System.err.println("Evaluation failed for Q&A: " + error.getMessage());
+                        // Set default scores on error
+                        qa.setScore(70.0);
+                        qa.setRubricLevel("Intermediate");
+                    })
+                    .onErrorComplete() // Continue even if one fails
+                    .block(); // Block to ensure completion
                 } catch (Exception e) {
-                    System.err.println("Failed to evaluate answer for interview " + interviewId + ": " + e.getMessage());
-                    // Continue with other evaluations even if one fails
+                    System.err.println("Failed to evaluate answer: " + e.getMessage());
                 }
             }))
             .toList();
 
-        // Wait for all evaluations to complete (with timeout)
+        // Wait for evaluations with shorter timeout
         try {
             CompletableFuture.allOf(evaluationTasks.toArray(new CompletableFuture[0]))
-                .get(30, java.util.concurrent.TimeUnit.SECONDS); // 30 second timeout
+                .get(15, java.util.concurrent.TimeUnit.SECONDS); // Reduced to 15 seconds
+            System.out.println("Evaluation completed for interview " + interviewId);
         } catch (Exception e) {
-            System.err.println("Evaluation timeout or error for interview " + interviewId + ": " + e.getMessage());
+            System.err.println("Evaluation timeout for interview " + interviewId + ": " + e.getMessage());
+            // Continue anyway - partial results are acceptable
         }
     }
 

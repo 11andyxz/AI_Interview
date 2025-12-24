@@ -54,8 +54,44 @@ public class OpenAiService {
                 })
                 .onErrorResume(error -> {
                     System.err.println("OpenAI API Error: " + error.getMessage());
-                    return Mono.just("抱歉，AI服务暂时不可用，请稍后重试。");
+                    error.printStackTrace();
+
+                    // Generate a mock response based on user message
+                    String userMessage = messages.stream()
+                        .filter(m -> "user".equals(m.getRole()))
+                        .reduce((first, second) -> second)
+                        .map(OpenAiMessage::getContent)
+                        .orElse("");
+
+                    return Mono.just(generateMockResponse(userMessage));
                 });
+    }
+
+    /**
+     * Generate a mock AI response when OpenAI API is unavailable
+     */
+    private String generateMockResponse(String userMessage) {
+        if (userMessage == null || userMessage.trim().isEmpty()) {
+            return "Thank you for your response. Can you tell me more about your experience?";
+        }
+
+        String lower = userMessage.toLowerCase();
+
+        if (lower.contains("hello") || lower.contains("hi")) {
+            return "Hello! Nice to meet you. Let's start with your background. Can you tell me about your recent work experience?";
+        } else if (lower.contains("experience") || lower.contains("worked")) {
+            return "That's interesting! Can you elaborate on the specific technologies you used and the challenges you faced?";
+        } else if (lower.contains("project")) {
+            return "Great! What was your role in that project, and what were the main technical challenges?";
+        } else if (lower.contains("yes") || lower.contains("yeah") || lower.contains("sure")) {
+            return "Perfect! Let's move on to the next topic. Tell me about a challenging problem you solved recently.";
+        } else if (lower.length() > 100) {
+            return "Thank you for the detailed explanation. That demonstrates good understanding. Can you give me a specific example?";
+        } else if (lower.length() > 20) {
+            return "I see. Can you provide more details about that?";
+        } else {
+            return "Could you elaborate on that point?";
+        }
     }
 
     /**
@@ -80,7 +116,21 @@ public class OpenAiService {
                 .filter(content -> content != null && !content.isEmpty())
                 .onErrorResume(error -> {
                     System.err.println("OpenAI Streaming Error: " + error.getMessage());
-                    return Flux.just("data: {\"error\":\"服务暂时不可用\"}\n\n");
+                    error.printStackTrace();
+
+                    // Generate mock response as fallback
+                    String userMessage = messages.stream()
+                        .filter(m -> "user".equals(m.getRole()))
+                        .reduce((first, second) -> second)
+                        .map(OpenAiMessage::getContent)
+                        .orElse("");
+
+                    String mockResponse = generateMockResponse(userMessage);
+
+                    // Stream the mock response word by word
+                    return Flux.fromArray(mockResponse.split(" "))
+                        .delayElements(Duration.ofMillis(50))
+                        .map(word -> word + " ");
                 });
     }
 

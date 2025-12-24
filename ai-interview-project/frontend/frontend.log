@@ -2,103 +2,132 @@
 > ai-interview-frontend@0.1.0 start
 > react-scripts start
 
-(node:54391) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(node:9639) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:54391) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
-(node:54391) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:9639) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:9639) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 Starting the development server...
 
 Compiled with warnings.
 
 [eslint] 
-src/components/Dashboard.jsx
-  Line 19:3:  Nested block is redundant                                                                                          no-lone-blocks
-  Line 43:6:  React Hook useEffect has a missing dependency: 'loadInterviews'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/InterviewCard.jsx
-  Line 3:38:  'Eye' is defined but never used  no-unused-vars
-
 src/components/InterviewRoom.jsx
-  Line 107:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                        react-hooks/exhaustive-deps
-  Line 250:6:   React Hook useEffect has missing dependencies: 'isMicOn', 'isVideoOn', and 'startSubtitle'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-  Line 515:17:  'data' is assigned a value but never used                                                                                                       no-unused-vars
-
-src/components/KnowledgeBasePage.jsx
-  Line 21:6:  React Hook useEffect has a missing dependency: 'loadKnowledgeBases'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/MockInterviewPage.jsx
-  Line 2:55:  'MessageSquare' is defined but never used                                                                                                              no-unused-vars
-  Line 34:6:  React Hook useEffect has missing dependencies: 'loadMockInterviewDetail' and 'loadMockInterviews'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/NewInterviewModal.jsx
-  Line 209:15:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
-  Line 217:13:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
-
-src/components/NotesPage.jsx
-  Line 21:6:  React Hook useEffect has a missing dependency: 'loadNotes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/PaymentPage.jsx
-  Line 3:44:  'Clock' is defined but never used              no-unused-vars
-  Line 9:9:   'navigate' is assigned a value but never used  no-unused-vars
-
-src/components/ReportPage.jsx
-  Line 17:6:  React Hook useEffect has a missing dependency: 'loadReport'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/ResumePage.jsx
-  Line 18:6:  React Hook useEffect has a missing dependency: 'loadResumes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/UserProfilePage.jsx
-  Line 2:16:  'CreditCard' is defined but never used                                                                          no-unused-vars
-  Line 16:6:  React Hook useEffect has a missing dependency: 'loadProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/utils/auth.js
-  Line 3:10:  'API_BASE_URL' is defined but never used  no-unused-vars
+  Line 35:10:   'recordedChunks' is assigned a value but never used                                                                                                                 no-unused-vars
+  Line 37:10:   'recordingStartTime' is assigned a value but never used                                                                                                             no-unused-vars
+  Line 80:9:    'handleShowKeyboardHelp' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 159:13:  'formData' is assigned a value but never used                                                                                                                       no-unused-vars
+  Line 161:13:  'audioFile' is assigned a value but never used                                                                                                                      no-unused-vars
+  Line 264:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                                            react-hooks/exhaustive-deps
+  Line 340:6:   React Hook useEffect has missing dependencies: 'error' and 'success'. Either include them or remove the dependency array                                            react-hooks/exhaustive-deps
+  Line 428:6:   React Hook useEffect has missing dependencies: 'error', 'isMicOn', 'isVideoOn', 'startSubtitle', and 'success'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 721:17:  'data' is assigned a value but never used                                                                                                                           no-unused-vars
 
 Search for the keywords to learn more about each warning.
 To ignore, add // eslint-disable-next-line to the line before.
 
 WARNING in [eslint] 
-src/components/Dashboard.jsx
-  Line 19:3:  Nested block is redundant                                                                                          no-lone-blocks
-  Line 43:6:  React Hook useEffect has a missing dependency: 'loadInterviews'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/InterviewCard.jsx
-  Line 3:38:  'Eye' is defined but never used  no-unused-vars
-
 src/components/InterviewRoom.jsx
-  Line 107:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                        react-hooks/exhaustive-deps
-  Line 250:6:   React Hook useEffect has missing dependencies: 'isMicOn', 'isVideoOn', and 'startSubtitle'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-  Line 515:17:  'data' is assigned a value but never used                                                                                                       no-unused-vars
+  Line 35:10:   'recordedChunks' is assigned a value but never used                                                                                                                 no-unused-vars
+  Line 37:10:   'recordingStartTime' is assigned a value but never used                                                                                                             no-unused-vars
+  Line 80:9:    'handleShowKeyboardHelp' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 159:13:  'formData' is assigned a value but never used                                                                                                                       no-unused-vars
+  Line 161:13:  'audioFile' is assigned a value but never used                                                                                                                      no-unused-vars
+  Line 264:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                                            react-hooks/exhaustive-deps
+  Line 340:6:   React Hook useEffect has missing dependencies: 'error' and 'success'. Either include them or remove the dependency array                                            react-hooks/exhaustive-deps
+  Line 428:6:   React Hook useEffect has missing dependencies: 'error', 'isMicOn', 'isVideoOn', 'startSubtitle', and 'success'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 721:17:  'data' is assigned a value but never used                                                                                                                           no-unused-vars
 
-src/components/KnowledgeBasePage.jsx
-  Line 21:6:  React Hook useEffect has a missing dependency: 'loadKnowledgeBases'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
 
-src/components/MockInterviewPage.jsx
-  Line 2:55:  'MessageSquare' is defined but never used                                                                                                              no-unused-vars
-  Line 34:6:  React Hook useEffect has missing dependencies: 'loadMockInterviewDetail' and 'loadMockInterviews'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+[eslint] 
+src/components/InterviewRoom.jsx
+  Line 35:10:   'recordedChunks' is assigned a value but never used                                                                                                                 no-unused-vars
+  Line 37:10:   'recordingStartTime' is assigned a value but never used                                                                                                             no-unused-vars
+  Line 80:9:    'handleShowKeyboardHelp' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 159:13:  'formData' is assigned a value but never used                                                                                                                       no-unused-vars
+  Line 161:13:  'audioFile' is assigned a value but never used                                                                                                                      no-unused-vars
+  Line 264:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                                            react-hooks/exhaustive-deps
+  Line 340:6:   React Hook useEffect has missing dependencies: 'error' and 'success'. Either include them or remove the dependency array                                            react-hooks/exhaustive-deps
+  Line 428:6:   React Hook useEffect has missing dependencies: 'error', 'isMicOn', 'isVideoOn', 'startSubtitle', and 'success'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 721:17:  'data' is assigned a value but never used                                                                                                                           no-unused-vars
 
-src/components/NewInterviewModal.jsx
-  Line 209:15:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
-  Line 217:13:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
 
-src/components/NotesPage.jsx
-  Line 21:6:  React Hook useEffect has a missing dependency: 'loadNotes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+WARNING in [eslint] 
+src/components/InterviewRoom.jsx
+  Line 35:10:   'recordedChunks' is assigned a value but never used                                                                                                                 no-unused-vars
+  Line 37:10:   'recordingStartTime' is assigned a value but never used                                                                                                             no-unused-vars
+  Line 80:9:    'handleShowKeyboardHelp' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 159:13:  'formData' is assigned a value but never used                                                                                                                       no-unused-vars
+  Line 161:13:  'audioFile' is assigned a value but never used                                                                                                                      no-unused-vars
+  Line 264:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                                            react-hooks/exhaustive-deps
+  Line 340:6:   React Hook useEffect has missing dependencies: 'error' and 'success'. Either include them or remove the dependency array                                            react-hooks/exhaustive-deps
+  Line 428:6:   React Hook useEffect has missing dependencies: 'error', 'isMicOn', 'isVideoOn', 'startSubtitle', and 'success'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 721:17:  'data' is assigned a value but never used                                                                                                                           no-unused-vars
 
-src/components/PaymentPage.jsx
-  Line 3:44:  'Clock' is defined but never used              no-unused-vars
-  Line 9:9:   'navigate' is assigned a value but never used  no-unused-vars
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
 
-src/components/ReportPage.jsx
-  Line 17:6:  React Hook useEffect has a missing dependency: 'loadReport'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+[eslint] 
+src/components/InterviewRoom.jsx
+  Line 35:10:   'recordedChunks' is assigned a value but never used                                                                                                                 no-unused-vars
+  Line 37:10:   'recordingStartTime' is assigned a value but never used                                                                                                             no-unused-vars
+  Line 80:9:    'handleShowKeyboardHelp' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 159:13:  'formData' is assigned a value but never used                                                                                                                       no-unused-vars
+  Line 161:13:  'audioFile' is assigned a value but never used                                                                                                                      no-unused-vars
+  Line 264:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                                            react-hooks/exhaustive-deps
+  Line 362:6:   React Hook useEffect has missing dependencies: 'error' and 'success'. Either include them or remove the dependency array                                            react-hooks/exhaustive-deps
+  Line 450:6:   React Hook useEffect has missing dependencies: 'error', 'isMicOn', 'isVideoOn', 'startSubtitle', and 'success'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 743:17:  'data' is assigned a value but never used                                                                                                                           no-unused-vars
 
-src/components/ResumePage.jsx
-  Line 18:6:  React Hook useEffect has a missing dependency: 'loadResumes'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
 
-src/components/UserProfilePage.jsx
-  Line 2:16:  'CreditCard' is defined but never used                                                                          no-unused-vars
-  Line 16:6:  React Hook useEffect has a missing dependency: 'loadProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+WARNING in [eslint] 
+src/components/InterviewRoom.jsx
+  Line 35:10:   'recordedChunks' is assigned a value but never used                                                                                                                 no-unused-vars
+  Line 37:10:   'recordingStartTime' is assigned a value but never used                                                                                                             no-unused-vars
+  Line 80:9:    'handleShowKeyboardHelp' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 159:13:  'formData' is assigned a value but never used                                                                                                                       no-unused-vars
+  Line 161:13:  'audioFile' is assigned a value but never used                                                                                                                      no-unused-vars
+  Line 264:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                                            react-hooks/exhaustive-deps
+  Line 362:6:   React Hook useEffect has missing dependencies: 'error' and 'success'. Either include them or remove the dependency array                                            react-hooks/exhaustive-deps
+  Line 450:6:   React Hook useEffect has missing dependencies: 'error', 'isMicOn', 'isVideoOn', 'startSubtitle', and 'success'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 743:17:  'data' is assigned a value but never used                                                                                                                           no-unused-vars
 
-src/utils/auth.js
-  Line 3:10:  'API_BASE_URL' is defined but never used  no-unused-vars
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/InterviewRoom.jsx
+  Line 35:10:   'recordedChunks' is assigned a value but never used                                                                                                                 no-unused-vars
+  Line 37:10:   'recordingStartTime' is assigned a value but never used                                                                                                             no-unused-vars
+  Line 80:9:    'handleShowKeyboardHelp' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 159:13:  'formData' is assigned a value but never used                                                                                                                       no-unused-vars
+  Line 161:13:  'audioFile' is assigned a value but never used                                                                                                                      no-unused-vars
+  Line 264:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                                            react-hooks/exhaustive-deps
+  Line 362:6:   React Hook useEffect has missing dependencies: 'error' and 'success'. Either include them or remove the dependency array                                            react-hooks/exhaustive-deps
+  Line 450:6:   React Hook useEffect has missing dependencies: 'error', 'isMicOn', 'isVideoOn', 'startSubtitle', and 'success'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 743:17:  'data' is assigned a value but never used                                                                                                                           no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/InterviewRoom.jsx
+  Line 35:10:   'recordedChunks' is assigned a value but never used                                                                                                                 no-unused-vars
+  Line 37:10:   'recordingStartTime' is assigned a value but never used                                                                                                             no-unused-vars
+  Line 80:9:    'handleShowKeyboardHelp' is assigned a value but never used                                                                                                         no-unused-vars
+  Line 159:13:  'formData' is assigned a value but never used                                                                                                                       no-unused-vars
+  Line 161:13:  'audioFile' is assigned a value but never used                                                                                                                      no-unused-vars
+  Line 264:6:   React Hook useEffect has a missing dependency: 'error'. Either include it or remove the dependency array                                                            react-hooks/exhaustive-deps
+  Line 362:6:   React Hook useEffect has missing dependencies: 'error' and 'success'. Either include them or remove the dependency array                                            react-hooks/exhaustive-deps
+  Line 450:6:   React Hook useEffect has missing dependencies: 'error', 'isMicOn', 'isVideoOn', 'startSubtitle', and 'success'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 743:17:  'data' is assigned a value but never used                                                                                                                           no-unused-vars
 
 webpack compiled with 1 warning

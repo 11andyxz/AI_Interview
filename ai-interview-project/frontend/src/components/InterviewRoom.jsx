@@ -265,18 +265,27 @@ const InterviewRoom = () => {
 
   // Initialize WebSocket connection
   useEffect(() => {
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+
     const connectWebSocket = () => {
-      const socket = new SockJS('http://localhost:8080/ws');
-      const stompClient = new Client({
-        webSocketFactory: () => socket,
-        reconnectDelay: 5000,
-        heartbeatIncoming: 4000,
-        heartbeatOutgoing: 4000,
-        onConnect: () => {
-          console.log('WebSocket connected');
-          
-          // Subscribe to AI response stream
-          stompClient.subscribe(`/topic/interview/${id}/response`, (message) => {
+      try {
+        const socket = new SockJS('http://localhost:8080/ws');
+        const stompClient = new Client({
+          webSocketFactory: () => socket,
+          reconnectDelay: 5000,
+          heartbeatIncoming: 4000,
+          heartbeatOutgoing: 4000,
+          debug: (str) => {
+            console.log('STOMP Debug:', str);
+          },
+          onConnect: () => {
+            console.log('WebSocket connected successfully');
+            success('Connected to AI interviewer');
+            reconnectAttempts = 0;
+
+            // Subscribe to AI response stream
+            stompClient.subscribe(`/topic/interview/${id}/response`, (message) => {
             const response = JSON.parse(message.body);
             
             if (response.type === 'chunk') {
@@ -315,16 +324,32 @@ const InterviewRoom = () => {
             }
           });
         },
-        onStompError: (frame) => {
-          console.error('WebSocket STOMP error:', frame);
-        },
-        onWebSocketClose: () => {
-          console.log('WebSocket closed');
-        }
-      });
-      
-      stompClient.activate();
-      stompClientRef.current = stompClient;
+          onStompError: (frame) => {
+            console.error('WebSocket STOMP error:', frame);
+            error('WebSocket connection error. Using HTTP mode.');
+            reconnectAttempts++;
+
+            if (reconnectAttempts < maxReconnectAttempts) {
+              console.log(`Attempting WebSocket reconnect ${reconnectAttempts}/${maxReconnectAttempts}...`);
+              setTimeout(connectWebSocket, 3000 * reconnectAttempts);
+            } else {
+              console.log('Max reconnection attempts reached. Using HTTP fallback permanently.');
+            }
+          },
+          onWebSocketClose: (evt) => {
+            console.log('WebSocket closed:', evt);
+            if (!evt.wasClean) {
+              error('WebSocket disconnected. Messages will use HTTP fallback.');
+            }
+          }
+        });
+
+        stompClient.activate();
+        stompClientRef.current = stompClient;
+      } catch (err) {
+        console.error('Failed to create WebSocket connection:', err);
+        error('Failed to establish real-time connection. Using HTTP mode.');
+      }
     };
 
     connectWebSocket();
@@ -372,23 +397,41 @@ const InterviewRoom = () => {
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           const vid = localVideoRef.current;
-          vid.onloadedmetadata = () => {
-            vid.play().catch(() => {});
+
+          // Ensure video plays automatically
+          vid.onloadedmetadata = async () => {
+            try {
+              await vid.play();
+              console.log("Video stream started successfully");
+            } catch (playError) {
+              console.error("Video play error:", playError);
+              error("Camera started but video playback failed. Please check browser permissions.");
+            }
           };
         }
-        // 默认关闭实际视频画面展示，只用于权限与音轨控制
+
+        // Control audio/video tracks based on initial state
         if (!isVideoOn) {
           stream.getVideoTracks().forEach(t => (t.enabled = false));
         }
         if (!isMicOn) {
           stream.getAudioTracks().forEach(t => (t.enabled = false));
         }
-        // 自动启动字幕
+
+        // Auto-start subtitles after media is ready
         setTimeout(() => {
           startSubtitle();
-        }, 500);
+        }, 1000);
+
+        success("Camera and microphone initialized successfully");
       } catch (err) {
         console.error("getUserMedia error:", err);
+        const errorMessage = err.name === 'NotAllowedError'
+          ? "Camera/microphone permission denied. Please allow access in browser settings."
+          : err.name === 'NotFoundError'
+          ? "No camera or microphone found. Please connect a device."
+          : "Failed to access camera/microphone: " + err.message;
+        error(errorMessage);
       }
     };
     initMedia();
@@ -531,58 +574,74 @@ const InterviewRoom = () => {
 
     // Send via WebSocket
     if (stompClientRef.current && stompClientRef.current.connected) {
-      const transcriptMessage = {
-        interviewId: id,
-        text: userMessage,
-        language: interviewSession?.interview?.language || 'English',
-        isFinal: true
-      };
-      stompClientRef.current.publish({
-        destination: '/app/transcript',
-        body: JSON.stringify(transcriptMessage)
-      });
-    } else {
-      // Fallback to HTTP if WebSocket not connected
       try {
-        const accessToken = localStorage.getItem('accessToken');
-        const headers = {
-          'Content-Type': 'application/json',
-        };
-        if (accessToken) {
-          headers['Authorization'] = `Bearer ${accessToken}`;
-        }
-
-        const chatRequest = {
-          userMessage: userMessage,
+        const transcriptMessage = {
+          interviewId: id,
+          text: userMessage,
           language: interviewSession?.interview?.language || 'English',
-          recentHistory: conversationHistory.slice(-5)
+          isFinal: true
         };
-
-        const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(chatRequest)
+        stompClientRef.current.publish({
+          destination: '/app/transcript',
+          body: JSON.stringify(transcriptMessage)
         });
-
-        if (response.ok) {
-          const aiResponseText = await response.text();
-          setIsStreaming(false);
-          setMessages(prev => [...prev, {
-            sender: 'ai',
-            text: aiResponseText
-          }]);
-
-          const newQA = {
-            questionText: userMessage,
-            answerText: aiResponseText,
-            createdAt: new Date().toISOString()
-          };
-          setConversationHistory(prev => [...prev, newQA]);
-        }
-      } catch (error) {
-        console.error("Error calling AI service:", error);
-        setIsStreaming(false);
+        console.log("Sent voice message via WebSocket:", userMessage.substring(0, 50));
+      } catch (wsError) {
+        console.error("WebSocket send error:", wsError);
+        error("Failed to send via WebSocket, trying HTTP fallback...");
+        // Fall through to HTTP fallback
+        sendViaHttp(userMessage);
       }
+    } else {
+      console.log("WebSocket not connected, using HTTP fallback");
+      // Fallback to HTTP if WebSocket not connected
+      sendViaHttp(userMessage);
+    }
+  };
+
+  const sendViaHttp = async (userMessage) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      const chatRequest = {
+        userMessage: userMessage,
+        language: interviewSession?.interview?.language || 'English',
+        recentHistory: conversationHistory.slice(-5)
+      };
+
+      const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(chatRequest)
+      });
+
+      if (response.ok) {
+        const aiResponseText = await response.text();
+        setIsStreaming(false);
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: aiResponseText
+        }]);
+
+        const newQA = {
+          questionText: userMessage,
+          answerText: aiResponseText,
+          createdAt: new Date().toISOString()
+        };
+        setConversationHistory(prev => [...prev, newQA]);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+    } catch (httpError) {
+      console.error("Error calling AI service via HTTP:", httpError);
+      error("Failed to get AI response. Please try again.");
+      setIsStreaming(false);
     }
   };
 
@@ -852,15 +911,15 @@ const InterviewRoom = () => {
           
           {/* User Video Overlay (Picture-in-Picture style) */}
           <div className="absolute bottom-4 right-4 w-64 h-48 bg-black rounded-lg border-2 border-gray-700 flex items-center justify-center overflow-hidden">
-             {isVideoOn ? (
-               <video
-                 ref={localVideoRef}
-                 autoPlay
-                 muted
-                 playsInline
-                 className="w-full h-full object-cover bg-black"
-               />
-             ) : (
+             <video
+               ref={localVideoRef}
+               autoPlay
+               muted
+               playsInline
+               style={{ display: isVideoOn ? 'block' : 'none' }}
+               className="w-full h-full object-cover bg-black"
+             />
+             {!isVideoOn && (
                <div className="w-full h-full bg-gray-700 flex flex-col items-center justify-center text-gray-300 text-sm gap-2">
                  <VideoOff size={28} className="text-red-400" />
                  <span>Your Camera</span>

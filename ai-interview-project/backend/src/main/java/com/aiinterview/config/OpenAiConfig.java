@@ -20,9 +20,13 @@ public class OpenAiConfig {
 
     @Bean
     public WebClient openAiWebClient() {
-        // Get API key from database
+        // Get API key from database, use dummy if not found
         String apiKey = apiKeyConfigService.getActiveApiKey("openai")
-            .orElseThrow(() -> new IllegalStateException("OpenAI API key not found in database"));
+            .orElse("sk-dummy-key-for-testing");
+
+        if (apiKey.equals("sk-dummy-key-for-testing")) {
+            System.err.println("WARNING: Using dummy OpenAI API key. Please configure a real API key in database.");
+        }
 
         return WebClient.builder()
                 .baseUrl(apiUrl)
