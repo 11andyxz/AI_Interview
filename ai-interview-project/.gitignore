@@ -1,0 +1,24 @@
+# Eval results - exclude raw data, keep key reports
+eval/results/*.csv
+eval/results/*.json
+!eval/results/eval_report_20251222_202648.md
+!eval/results/eval_report_20251223_175342.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
