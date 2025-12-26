@@ -2,9 +2,13 @@ package com.aiinterview.service;
 
 import com.aiinterview.dto.ResumeAnalysisResult;
 import com.aiinterview.model.openai.OpenAiMessage;
+import com.aiinterview.validator.ResumeAnalysisValidator;
+import com.aiinterview.validator.ValidationResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,43 +22,79 @@ import java.util.List;
 @Service
 public class ResumeAnalysisService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ResumeAnalysisService.class);
+    private static final int MAX_RETRIES = 2;
+
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
+    private final ResumeAnalysisValidator validator;
 
     @Autowired
-    public ResumeAnalysisService(OpenAiService openAiService, ObjectMapper objectMapper) {
+    public ResumeAnalysisService(OpenAiService openAiService, ObjectMapper objectMapper, ResumeAnalysisValidator validator) {
         this.openAiService = openAiService;
         this.objectMapper = objectMapper;
+        this.validator = validator;
     }
 
     /**
-     * Analyze resume content using OpenAI and return structured results
+     * Analyze resume content using OpenAI with validation and retry logic
      */
     public ResumeAnalysisResult analyzeResumeWithOpenAI(String resumeText) {
         if (resumeText == null || resumeText.trim().isEmpty()) {
             throw new IllegalArgumentException("Resume text cannot be null or empty");
         }
 
-        try {
-            // Generate analysis prompt
-            String prompt = generateAnalysisPrompt(resumeText);
+        ValidationResult validationResult = null;
+        
+        // Try up to MAX_RETRIES times
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                logger.info("Resume analysis attempt {}/{}", attempt, MAX_RETRIES);
+                
+                String prompt = generateAnalysisPrompt(resumeText);
+                
+                String aiResponse = openAiService.simpleChat(
+                    "You are an expert HR professional and technical recruiter with extensive experience analyzing resumes.",
+                    prompt
+                ).block();
 
-            // Call OpenAI service
-            String aiResponse = openAiService.simpleChat(
-                "You are an expert HR professional and technical recruiter with extensive experience analyzing resumes.",
-                prompt
-            ).block(); // Block to get the result synchronously
+                if (aiResponse == null || aiResponse.trim().isEmpty()) {
+                    logger.warn("OpenAI returned empty response on attempt {}", attempt);
+                    continue;
+                }
 
-            if (aiResponse == null || aiResponse.trim().isEmpty()) {
-                throw new RuntimeException("OpenAI service returned empty response");
+                // Extract and validate JSON
+                String jsonResponse = extractJsonFromResponse(aiResponse);
+                validationResult = validator.validate(jsonResponse);
+                
+                if (validationResult.isValid()) {
+                    logger.info("Resume analysis successful on attempt {}", attempt);
+                    return parseAnalysisResult(jsonResponse);
+                } else {
+                    logger.warn("Validation failed on attempt {}: {}", attempt, validationResult.getErrorMessage());
+                }
+
+            } catch (Exception e) {
+                logger.error("Error on resume analysis attempt {}: {}", attempt, e.getMessage());
             }
-
-            // Parse the AI response into structured data
-            return parseAnalysisResult(aiResponse);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to analyze resume with OpenAI: " + e.getMessage(), e);
         }
+
+        // All retries failed - return fallback
+        logger.error("Resume analysis failed after {} attempts. Errors: {}", 
+                    MAX_RETRIES, validationResult != null ? validationResult.getErrorMessage() : "none");
+        return createFallbackResult();
+    }
+
+    private ResumeAnalysisResult createFallbackResult() {
+        ResumeAnalysisResult fallback = new ResumeAnalysisResult();
+        fallback.setLevel("junior");
+        fallback.setTechStack(Collections.emptyList());
+        fallback.setExperienceYears(0);
+        fallback.setSkills(Collections.emptyList());
+        fallback.setMainSkillAreas(Collections.emptyList());
+        fallback.setEducation("Not analyzed");
+        fallback.setSummary("Resume analysis temporarily unavailable. Please try again later.");
+        return fallback;
     }
 
     /**
@@ -93,12 +133,8 @@ public class ResumeAnalysisService {
     /**
      * Parse the AI response and extract structured data
      */
-    protected ResumeAnalysisResult parseAnalysisResult(String aiResponse) {
+    protected ResumeAnalysisResult parseAnalysisResult(String jsonResponse) {
         try {
-            // Clean the response - remove any markdown formatting or extra text
-            String jsonResponse = extractJsonFromResponse(aiResponse);
-
-            // Parse JSON
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             ResumeAnalysisResult result = new ResumeAnalysisResult();
@@ -115,7 +151,7 @@ public class ResumeAnalysisService {
             return result;
 
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse AI response as JSON: " + aiResponse, e);
+            throw new RuntimeException("Failed to parse validated JSON: " + jsonResponse, e);
         }
     }
 
