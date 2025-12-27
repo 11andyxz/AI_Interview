@@ -1,0 +1,93 @@
+<!--
+    实时语音对话系统 - Maven 依赖配置
+    请将以下依赖添加到您的 pom.xml <dependencies> 部分
+-->
+
+<!-- Spring Boot WebSocket -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-websocket</artifactId>
+</dependency>
+
+<!-- Spring Boot WebFlux (用于 OpenAI 流式调用) -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+
+<!-- Jackson JSON 处理 -->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+</dependency>
+
+<!-- SockJS 和 STOMP 支持 (前端通过 CDN 引入) -->
+<!-- 后端无需额外依赖，spring-boot-starter-websocket 已包含 -->
+
+<!-- Reactor Netty (WebFlux 底层) -->
+<dependency>
+    <groupId>io.projectreactor.netty</groupId>
+    <artifactId>reactor-netty</artifactId>
+</dependency>
+
+<!-- Lombok (可选，简化代码) -->
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <optional>true</optional>
+</dependency>
+
+<!-- 测试依赖 -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<dependency>
+    <groupId>io.projectreactor</groupId>
+    <artifactId>reactor-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!--
+    完整的 pom.xml 示例 (Spring Boot 3.x):
+-->
+<!--
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.aiinterview</groupId>
+    <artifactId>ai-interview-voice</artifactId>
+    <version>1.0.0</version>
+    <name>AI Interview Voice System</name>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+        上面列出的所有依赖...
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+-->
