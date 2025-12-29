@@ -81,6 +81,64 @@ const InterviewRoom = () => {
     setShowKeyboardHelp(true);
   };
 
+  const requestMediaPermissions = async () => {
+    try {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+      let stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      } catch (err) {
+        if (err && err.name === 'NotFoundError') {
+          // Fallback to audio-only if camera is unavailable.
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        } else {
+          throw err;
+        }
+      }
+      localStreamRef.current = stream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+        const vid = localVideoRef.current;
+
+        // Ensure video plays automatically
+        vid.onloadedmetadata = async () => {
+          try {
+            await vid.play();
+            console.log("Video stream started successfully");
+          } catch (playError) {
+            console.error("Video play error:", playError);
+            error("Camera started but video playback failed. Please check browser permissions.");
+          }
+        };
+      }
+
+      // Control audio/video tracks based on initial state
+      if (!isVideoOn) {
+        stream.getVideoTracks().forEach(t => (t.enabled = false));
+      }
+      if (!isMicOn) {
+        stream.getAudioTracks().forEach(t => (t.enabled = false));
+      }
+
+      // Auto-start subtitles after media is ready
+      setTimeout(() => {
+        startSubtitle();
+      }, 1000);
+
+      success("Camera and microphone initialized successfully");
+    } catch (err) {
+      console.error("getUserMedia error:", err);
+      const errorMessage = err.name === 'NotAllowedError'
+        ? "Camera/microphone permission denied. Please allow access in browser settings."
+        : err.name === 'NotFoundError'
+        ? "No camera or microphone found. Please connect a device."
+        : "Failed to access camera/microphone: " + err.message;
+      error(errorMessage);
+    }
+  };
+
   // Setup keyboard shortcuts
   useInterviewShortcuts({
     onSend: handleSendMessageShortcut,
@@ -390,51 +448,7 @@ const InterviewRoom = () => {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const initMedia = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-        localStreamRef.current = stream;
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-          const vid = localVideoRef.current;
-
-          // Ensure video plays automatically
-          vid.onloadedmetadata = async () => {
-            try {
-              await vid.play();
-              console.log("Video stream started successfully");
-            } catch (playError) {
-              console.error("Video play error:", playError);
-              error("Camera started but video playback failed. Please check browser permissions.");
-            }
-          };
-        }
-
-        // Control audio/video tracks based on initial state
-        if (!isVideoOn) {
-          stream.getVideoTracks().forEach(t => (t.enabled = false));
-        }
-        if (!isMicOn) {
-          stream.getAudioTracks().forEach(t => (t.enabled = false));
-        }
-
-        // Auto-start subtitles after media is ready
-        setTimeout(() => {
-          startSubtitle();
-        }, 1000);
-
-        success("Camera and microphone initialized successfully");
-      } catch (err) {
-        console.error("getUserMedia error:", err);
-        const errorMessage = err.name === 'NotAllowedError'
-          ? "Camera/microphone permission denied. Please allow access in browser settings."
-          : err.name === 'NotFoundError'
-          ? "No camera or microphone found. Please connect a device."
-          : "Failed to access camera/microphone: " + err.message;
-        error(errorMessage);
-      }
-    };
-    initMedia();
+    requestMediaPermissions();
     return () => {
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach(t => t.stop());
@@ -1069,6 +1083,12 @@ const InterviewRoom = () => {
                 Start
               </button>
             )}
+            <button
+              onClick={requestMediaPermissions}
+              className="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-medium"
+            >
+              Request AV
+            </button>
             <span className="text-gray-400">{isPaused ? 'paused' : subtitleStatus}</span>
           </div>
         </div>
@@ -1094,4 +1114,3 @@ const InterviewRoom = () => {
 };
 
 export default InterviewRoom;
-
