@@ -482,18 +482,15 @@ const InterviewRoom = () => {
     }
   };
 
-  // Reset voice timer for auto-send
-  const resetVoiceTimer = () => {
-    if (voiceTimerRef.current) {
-      clearTimeout(voiceTimerRef.current);
+  const stopAllMedia = () => {
+    stopSubtitle();
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      stopRecording();
     }
-    voiceTimerRef.current = setTimeout(() => {
-      const currentText = subtitle.trim();
-      if (currentText.length > 10 && currentText !== lastSentTextRef.current) {
-        console.log("Auto-sending voice message due to timeout:", currentText);
-        handleSendVoiceMessage(currentText);
-      }
-    }, 3000); // 3 seconds of silence
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(t => t.stop());
+      localStreamRef.current = null;
+    }
   };
 
   const startSubtitle = () => {
@@ -511,17 +508,20 @@ const InterviewRoom = () => {
     rec.interimResults = true;
     rec.lang = 'en-US';
     rec.onresult = (event) => {
-      let text = "";
+      let interimText = "";
+      let finalText = "";
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        text += event.results[i][0].transcript;
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalText += transcript;
+        } else {
+          interimText += transcript;
+        }
       }
-      const trimmedText = text.trim();
-      setSubtitle(trimmedText);
-
-      // Auto-send logic - use pause detection (3 seconds of silence)
-      if (trimmedText.length > 0) {
-        // Reset timer for pause detection (will auto-send after 3 seconds of silence)
-        resetVoiceTimer();
+      const combinedText = `${finalText}${interimText}`.trim();
+      setSubtitle(combinedText);
+      if (finalText.trim().length > 0) {
+        handleSendVoiceMessage(finalText.trim());
       }
     };
     rec.onerror = (e) => {
@@ -546,8 +546,9 @@ const InterviewRoom = () => {
   const stopSubtitle = () => {
     setSubtitleStatus("off");
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      const rec = recognitionRef.current;
       recognitionRef.current = null;
+      rec.stop();
     }
     // Clear voice timer
     if (voiceTimerRef.current) {
@@ -556,19 +557,13 @@ const InterviewRoom = () => {
     }
   };
 
-  const handleSendVoiceMessage = async (voiceText) => {
-    if (!voiceText.trim()) return;
+  const sendUserMessage = async (userMessage, { fromVoice = false } = {}) => {
+    if (!userMessage.trim()) return;
 
-    const userMessage = voiceText.trim();
-
-    // Avoid sending duplicate messages
-    if (userMessage === lastSentTextRef.current) return;
-    lastSentTextRef.current = userMessage;
-
-    // Clear any pending timer
-    if (voiceTimerRef.current) {
-      clearTimeout(voiceTimerRef.current);
-      voiceTimerRef.current = null;
+    // Avoid sending duplicate voice messages
+    if (fromVoice && userMessage === lastSentTextRef.current) return;
+    if (fromVoice) {
+      lastSentTextRef.current = userMessage;
     }
 
     // Add user message to display
@@ -580,37 +575,17 @@ const InterviewRoom = () => {
     setQuestionCount(prev => prev + 1);
     updateProgress();
 
-    // Clear subtitle after sending
-    setSubtitle("");
-    setStreamingResponse('');
-    currentAiMessageRef.current = '';
-    setIsStreaming(true);
-
-    // Send via WebSocket
-    if (stompClientRef.current && stompClientRef.current.connected) {
-      try {
-        const transcriptMessage = {
-          interviewId: id,
-          text: userMessage,
-          language: interviewSession?.interview?.language || 'English',
-          isFinal: true
-        };
-        stompClientRef.current.publish({
-          destination: '/app/transcript',
-          body: JSON.stringify(transcriptMessage)
-        });
-        console.log("Sent voice message via WebSocket:", userMessage.substring(0, 50));
-      } catch (wsError) {
-        console.error("WebSocket send error:", wsError);
-        error("Failed to send via WebSocket, trying HTTP fallback...");
-        // Fall through to HTTP fallback
-        sendViaHttp(userMessage);
-      }
-    } else {
-      console.log("WebSocket not connected, using HTTP fallback");
-      // Fallback to HTTP if WebSocket not connected
-      sendViaHttp(userMessage);
+    if (fromVoice) {
+      setSubtitle("");
     }
+
+    await sendViaHttp(userMessage);
+  };
+
+  const handleSendVoiceMessage = async (voiceText) => {
+    const userMessage = voiceText.trim();
+    if (!userMessage) return;
+    await sendUserMessage(userMessage, { fromVoice: true });
   };
 
   const sendViaHttp = async (userMessage) => {
@@ -637,7 +612,6 @@ const InterviewRoom = () => {
 
       if (response.ok) {
         const aiResponseText = await response.text();
-        setIsStreaming(false);
         setMessages(prev => [...prev, {
           sender: 'ai',
           text: aiResponseText
@@ -650,12 +624,21 @@ const InterviewRoom = () => {
         };
         setConversationHistory(prev => [...prev, newQA]);
       } else {
-        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+        console.error("Failed to get AI response:", response.status);
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: "抱歉，我暂时无法处理您的回答。请稍后再试。"
+        }]);
       }
     } catch (httpError) {
       console.error("Error calling AI service via HTTP:", httpError);
       error("Failed to get AI response. Please try again.");
-      setIsStreaming(false);
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          sender: 'ai',
+          text: "(离线模式) 这是个很有趣的观点。你能详细说明一下吗？"
+        }]);
+      }, 1500);
     }
   };
 
@@ -664,72 +647,8 @@ const InterviewRoom = () => {
 
     const userMessage = inputText.trim();
 
-    // Add user message to display
-    const newMessages = [...messages, { sender: 'user', text: userMessage }];
-    setMessages(newMessages);
     setInputText("");
-
-    // Update real-time feedback
-    const score = calculateRealtimeScore(userMessage);
-    setCurrentScore(score);
-    setQuestionCount(prev => prev + 1);
-    updateProgress();
-
-    try {
-      // Build ChatRequest object
-      const chatRequest = {
-        userMessage: userMessage,
-        language: interviewSession?.interview?.language || 'English',
-        recentHistory: conversationHistory.slice(-5) // Send last 5 QA pairs for context
-      };
-
-      // Call Backend/AI Service with ChatRequest
-      const accessToken = localStorage.getItem('accessToken');
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(`http://localhost:8080/api/interviews/${id}/chat`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(chatRequest)
-      });
-
-      if (response.ok) {
-        const aiResponseText = await response.text();
-        setMessages(prev => [...prev, { 
-          sender: 'ai', 
-          text: aiResponseText 
-        }]);
-
-        // Update conversation history
-        const newQA = {
-          questionText: userMessage,
-          answerText: aiResponseText,
-          createdAt: new Date().toISOString()
-        };
-        setConversationHistory(prev => [...prev, newQA]);
-      } else {
-        console.error("Failed to get AI response:", response.status);
-        // Fallback message
-        setMessages(prev => [...prev, {
-          sender: 'ai',
-          text: "抱歉，我暂时无法处理您的回答。请稍后再试。"
-        }]);
-      }
-    } catch (error) {
-      console.error("Error calling AI service:", error);
-      // Fallback for demo if backend is not running
-      setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          sender: 'ai', 
-          text: "(离线模式) 这是个很有趣的观点。你能详细说明一下吗？"
-        }]);
-      }, 1500);
-    }
+    await sendUserMessage(userMessage);
   };
 
   const handleEndInterview = () => {
@@ -757,6 +676,7 @@ const InterviewRoom = () => {
           const data = await response.json();
           success('Interview ended successfully. Report generated.');
           
+          stopAllMedia();
           // Close WebSocket connection
           if (stompClientRef.current) {
             stompClientRef.current.deactivate();
