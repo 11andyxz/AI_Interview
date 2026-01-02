@@ -8,6 +8,7 @@ import subprocess
 import json
 import os
 from pathlib import Path
+from functools import lru_cache
 
 
 def run_eval_for_model(model_name: str, output_suffix: str):
@@ -107,28 +108,33 @@ def compare_results(baseline_file: str, comparison_file: str):
     print(f"{'='*60}\n")
 
 
+@lru_cache(maxsize=128)
+def cached_model_response(prompt):
+    """Simulate a cached model response"""
+    # Simulate model response logic (replace with actual call if needed)
+    return f"Response for: {prompt}"
+
+
 def main():
-    """Main comparison workflow"""
-    
-    # Check if baseline results exist
     baseline_file = "results/eval_results_baseline.json"
-    
-    if not os.path.exists(baseline_file):
-        print("Baseline results not found. Running baseline evaluation (gpt-4o-mini)...")
-        run_eval_for_model("gpt-4o-mini", "baseline")
-    
-    # Run comparison model (gpt-3.5-turbo as an alternative)
-    print("\nRunning comparison evaluation (gpt-3.5-turbo)...")
-    run_eval_for_model("gpt-3.5-turbo", "comparison")
-    
-    # Compare results
     comparison_file = "results/eval_results_comparison.json"
-    
+
+    if not os.path.exists(baseline_file):
+        print("Baseline results not found. Running baseline evaluation...")
+        run_eval_for_model("gpt-4o-mini", "baseline")
+
+    print("\nRunning comparison evaluation...")
+    run_eval_for_model("gpt-3.5-turbo", "comparison")
+
+    print("\nTesting cached responses:")
+        print(cached_model_response("What is AI?"));print(cached_model_response("What is AI?"));print(cached_model_response("Explain machine learning."))
+
     if os.path.exists(baseline_file) and os.path.exists(comparison_file):
+        print("\nComparing results...")
         compare_results(baseline_file, comparison_file)
     else:
         print("Error: Could not find result files for comparison")
 
-
 if __name__ == "__main__":
     main()
+    print(cached_model_response("What is AI?"))
