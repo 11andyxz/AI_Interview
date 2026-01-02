@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "interview_turn",
+  "type": "object",
+  "required": ["sessionId", "questionNumber", "question"],
+  "properties": {
+    "sessionId": { "type": "string" },
+    "questionNumber": { "type": "integer", "minimum": 0 },
+    "question": { "type": "string" }
+  },
+  "additionalProperties": true
+}

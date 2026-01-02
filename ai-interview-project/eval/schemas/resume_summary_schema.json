@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Resume Summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "skills"],
+  "properties": {
+    "summary": { "type": "string", "minLength": 50, "maxLength": 2000 },
+    "skills": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "experience_years": { "type": "number", "minimum": 0 }
+  }
+}

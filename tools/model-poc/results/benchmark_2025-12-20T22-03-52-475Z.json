@@ -1,0 +1,82 @@
+{
+  "stats": {
+    "total_requests": 5,
+    "successful": 0,
+    "failed": 5,
+    "latency": {
+      "mean": null,
+      "min": null,
+      "max": null
+    }
+  },
+  "results": [
+    {
+      "prompt_id": 1,
+      "category": "introduction",
+      "input": [
+        {
+          "role": "user",
+          "content": "Hello, can you introduce yourself as an AI interviewer?"
+        }
+      ],
+      "error": "request to http://localhost:3001/api/chat failed, reason: ",
+      "timestamp": "2025-12-20T22:03:52.521Z"
+    },
+    {
+      "prompt_id": 2,
+      "category": "technical_question",
+      "input": [
+        {
+          "role": "user",
+          "content": "Can you explain the difference between @Component, @Repository, @Service, and @Controller annotations in Spring framework?"
+        }
+      ],
+      "error": "request to http://localhost:3001/api/chat failed, reason: ",
+      "timestamp": "2025-12-20T22:03:52.523Z"
+    },
+    {
+      "prompt_id": 3,
+      "category": "follow_up",
+      "input": [
+        {
+          "role": "user",
+          "content": "What is eventual consistency in distributed systems?"
+        },
+        {
+          "role": "assistant",
+          "content": "Eventual consistency means that in a distributed system, replicas may not be immediately consistent, but they will converge to the same state if no new updates are made."
+        },
+        {
+          "role": "user",
+          "content": "Can you give a practical example?"
+        }
+      ],
+      "error": "request to http://localhost:3001/api/chat failed, reason: ",
+      "timestamp": "2025-12-20T22:03:52.525Z"
+    },
+    {
+      "prompt_id": 4,
+      "category": "database",
+      "input": [
+        {
+          "role": "user",
+          "content": "Explain the difference between SQL and NoSQL databases."
+        }
+      ],
+      "error": "request to http://localhost:3001/api/chat failed, reason: ",
+      "timestamp": "2025-12-20T22:03:52.526Z"
+    },
+    {
+      "prompt_id": 5,
+      "category": "system_design",
+      "input": [
+        {
+          "role": "user",
+          "content": "How would you design a scalable chat application?"
+        }
+      ],
+      "error": "request to http://localhost:3001/api/chat failed, reason: ",
+      "timestamp": "2025-12-20T22:03:52.528Z"
+    }
+  ]
+}

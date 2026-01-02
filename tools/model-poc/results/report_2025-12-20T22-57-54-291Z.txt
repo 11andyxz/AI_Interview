@@ -1,0 +1,37 @@
+BENCHMARK REPORT
+============================================================
+
+Date: 12/20/2025, 6:00:52 PM
+Backend: local
+
+STATISTICS
+------------------------------------------------------------
+Total Requests: 5
+Success Rate: 100.00%
+
+LATENCY (ms)
+------------------------------------------------------------
+Mean:   34646.00
+Median: 39761.00
+Min:    10407
+Max:    43398
+P95:    43398
+
+SAMPLE RESPONSES
+------------------------------------------------------------
+
+Prompt 1 (introduction):
+Input: Hello, can you introduce yourself as an AI interviewer?...
+Output: Hello! I'm just an AI assistant designed to help facilitate and support conversations. My purpose is to provide helpful responses and answer questions to the best of my abilities based on the informat...
+Latency: 10407ms
+
+Prompt 2 (technical_question):
+Input: Can you explain the difference between @Component, @Repository, @Service, and @C...
+Output: Of course! In Spring Framework, these annotations are used to define different types of beans that play critical roles in your application's architecture. Here's a brief overview of each annotation:
+@...
+Latency: 39761ms
+
+Prompt 3 (follow_up):
+Input: Can you give a practical example?...
+Output: Sure! Let's say you have a distributed database with three replicas of a particular key-value store. A client makes an update to a value associated with that key, but the update is only acknowledged b...
+Latency: 43398ms

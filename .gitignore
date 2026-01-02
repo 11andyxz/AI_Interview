@@ -67,3 +67,12 @@ uploads/
 quick-test-*.sh
 test-*-integration.sh
 
+# Eval results (do not commit large result folders)
+ai-interview-project/eval/results/
+
+# Local model/server artifacts
+tools/
+
+# Temp/openapi artifacts
+tmp_*.json
+
