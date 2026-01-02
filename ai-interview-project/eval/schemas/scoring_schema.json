@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "scoring",
+  "type": "object",
+  "required": ["score"],
+  "properties": {
+    "score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string" },
+    "breakdown": { "type": "object" }
+  },
+  "additionalProperties": false
+}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Scoring Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["score", "rationale"],
+  "properties": {
+    "score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 10 },
+    "breakdown": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,4 @@
+{"prompt_id":"intv-001","output":"{\"answer\": \"我在上一家公司主要负责搜索功能的设计与实现，使用Elasticsearch完成索引建模、查询优化和性能调优，包括倒排索引配置与分词优化。曾通过调整mapping和analyzer将查询延迟从300ms降到120ms，并实现了基于评分的排序策略\", \"follow_up_question\": \"能描述一次你做过的查询优化的具体步骤吗？\", \"confidence\": 0.88, \"citations\": []}"}
+
+{"prompt_id":"intv-002","output":"{\"answer\": \"我有3年React开发经验，熟悉组件化开发、状态管理和性能优化。曾负责过项目的页面重构和性能调优\", \"follow_up_question\": \"你在使用Redux时如何组织store和减少不必要的re-render？\", \"confidence\": 0.75, \"citations\": []}"}
+{"prompt_id":"intv-003","output":"{\"answer\": \"我通常先与相关方沟通以明确需求和优先级，分解任务并设定可交付的小目标；遇到模糊点会用示例验证假设，并持续与产品沟通直到形成可实施的需求\", \"follow_up_question\": \"你能给出一个你曾用过的具体示例吗？\", \"confidence\": 0.82, \"citations\": []}"}

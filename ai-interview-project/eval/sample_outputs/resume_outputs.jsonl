@@ -1,0 +1,4 @@
+{"prompt_id":"rs-001","output":"{\"summary\": \"Backend engineer with 4 years experience in Java and Spring Boot, built REST APIs and services.\", \"skills\": [\"Java\", \"Spring Boot\", \"REST\"], \"experience_years\": 4}"}
+
+{"prompt_id":"rs-002","output":"{\"summary\": \"Full-stack engineer experienced in React and Node.js; focuses on pragmatic solutions.\", \"skills\": [\"JavaScript\", \"React\", \"Node.js\"], \"experience_years\": 3}"}
+{"prompt_id":"rs-003","output":"{\"summary\": \"Early-career engineer with strong internship experience and practical coding skills; seeks opportunities to expand full-time responsibilities and ownership.\", \"skills\": [\"Python\", \"Git\", \"Unit Testing\"], \"experience_years\": 1}"}

@@ -2,6 +2,7 @@ package com.aiinterview.service;
 
 import com.aiinterview.dto.ResumeAnalysisResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.aiinterview.validator.ResumeAnalysisValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,6 +18,9 @@ class ResumeAnalysisServiceTest {
     @Mock
     private OpenAiService openAiService;
 
+    @Mock
+    private ResumeAnalysisValidator validator;
+
     private ObjectMapper objectMapper;
     private ResumeAnalysisService resumeAnalysisService;
 
@@ -24,7 +28,7 @@ class ResumeAnalysisServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
-        resumeAnalysisService = new ResumeAnalysisService(openAiService, objectMapper);
+        resumeAnalysisService = new ResumeAnalysisService(openAiService, objectMapper, validator);
     }
 
     @Test
