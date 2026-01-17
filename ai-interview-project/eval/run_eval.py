@@ -1099,7 +1099,7 @@ class EvalRunner:
             'factuality_score', 'coherence_score',
             'error', 'timestamp',
             # Validator fields for traceability
-            'validator_run', 'validator_pass', 'validator_error_type', 'validator_error_info', 'validator_retried',
+            'validator_run', 'validator_pass', 'validator_error_type', 'validator_error_info', 'validator_retry_attempted', 'validator_retried',
             # Trace fields
             'endpoint', 'original_response', 'attempts'
         ]
@@ -1120,6 +1120,8 @@ class EvalRunner:
                 row['validator_pass'] = v.get('validator_pass', '')
                 row['validator_error_type'] = v.get('validator_error_type', '')
                 row['validator_error_info'] = v.get('validator_error_info', '')
+                # Historical: some runs used 'retry_attempted' flag. Fall back to 'retried' when absent.
+                row['validator_retry_attempted'] = v.get('retry_attempted', v.get('retried', False))
                 row['validator_retried'] = v.get('retried', False)
                 row['fallback_action'] = result.get('fallback_action', '')
                 writer.writerow(row)
