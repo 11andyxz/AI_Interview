@@ -1,6 +1,11 @@
 package com.aiinterview.service;
 
 import com.aiinterview.model.openai.OpenAiMessage;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.aiinterview.model.openai.OpenAiRequest;
 import com.aiinterview.model.openai.OpenAiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +21,13 @@ import java.util.List;
 
 @Service
 public class OpenAiService {
+    private static final Logger logger = LoggerFactory.getLogger(OpenAiService.class);
 
     @Autowired
     private WebClient openAiWebClient;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Value("${openai.model}")
     private String model;
@@ -53,8 +62,7 @@ public class OpenAiService {
                     return "";
                 })
                 .onErrorResume(error -> {
-                    System.err.println("OpenAI API Error: " + error.getMessage());
-                    error.printStackTrace();
+                    logger.error("OpenAI API Error: {}", error.getMessage(), error);
 
                     // Generate a mock response based on user message
                     String userMessage = messages.stream()
@@ -115,8 +123,7 @@ public class OpenAiService {
                 .map(this::parseStreamChunk)
                 .filter(content -> content != null && !content.isEmpty())
                 .onErrorResume(error -> {
-                    System.err.println("OpenAI Streaming Error: " + error.getMessage());
-                    error.printStackTrace();
+                    logger.error("OpenAI Streaming Error: {}", error.getMessage(), error);
 
                     // Generate mock response as fallback
                     String userMessage = messages.stream()
@@ -146,19 +153,54 @@ public class OpenAiService {
                 if (jsonData.equals("[DONE]")) {
                     return "";
                 }
-                // Simple parsing - in production, use proper JSON parsing
-                if (jsonData.contains("\"content\":\"")) {
-                    int start = jsonData.indexOf("\"content\":\"") + 11;
-                    int end = jsonData.indexOf("\"", start);
+                // Try robust JSON parsing first
+                try {
+                    JsonNode root = objectMapper.readTree(jsonData);
+                    String content = findContentNode(root);
+                    if (content != null) return content;
+                } catch (Exception ex) {
+                    // fall through to regex fallback below
+                }
+
+                // Fallback: quick string search for "content":"..."
+                int idx = jsonData.indexOf("\"content\":\"");
+                if (idx >= 0) {
+                    int start = idx + 11;
+                    int end = jsonData.indexOf('"', start);
                     if (end > start) {
                         return jsonData.substring(start, end);
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("Failed to parse chunk: " + e.getMessage());
+            logger.warn("Failed to parse chunk: {}", e.getMessage());
         }
         return "";
+    }
+
+    private String findContentNode(JsonNode node) {
+        if (node == null) return null;
+        if (node.has("content") && node.get("content").isTextual()) {
+            return node.get("content").asText();
+        }
+        // traverse arrays and objects
+        if (node.isObject()) {
+            for (String field : iterable(node.fieldNames())) {
+                JsonNode child = node.get(field);
+                String found = findContentNode(child);
+                if (found != null) return found;
+            }
+        } else if (node.isArray()) {
+            for (JsonNode child : node) {
+                String found = findContentNode(child);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
+    private Iterable<String> iterable(java.util.Iterator<String> it) {
+        return () -> it;
     }
 
     /**
