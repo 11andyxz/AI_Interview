@@ -1,0 +1,55 @@
+{
+  "endpoint": "resume_analysis",
+  "baseline_version": "v1.0",
+  "candidate_version": "v1.1",
+  "baseline_mean_quality": 0.8235120761502854,
+  "candidate_mean_quality": 0.8475445567330302,
+  "quality_change": 0.024032480582744764,
+  "quality_change_pct": 2.9182912162127175,
+  "p_value": 0.8684774348763784,
+  "is_statistically_significant": false,
+  "is_regression": false,
+  "recommendation": "REVIEW: Minor quality change detected. Manual review recommended.",
+  "timestamp": "2026-01-24T10:52:45.779663",
+  "benchmark_cases_count": 3,
+  "baseline_results": [
+    {
+      "case_id": "bench_resume_001",
+      "prompt": "Analyze this resume:\nJohn Doe, Software Engineer, 5 years Python, Django, PostgreSQL. Worked at TechCorp building web applications.\nExtract skills and experience level.",
+      "quality_score": 0.9721276636114843,
+      "weight": 1.0
+    },
+    {
+      "case_id": "bench_resume_002",
+      "prompt": "Analyze this resume:\nJane Smith, Frontend Developer, 2 years React, JavaScript, HTML/CSS. Fresh bootcamp graduate with portfolio.\nExtract skills and experience level.",
+      "quality_score": 0.8442807602504985,
+      "weight": 1.0
+    },
+    {
+      "case_id": "bench_resume_003",
+      "prompt": "Analyze this resume:\nComplex resume with multiple roles, tech leadership, and international experience spanning 10+ years.\nExtract skills and experience level.",
+      "quality_score": 0.6541278045888737,
+      "weight": 1.5
+    }
+  ],
+  "candidate_results": [
+    {
+      "case_id": "bench_resume_001",
+      "prompt": "Analyze the following resume systematically:\nJohn Doe, Software Engineer, 5 years Python, Django, PostgreSQL. Worked at TechCorp building web applications.\nExtract skills, experience level, and strengths. Be specific and detailed.",
+      "quality_score": 0.8026335795720856,
+      "weight": 1.0
+    },
+    {
+      "case_id": "bench_resume_002",
+      "prompt": "Analyze the following resume systematically:\nJane Smith, Frontend Developer, 2 years React, JavaScript, HTML/CSS. Fresh bootcamp graduate with portfolio.\nExtract skills, experience level, and strengths. Be specific and detailed.",
+      "quality_score": 0.8197252842058002,
+      "weight": 1.0
+    },
+    {
+      "case_id": "bench_resume_003",
+      "prompt": "Analyze the following resume systematically:\nComplex resume with multiple roles, tech leadership, and international experience spanning 10+ years.\nExtract skills, experience level, and strengths. Be specific and detailed.",
+      "quality_score": 0.9202748064212048,
+      "weight": 1.5
+    }
+  ]
+}

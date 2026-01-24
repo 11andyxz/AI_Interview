@@ -1095,6 +1095,7 @@ class EvalRunner:
         fieldnames = [
             'id', 'task_type', 'difficulty', 'prompt_type',
             'success', 'latency_ms', 'tokens_used', 
+            'model_version', 'estimated_cost',
             'quality_score', 'completeness_score', 'format_score', 
             'factuality_score', 'coherence_score',
             'error', 'timestamp',
@@ -1330,6 +1331,8 @@ def main():
                         help='Override max_new_tokens for text-generation-webui-style endpoints')
     parser.add_argument('--stop', type=str, default=None,
                         help='Optional stop token/sequence to include in generation payloads')
+    parser.add_argument('--model-version', default=None,
+                        help='Optional model version tag for A/B testing (e.g., gpt-4o-mini, gpt-3.5-turbo)')
     parser.add_argument('--fallback-mode', default='salvage', choices=['none', 'salvage', 'human_review'],
                         help='Fallback behavior when validation fails')
     parser.add_argument('--allow-salvage', dest='allow_salvage', action='store_true',
@@ -1367,6 +1370,17 @@ def main():
         if os.path.exists(filepath):
             prompts = runner.load_prompts(filepath)
             runner.evaluate_prompts(prompts, prompt_type)
+            # If a model version tag was provided (A/B testing), annotate recent results
+            if getattr(args, 'model_version', None):
+                try:
+                    cost_per_token = 0.000002  # placeholder USD per token; replace with real pricing
+                    for r in runner.results[-len(prompts):]:
+                        r['model_version'] = args.model_version
+                        r['estimated_cost'] = round((r.get('tokens_used', 0) * cost_per_token), 6)
+                except Exception:
+                    for r in runner.results[-len(prompts):]:
+                        r.setdefault('model_version', args.model_version)
+                        r.setdefault('estimated_cost', 0.0)
         else:
             print(f"Warning: {filepath} not found, skipping {prompt_type}")
 

@@ -1,0 +1,52 @@
+{"id": "qa_0_gpt-3.5-turbo_0", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_1", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_2", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_3", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_4", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_5", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_6", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_7", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_8", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_9", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_10", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_11", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_12", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_13", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-3.5-turbo_14", "text": "ArrayList is faster for getting elements, LinkedList is better for adding/removing elements in the middle."}
+{"id": "qa_0_gpt-4o-mini_0", "text": "ArrayList provides O(1) random access using arrays but O(n) insertion. LinkedList has O(n) access time but O(1) insertion/deletion when position is known."}
+{"id": "qa_0_gpt-4o-mini_1", "text": "ArrayList provides O(1) random access using arrays but O(n) insertion. LinkedList has O(n) access time but O(1) insertion/deletion when position is known."}
+{"id": "qa_0_gpt-4o-mini_2", "text": "ArrayList provides O(1) random access using arrays but O(n) insertion. LinkedList has O(n) access time but O(1) insertion/deletion when position is known."}
+{"id": "qa_0_gpt-4o-mini_3", "text": "ArrayList provides O(1) random access using arrays but O(n) insertion. LinkedList has O(n) access time but O(1) insertion/deletion when position is known."}
+{"id": "qa_0_gpt-4o-mini_4", "text": "ArrayList provides O(1) random access using arrays but O(n) insertion. LinkedList has O(n) access time but O(1) insertion/deletion when position is known."}
+{"id": "qa_0_gpt-4o-mini_5", "text": "ArrayList provides O(1) random access using arrays but O(n) insertion. LinkedList has O(n) access time but O(1) insertion/deletion when position is known."}
+{"id": "qa_0_gpt-4o-mini_6", "text": "ArrayList provides O(1) random access using arrays but O(n) insertion. LinkedList has O(n) access time but O(1) insertion/deletion when position is known."}
+{"id": "qa_0_gpt-4o-mini_7", "text": "ArrayList provides O(1) random access using arrays but O(n) insertion. LinkedList has O(n) access time but O(1) insertion/deletion when position is known."}
+{"id": "qa_0_gpt-4-turbo_0", "text": "ArrayList implements List interface using resizable arrays, providing constant-time random access O(1) but linear-time O(n) insertion/deletion. LinkedList uses doubly-linked list structure offering O(1) insertion/deletion at arbitrary positions but requires O(n) traversal for random access. Choice depends on access pattern: frequent random access favors ArrayList, frequent modifications favor LinkedList."}
+{"id": "qa_0_gpt-4-turbo_1", "text": "ArrayList implements List interface using resizable arrays, providing constant-time random access O(1) but linear-time O(n) insertion/deletion. LinkedList uses doubly-linked list structure offering O(1) insertion/deletion at arbitrary positions but requires O(n) traversal for random access. Choice depends on access pattern: frequent random access favors ArrayList, frequent modifications favor LinkedList."}
+{"id": "qa_0_gpt-4-turbo_2", "text": "ArrayList implements List interface using resizable arrays, providing constant-time random access O(1) but linear-time O(n) insertion/deletion. LinkedList uses doubly-linked list structure offering O(1) insertion/deletion at arbitrary positions but requires O(n) traversal for random access. Choice depends on access pattern: frequent random access favors ArrayList, frequent modifications favor LinkedList."}
+{"id": "qa_1_gpt-3.5-turbo_0", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_1", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_2", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_3", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_4", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_5", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_6", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_7", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_8", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_9", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_10", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_11", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_12", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_13", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-3.5-turbo_14", "text": "QuickSort is O(n log n) usually, MergeSort is always O(n log n), BubbleSort is O(n\u00b2)."}
+{"id": "qa_1_gpt-4o-mini_0", "text": "QuickSort: O(n log n) average, O(n\u00b2) worst case. MergeSort: O(n log n) guaranteed. HeapSort: O(n log n). BubbleSort: O(n\u00b2)."}
+{"id": "qa_1_gpt-4o-mini_1", "text": "QuickSort: O(n log n) average, O(n\u00b2) worst case. MergeSort: O(n log n) guaranteed. HeapSort: O(n log n). BubbleSort: O(n\u00b2)."}
+{"id": "qa_1_gpt-4o-mini_2", "text": "QuickSort: O(n log n) average, O(n\u00b2) worst case. MergeSort: O(n log n) guaranteed. HeapSort: O(n log n). BubbleSort: O(n\u00b2)."}
+{"id": "qa_1_gpt-4o-mini_3", "text": "QuickSort: O(n log n) average, O(n\u00b2) worst case. MergeSort: O(n log n) guaranteed. HeapSort: O(n log n). BubbleSort: O(n\u00b2)."}
+{"id": "qa_1_gpt-4o-mini_4", "text": "QuickSort: O(n log n) average, O(n\u00b2) worst case. MergeSort: O(n log n) guaranteed. HeapSort: O(n log n). BubbleSort: O(n\u00b2)."}
+{"id": "qa_1_gpt-4o-mini_5", "text": "QuickSort: O(n log n) average, O(n\u00b2) worst case. MergeSort: O(n log n) guaranteed. HeapSort: O(n log n). BubbleSort: O(n\u00b2)."}
+{"id": "qa_1_gpt-4o-mini_6", "text": "QuickSort: O(n log n) average, O(n\u00b2) worst case. MergeSort: O(n log n) guaranteed. HeapSort: O(n log n). BubbleSort: O(n\u00b2)."}
+{"id": "qa_1_gpt-4o-mini_7", "text": "QuickSort: O(n log n) average, O(n\u00b2) worst case. MergeSort: O(n log n) guaranteed. HeapSort: O(n log n). BubbleSort: O(n\u00b2)."}
+{"id": "qa_1_gpt-4-turbo_0", "text": "Comparison-based sorts: QuickSort achieves O(n log n) average with O(n\u00b2) worst-case when poorly partitioned; MergeSort guarantees O(n log n) in all cases with O(n) space; HeapSort provides O(n log n) time with O(1) space. Non-comparison sorts like RadixSort achieve O(nk) for integers with k digits. Algorithm choice depends on data characteristics, stability requirements, and space constraints."}
+{"id": "qa_1_gpt-4-turbo_1", "text": "Comparison-based sorts: QuickSort achieves O(n log n) average with O(n\u00b2) worst-case when poorly partitioned; MergeSort guarantees O(n log n) in all cases with O(n) space; HeapSort provides O(n log n) time with O(1) space. Non-comparison sorts like RadixSort achieve O(nk) for integers with k digits. Algorithm choice depends on data characteristics, stability requirements, and space constraints."}
+{"id": "qa_1_gpt-4-turbo_2", "text": "Comparison-based sorts: QuickSort achieves O(n log n) average with O(n\u00b2) worst-case when poorly partitioned; MergeSort guarantees O(n log n) in all cases with O(n) space; HeapSort provides O(n log n) time with O(1) space. Non-comparison sorts like RadixSort achieve O(nk) for integers with k digits. Algorithm choice depends on data characteristics, stability requirements, and space constraints."}
