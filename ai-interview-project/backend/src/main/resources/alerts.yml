@@ -1,0 +1,102 @@
+# ML Observability Alert Rules for Week 9
+# Configured per task requirements with duration thresholds
+
+alerts:
+  critical:
+    - name: validation_rate_critical
+      metric: ai_validation_pass_rate
+      condition: less_than
+      threshold: 0.90
+      duration_minutes: 5
+      severity: critical
+      description: "Validation pass rate dropped below 90% for >5 minutes"
+      
+    - name: high_latency_p95
+      metric: ai_request_latency_p95
+      condition: greater_than
+      threshold: 5000
+      duration_minutes: 10
+      severity: critical
+      description: "P95 latency exceeds 5 seconds for >10 minutes"
+      
+    - name: high_error_rate
+      metric: error_rate
+      condition: greater_than
+      threshold: 0.10
+      duration_minutes: 3
+      severity: critical
+      description: "Error rate exceeds 10% for >3 minutes"
+      
+    - name: cost_spike
+      metric: daily_cost
+      condition: cost_spike_3x
+      threshold: 3.0
+      duration_minutes: 0
+      severity: critical
+      description: "Cost spike > 3x average daily spend"
+
+  warning:
+    - name: validation_rate_warning
+      metric: ai_validation_pass_rate
+      condition: less_than
+      threshold: 0.95
+      duration_minutes: 15
+      severity: warning
+      description: "Validation pass rate below 95% for >15 minutes"
+      
+    - name: retry_rate_increased
+      metric: ai_retry_count
+      condition: increased_50_percent
+      threshold: 1.5
+      duration_minutes: 0
+      severity: warning
+      description: "Retry rate increased > 50% compared to baseline"
+      
+    - name: drift_detected
+      metric: kl_divergence
+      condition: greater_than
+      threshold: 0.15
+      duration_minutes: 0
+      severity: warning
+      description: "KL divergence > 0.15 (significant drift detected)"
+      
+    - name: user_feedback_dropped
+      metric: user_feedback_rating
+      condition: dropped_15_percent
+      threshold: 0.15
+      duration_minutes: 0
+      severity: warning
+      description: "User feedback rating dropped > 15%"
+
+  info:
+    - name: daily_summary
+      metric: daily_metrics
+      condition: scheduled
+      threshold: 0
+      duration_minutes: 0
+      severity: info
+      description: "Daily summary (total requests, avg quality, costs)"
+      
+    - name: ab_test_progress
+      metric: ab_test_status
+      condition: scheduled
+      threshold: 0
+      duration_minutes: 0
+      severity: info
+      description: "A/B test progress update (samples, current leaders)"
+      
+    - name: prompt_optimization_recommendations
+      metric: prompt_analysis
+      condition: scheduled
+      threshold: 0
+      duration_minutes: 0
+      severity: info
+      description: "Prompt optimization recommendations based on the week's data"
+
+# Alert channels
+channels:
+  - type: log
+    enabled: true
+  - type: email
+    enabled: false
+    recipients: []
