@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.core.env.Environment;
 
 import java.net.InetAddress;
@@ -18,11 +20,14 @@ import java.net.UnknownHostException;
  * - Resume analysis and parsing
  * - User authentication and authorization
  * - Subscription management
+ * - ML observability and monitoring
  * 
  * @author AI Interview Team
  * @version 1.0.0
  */
 @SpringBootApplication
+@EnableScheduling
+@EnableAspectJAutoProxy
 public class AiInterviewApplication {
 
     private static final Logger logger = LoggerFactory.getLogger(AiInterviewApplication.class);

@@ -108,7 +108,8 @@ class InterviewFlowIntegrationTest extends BaseIntegrationTest {
         resume.setFileSize(1024L);
         resume.setFilePath("/uploads/resumes/test-resume.pdf");
         resume.setAnalyzed(true); // Mark as analyzed
-        resume.setAnalysisData("{}"); // Add empty JSON analysis
+        resume.setAnalysisResult("Analyzed"); // Add analysis result
+        resume.setAnalysisData("{\"level\":\"mid\",\"techStack\":[\"Java\",\"Spring\"]}"); // Add proper JSON analysis
         resume = userResumeRepository.save(resume);
 
         // Create interview with resume-based type
@@ -170,9 +171,10 @@ class InterviewFlowIntegrationTest extends BaseIntegrationTest {
         String username = "kbuser_" + System.currentTimeMillis();
         User user = userService.createUser(username, "password123");
 
-        // Create interview with custom knowledge base
+        // Create interview with custom knowledge base (using candidateId=1 which should exist or be mocked)
         CreateInterviewRequest request = new CreateInterviewRequest();
         request.setInterviewType("general");
+        request.setCandidateId(1);  // Use a simple ID (will be validated by service)
         request.setPositionType("AI Engineer");
         request.setProgrammingLanguages(List.of("Python", "TensorFlow"));
         request.setLanguage("English");

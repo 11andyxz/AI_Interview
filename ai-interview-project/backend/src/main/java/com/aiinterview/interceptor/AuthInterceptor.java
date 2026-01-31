@@ -23,7 +23,8 @@ public class AuthInterceptor implements HandlerInterceptor {
         "/api/auth/login",
         "/api/auth/register",
         "/api/health",
-        "/api/payment/webhook"
+        "/api/payment/webhook",
+        "/api/monitoring"
     };
 
     @Override

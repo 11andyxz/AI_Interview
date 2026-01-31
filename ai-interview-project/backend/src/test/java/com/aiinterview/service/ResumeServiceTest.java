@@ -188,14 +188,15 @@ class ResumeServiceTest {
 
     @Test
     void testAnalyzeResume_Success() throws IOException {
-        // Mock file existence
-        Path mockPath = Paths.get(testResume.getFilePath());
-        try {
-            Files.createDirectories(mockPath.getParent());
-            Files.writeString(mockPath, "Java Spring Developer Resume Content");
-        } catch (IOException e) {
-            // Ignore for test
-        }
+        // Use a text file instead of PDF to avoid parsing issues
+        testResume.setOriginalFileName("test-resume.txt");
+        testResume.setFileType("text/plain");
+        
+        // Create actual text file in temp directory
+        Path tempDir = Files.createTempDirectory("resume-test");
+        Path mockPath = tempDir.resolve("test-resume.txt");
+        Files.writeString(mockPath, "Java Spring Developer Resume Content");
+        testResume.setFilePath(mockPath.toString());
 
         // Mock ResumeAnalysisService
         ResumeAnalysisResult mockAnalysis = new ResumeAnalysisResult();
@@ -206,7 +207,7 @@ class ResumeServiceTest {
 
         when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
         when(resumeAnalysisService.analyzeResumeWithOpenAI(anyString())).thenReturn(mockAnalysis);
-        when(objectMapper.writeValueAsString(any())).thenReturn("{\"level\":\"mid\",\"techStack\":[\"Java\",\"Spring\"]}");
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"level\":\"mid\",\"techStack\":[\"Java\",\"Spring\"],\"experienceYears\":5,\"mainSkillAreas\":[\"Backend Development\"]}");
         when(knowledgeBaseRepository.save(any(KnowledgeBase.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -223,6 +224,7 @@ class ResumeServiceTest {
         // Clean up
         try {
             Files.deleteIfExists(mockPath);
+            Files.deleteIfExists(tempDir);
         } catch (IOException e) {
             // Ignore cleanup error
         }
@@ -282,6 +284,16 @@ class ResumeServiceTest {
 
     @Test
     void testMarkAsAnalyzed() throws Exception {
+        // Use a text file instead of PDF to avoid parsing issues
+        testResume.setOriginalFileName("test-resume.txt");
+        testResume.setFileType("text/plain");
+        
+        // Create actual text file in temp directory
+        Path tempDir = Files.createTempDirectory("resume-test-mark");
+        Path mockPath = tempDir.resolve("test-resume.txt");
+        Files.writeString(mockPath, "Java Spring Developer Resume Content");
+        testResume.setFilePath(mockPath.toString());
+        
         // Mock ResumeAnalysisService for analyzeResume call
         ResumeAnalysisResult mockAnalysis = new ResumeAnalysisResult();
         mockAnalysis.setLevel("mid");
@@ -291,7 +303,7 @@ class ResumeServiceTest {
 
         when(resumeRepository.findByIdAndUserId(resumeId, userId)).thenReturn(Optional.of(testResume));
         when(resumeAnalysisService.analyzeResumeWithOpenAI(anyString())).thenReturn(mockAnalysis);
-        when(objectMapper.writeValueAsString(any())).thenReturn("{\"level\":\"mid\",\"techStack\":[\"Java\",\"Spring\"]}");
+        when(objectMapper.writeValueAsString(any())).thenReturn("{\"level\":\"mid\",\"techStack\":[\"Java\",\"Spring\"],\"experienceYears\":5,\"mainSkillAreas\":[\"Backend Development\"]}");
         when(knowledgeBaseRepository.save(any(KnowledgeBase.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
         when(resumeRepository.save(any(UserResume.class)))
@@ -301,5 +313,13 @@ class ResumeServiceTest {
 
         assertTrue(testResume.getAnalyzed());
         verify(resumeRepository).save(testResume);
+        
+        // Clean up
+        try {
+            Files.deleteIfExists(mockPath);
+            Files.deleteIfExists(tempDir);
+        } catch (IOException e) {
+            // Ignore cleanup error
+        }
     }
 }

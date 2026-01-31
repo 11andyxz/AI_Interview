@@ -3,6 +3,8 @@ package com.aiinterview.service;
 import com.aiinterview.model.openai.OpenAiMessage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,8 @@ public class OpenAiService {
     /**
      * Call OpenAI API with messages (non-streaming)
      */
+    @Timed(value = "ai.request.latency", description = "OpenAI chat timing", extraTags = {"method", "chat", "provider", "openai"})
+    @Counted(value = "ai.request.count", description = "OpenAI chat count", extraTags = {"method", "chat", "provider", "openai"})
     public Mono<String> chat(List<OpenAiMessage> messages) {
         OpenAiRequest request = new OpenAiRequest();
         request.setModel(model);

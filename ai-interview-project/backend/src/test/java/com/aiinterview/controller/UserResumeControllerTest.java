@@ -161,14 +161,26 @@ class UserResumeControllerTest {
 
     @Test
     void testDownloadResume_Success() throws Exception {
-        when(resumeService.getResumeFilePath(resumeId, userId))
-            .thenReturn(java.util.Optional.of(java.nio.file.Paths.get("test.pdf")));
+        // Create a temporary file for testing
+        java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-resume", ".pdf");
+        java.nio.file.Files.write(tempFile, "Test PDF content".getBytes());
+        
+        try {
+            // Mock resume exists
+            when(resumeService.getResumeById(resumeId, userId))
+                .thenReturn(java.util.Optional.of(mockResume));
+            when(resumeService.getResumeFilePath(resumeId, userId))
+                .thenReturn(java.util.Optional.of(tempFile));
 
-        // This test would need file system mocking for complete testing
-        // For now, we'll test the basic endpoint structure
-        mockMvc.perform(get("/api/user/resume/{id}/download", resumeId)
-                .requestAttr("userId", userId))
-            .andExpect(status().isOk());
+            // Test download
+            mockMvc.perform(get("/api/user/resume/{id}/download", resumeId)
+                    .requestAttr("userId", userId))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"" + tempFile.getFileName() + "\""));
+        } finally {
+            // Clean up
+            java.nio.file.Files.deleteIfExists(tempFile);
+        }
     }
 
     @Test
@@ -183,6 +195,11 @@ class UserResumeControllerTest {
 
     @Test
     void testAnalyzeResume_Success() throws Exception {
+        // Mock resume exists and is not yet analyzed
+        mockResume.setAnalyzed(false);
+        when(resumeService.getResumeById(resumeId, userId))
+            .thenReturn(java.util.Optional.of(mockResume));
+        
         mockMvc.perform(post("/api/user/resume/{id}/analyze", resumeId)
                 .requestAttr("userId", userId))
             .andExpect(status().isOk())
@@ -294,7 +311,7 @@ class UserResumeControllerTest {
     @Test
     void testUploadResume_TextOnly_Success() throws Exception {
         MockMultipartFile textFile = new MockMultipartFile(
-            "resumeText", "", "text/plain", "Resume text content".getBytes());
+            "file", "resume.txt", "text/plain", "Resume text content".getBytes());
 
         when(resumeService.uploadResume(eq(userId), any(), any()))
             .thenReturn(mockResume);

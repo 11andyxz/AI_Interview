@@ -71,6 +71,25 @@ public class UserResumeController {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
 
+        // Validate file is not empty
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.status(400).body(Map.of("error", "File cannot be empty"));
+        }
+
+        // Validate file size (max 10MB)
+        if (file.getSize() > 10 * 1024 * 1024) {
+            return ResponseEntity.status(400).body(Map.of("error", "File size exceeds 10MB limit"));
+        }
+
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.equals("application/pdf") 
+                && !contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                && !contentType.equals("application/msword")
+                && !contentType.equals("text/plain"))) {
+            return ResponseEntity.status(400).body(Map.of("error", "Invalid file type. Only PDF, DOC, DOCX, and TXT are allowed"));
+        }
+
         try {
             UserResume resume = resumeService.uploadResume(userId, file, resumeText);
 
@@ -152,6 +171,12 @@ public class UserResumeController {
             return ResponseEntity.status(401).build();
         }
         
+        // Check if resume exists first
+        Optional<UserResume> resumeOpt = resumeService.getResumeById(id, userId);
+        if (resumeOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
         try {
             Optional<Path> filePathOpt = resumeService.getResumeFilePath(id, userId);
             if (filePathOpt.isEmpty()) {
@@ -186,6 +211,18 @@ public class UserResumeController {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
 
+        // Check if resume exists
+        var existingResumeOpt = resumeService.getResumeById(id, userId);
+        if (existingResumeOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "Resume not found"));
+        }
+
+        // Check if already analyzed
+        UserResume existingResume = existingResumeOpt.get();
+        if (existingResume.getAnalyzed() != null && existingResume.getAnalyzed()) {
+            return ResponseEntity.status(400).body(Map.of("error", "Resume already analyzed", "message", "Resume already analyzed"));
+        }
+
         try {
             resumeService.analyzeResume(id, userId);
 
@@ -193,7 +230,7 @@ public class UserResumeController {
             var resumeOpt = resumeService.getResumeById(id, userId);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Resume analysis completed successfully");
+            response.put("message", "Resume analysis completed");
 
             if (resumeOpt.isPresent()) {
                 UserResume resume = resumeOpt.get();
