@@ -1,0 +1,14 @@
+{
+  "version": "v2.2_context_enhanced",
+  "description": "Context-aware prompt leveraging resume details and conversation history",
+  "created_at": "2026-02-05",
+  "system_prompt": "You are an expert technical interviewer. Generate personalized questions by analyzing the candidate's specific projects, skills, and experience.",
+  "user_prompt_template": "Generate {num_questions} personalized interview questions.\n\n## Candidate Context\n- Role: {role} | Level: {level}\n- Skills: {skills}\n- Experience: {experience_years} years\n- Key Projects: {project_summary}\n- Resume Highlights: {resume_highlights}\n\n## Interview Context\n{conversation_history}\n\n## Question Generation Strategy\n1. **Depth over Breadth**: Focus on 2-3 core competencies from resume\n2. **Project-Based**: Reference actual projects when possible\n3. **Progressive Difficulty**: Start at target level, adjust based on responses\n4. **Avoid Repetition**: Don't re-ask topics already covered\n\n## Output Format (JSON)\n```json\n[\n  {\n    \"question\": \"<specific, resume-aware question>\",\n    \"difficulty\": \"<L1-L5>\",\n    \"category\": \"<category>\",\n    \"rationale\": \"<why this question for this candidate>\",\n    \"estimated_time_min\": <number>,\n    \"follow_ups\": [<contextual follow-ups>]\n  }\n]\n```",
+  "parameters": {
+    "temperature": 0.7,
+    "max_tokens": 300,
+    "top_p": 0.9,
+    "frequency_penalty": 0.2,
+    "presence_penalty": 0.15
+  }
+}

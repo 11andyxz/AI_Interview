@@ -1,0 +1,99 @@
+# ML Cost Budget Alerts Configuration
+
+cost_alerts:
+  enabled: true
+  check_interval_minutes: 15
+  
+  critical:
+    - name: "Daily Budget Exceeded"
+      threshold: "$100/day"
+      condition: "daily_cost > 100"
+      action: "Enable aggressive caching, notify team immediately"
+      notification:
+        - email
+        - slack
+      
+    - name: "Cost Spike Detected"
+      threshold: "200% of daily average"
+      condition: "daily_cost > avg_daily_cost * 2.0"
+      action: "Investigate unusual activity, check for bugs or attacks"
+      notification:
+        - email
+        - slack
+        - pagerduty
+      
+    - name: "Monthly Budget 90% Utilized"
+      threshold: "$2250/month"
+      condition: "monthly_cost > 2250"
+      action: "Review spending, plan optimizations for next month"
+      notification:
+        - email
+        - slack
+  
+  warning:
+    - name: "Daily Budget 80% Utilized"
+      threshold: "$80/day"
+      condition: "daily_cost > 80"
+      action: "Monitor closely, consider enabling more aggressive caching"
+      notification:
+        - slack
+      
+    - name: "Cost Per Request Increasing"
+      threshold: "20% increase over 7-day average"
+      condition: "avg_cost_per_request > rolling_7day_avg * 1.2"
+      action: "Review recent prompt changes, check token usage"
+      notification:
+        - slack
+      
+    - name: "Low Cache Hit Rate"
+      threshold: "Cache hit rate < 20%"
+      condition: "cache_hit_rate < 0.20"
+      action: "Review caching strategy, adjust TTL or similarity threshold"
+      notification:
+        - slack
+      
+    - name: "Expensive Model Usage High"
+      threshold: "GPT-4 requests > 10% of total"
+      condition: "gpt4_request_percentage > 0.10"
+      action: "Review GPT-4 usage patterns, ensure selective usage"
+      notification:
+        - slack
+
+# Budget allocation by scenario
+budget_allocation:
+  daily_total: 100.0
+  breakdown:
+    resume_analysis: 30.0      # 30% ($30/day)
+    question_generation: 40.0  # 40% ($40/day)
+    answer_evaluation: 30.0    # 30% ($30/day)
+
+# Cost optimization targets
+optimization_targets:
+  cache_hit_rate: 0.30          # Target 30% cache hit rate
+  avg_cost_per_request: 0.0024  # Target $0.0024 per request
+  token_usage_reduction: 0.20   # Target 20% reduction from baseline
+
+# Monitoring thresholds
+monitoring:
+  daily_cost_spike_multiplier: 2.0
+  cost_per_request_spike_multiplier: 1.5
+  rolling_average_window_days: 7
+
+# Actions
+actions:
+  aggressive_caching:
+    enabled: true
+    semantic_cache_threshold: 0.90  # Lower from 0.95 to increase hit rate
+    ttl_multiplier: 2.0             # Double TTL to keep cache longer
+    
+  rate_limiting:
+    enabled: false
+    max_requests_per_user_per_hour: 100
+    
+  model_fallback:
+    enabled: true
+    fallback_sequence:
+      - gpt-3.5-turbo-1106
+      - gpt-3.5-turbo-16k
+    
+  notification_cooldown_minutes: 60  # Don't spam alerts

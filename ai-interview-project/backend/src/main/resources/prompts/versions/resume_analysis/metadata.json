@@ -1,0 +1,60 @@
+{
+  "scenario": "resume_analysis",
+  "description": "Resume analysis prompt versions and performance metrics",
+  "versions": [
+    {
+      "version": "v1.0_baseline",
+      "created_at": "2026-01-15",
+      "status": "baseline",
+      "avg_latency_ms": 1680,
+      "avg_tokens": 420,
+      "quality_score": 7.8,
+      "cost_per_request": 0.0028,
+      "pass_rate": 0.87,
+      "active": true,
+      "traffic_percentage": 50,
+      "sample_size": 450,
+      "notes": "Current production version - stable but verbose"
+    },
+    {
+      "version": "v1.1_structured",
+      "created_at": "2026-02-01",
+      "status": "testing",
+      "avg_latency_ms": 1580,
+      "avg_tokens": 390,
+      "quality_score": 8.4,
+      "cost_per_request": 0.0026,
+      "pass_rate": 0.91,
+      "active": true,
+      "traffic_percentage": 30,
+      "sample_size": 280,
+      "notes": "Better structure, reduced tokens, improved quality"
+    },
+    {
+      "version": "v1.2_few_shot",
+      "created_at": "2026-02-05",
+      "status": "experiment",
+      "avg_latency_ms": 1420,
+      "avg_tokens": 380,
+      "quality_score": 8.7,
+      "cost_per_request": 0.0024,
+      "pass_rate": 0.94,
+      "active": true,
+      "traffic_percentage": 20,
+      "sample_size": 120,
+      "notes": "Best quality and efficiency - candidate for rollout"
+    }
+  ],
+  "current_experiment": {
+    "name": "resume_analysis_v1.2_rollout",
+    "start_date": "2026-02-05",
+    "end_date": "2026-02-12",
+    "hypothesis": "Few-shot examples improve consistency and reduce token usage",
+    "success_criteria": {
+      "quality_score": ">8.5",
+      "pass_rate": ">0.92",
+      "cost_reduction": ">10%"
+    },
+    "status": "in_progress"
+  }
+}
