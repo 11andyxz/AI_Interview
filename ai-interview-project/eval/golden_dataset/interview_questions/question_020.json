@@ -1,0 +1,39 @@
+{
+  "questionId": "backend_l2_020",
+  "difficulty": "L2 - Junior",
+  "domain": "Backend",
+  "techStack": ["RESTful", "API设计"],
+  "question": "什么是RESTful API？请说明其设计原则和最佳实践。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "REST架构风格",
+      "资源导向",
+      "HTTP方法（GET/POST/PUT/DELETE）",
+      "无状态",
+      "URL设计规范"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述REST原则",
+      "completeness": "涵盖核心原则和设计规范",
+      "clarity": "解释清晰，有URL示例",
+      "depth": "理解资源导向和HTTP语义"
+    },
+    "sampleGoodAnswer": "RESTful API是遵循REST（Representational State Transfer）架构风格的API设计。\n\n核心原则：\n1. 资源导向：URL表示资源，使用名词而非动词\n2. HTTP方法：GET（查询）、POST（创建）、PUT（更新）、DELETE（删除）\n3. 无状态：每个请求包含完整信息，服务器不保存会话\n4. 统一接口：标准化的资源操作\n\n设计最佳实践：\n1. URL规范：\n   - 使用复数名词：/api/users 而非 /api/user\n   - 层级关系：/api/users/123/orders\n   - 避免动词：/api/users/123 而非 /api/getUser?id=123\n\n2. HTTP状态码：200（成功）、201（创建）、400（客户端错误）、404（未找到）、500（服务器错误）\n\n3. 版本控制：/api/v1/users\n\n4. 分页和过滤：/api/users?page=1&size=20&status=active\n\n5. 返回统一格式：{\"code\": 0, \"data\": {}, \"message\": \"success\"}",
+    "evaluationCriteria": {
+      "excellent": "完整解释REST原则、提供设计示例、说明最佳实践",
+      "good": "准确描述核心概念和基本规范",
+      "average": "知道REST但设计细节不清",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.96,
+    "difficulty": 0.65,
+    "discriminability": 0.83
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "scoringId": "scoring_004",
+  "questionId": "backend_l4_002",
+  "question": "在分布式系统中实现分布式锁，你会选择什么方案？",
+  "candidateAnswer": "可以用synchronized或者Lock来实现分布式锁。在需要加锁的代码前面加上synchronized关键字，这样同一时刻只有一个线程能执行。如果需要更灵活的控制，可以用ReentrantLock，它支持公平锁和非公平锁。",
+  "evaluation": {
+    "score": 2.0,
+    "level": "Poor",
+    "strengths": [
+      "知道synchronized和Lock的概念"
+    ],
+    "improvements": [
+      "完全理解错误：synchronized和Lock只能在单JVM内生效，无法跨进程",
+      "没有理解分布式锁的概念和应用场景",
+      "缺少Redis、Zookeeper等分布式锁实现方案",
+      "没有考虑分布式环境的特点",
+      "回答不符合Senior级别要求"
+    ],
+    "technicalAccuracy": 0.10,
+    "completeness": 0.15,
+    "clarity": 0.60,
+    "depth": 0.05,
+    "feedback": "你的回答存在严重的概念错误。synchronized和ReentrantLock是Java内置的锁机制，只能在单个JVM进程内生效，无法解决分布式系统中多个服务实例之间的并发问题。\n\n分布式锁需要依赖外部存储来实现跨进程的互斥，常见方案有：\n1. Redis：使用SET NX EX命令或Redisson的RedLock\n2. Zookeeper：使用临时顺序节点\n3. 数据库：使用SELECT FOR UPDATE\n\n建议系统学习分布式系统的基础知识，特别是CAP理论、分布式一致性等概念。这个问题对于Senior级别来说是基础要求，需要深入掌握。"
+  },
+  "qualityMetrics": {
+    "answerLength": 98,
+    "technicalTerms": 3,
+    "hasExample": false,
+    "hasExplanation": true
+  }
+}

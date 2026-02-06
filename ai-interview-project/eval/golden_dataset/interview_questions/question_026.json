@@ -1,0 +1,39 @@
+{
+  "questionId": "devops_l2_026",
+  "difficulty": "L2 - Junior",
+  "domain": "DevOps",
+  "techStack": ["CI/CD", "Jenkins"],
+  "question": "什么是CI/CD？请说明持续集成和持续部署的区别，以及它们的好处。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "CI（持续集成）",
+      "CD（持续交付/持续部署）",
+      "自动化流程",
+      "工具链（Jenkins、GitLab CI）",
+      "优势"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述CI/CD概念和区别",
+      "completeness": "涵盖定义、流程、工具、优势",
+      "clarity": "解释清晰，有流程说明",
+      "depth": "理解DevOps实践"
+    },
+    "sampleGoodAnswer": "CI/CD是现代软件开发的核心实践，通过自动化提升交付效率和质量。\n\nCI（Continuous Integration，持续集成）：\n- 定义：开发者频繁（每天多次）将代码合并到主干\n- 流程：提交代码 → 自动构建 → 自动测试 → 反馈结果\n- 目标：尽早发现集成问题，保证代码质量\n- 工具：Jenkins、GitLab CI、Travis CI\n\nCD（Continuous Delivery/Deployment，持续交付/部署）：\n- 持续交付：代码随时可以部署到生产，但需手动触发\n- 持续部署：通过所有测试后自动部署到生产\n- 流程：CI通过 → 自动部署到测试环境 → 自动化测试 → 部署到生产\n\n典型CI/CD流程：\n1. 开发提交代码到Git\n2. 触发CI流程：编译、单元测试、代码扫描\n3. 构建Docker镜像，推送到镜像仓库\n4. 自动部署到测试环境，执行集成测试\n5. 测试通过后部署到预发布环境\n6. 手动审批或自动部署到生产环境\n\n好处：\n1. 快速反馈：几分钟内发现问题\n2. 降低风险：小批量频繁发布，问题易定位\n3. 提升效率：自动化减少人工操作\n4. 提高质量：每次提交都经过测试\n5. 快速迭代：从开发到上线大幅缩短",
+    "evaluationCriteria": {
+      "excellent": "完整解释CI/CD、流程、工具、优势",
+      "good": "准确描述核心概念和基本流程",
+      "average": "知道CI/CD但流程不清晰",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.96,
+    "difficulty": 0.64,
+    "discriminability": 0.81
+  }
+}

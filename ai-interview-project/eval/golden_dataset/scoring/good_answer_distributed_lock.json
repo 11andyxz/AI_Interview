@@ -1,0 +1,35 @@
+{
+  "scoringId": "scoring_005",
+  "questionId": "backend_l4_002",
+  "question": "在分布式系统中实现分布式锁，你会选择什么方案？",
+  "candidateAnswer": "分布式锁主要有两种常用方案：\n\n1. Redis方案：使用SET key value NX EX seconds命令实现。NX表示key不存在时才设置成功，EX设置过期时间防止死锁。释放锁时需要验证value（通常用UUID），确保只释放自己持有的锁。\n\n优点：性能高，实现简单\n缺点：如果业务执行时间超过锁过期时间，可能导致并发问题。Redis主从切换可能导致锁丢失。\n\n2. Zookeeper方案：创建临时顺序节点，序号最小的获得锁，其他节点watch前一个节点。当持有锁的节点断开连接，临时节点自动删除，下一个节点获得锁。\n\n优点：可靠性高，不会丢失锁，支持公平锁\n缺点：性能不如Redis，依赖ZK集群\n\n实际选择：\n- 高并发场景用Redis（可容忍极低概率的问题）\n- 强一致性要求用Zookeeper\n\n我们项目用的是Redis，结合Redisson框架的可重入锁和watchdog机制（自动续期），解决了锁过期问题。",
+  "evaluation": {
+    "score": 8.0,
+    "level": "Good",
+    "strengths": [
+      "提供了两种主流方案",
+      "详细说明了实现细节（SET NX EX、临时顺序节点）",
+      "分析了优缺点",
+      "给出了选型建议",
+      "有实际项目经验（Redisson）",
+      "提到了重要的细节（UUID验证、watchdog）"
+    ],
+    "improvements": [
+      "可以展开说明Redis主从切换导致锁丢失的具体场景",
+      "可以提到RedLock算法",
+      "缺少数据库方案的对比",
+      "可以补充一个代码示例"
+    ],
+    "technicalAccuracy": 0.92,
+    "completeness": 0.78,
+    "clarity": 0.90,
+    "depth": 0.75,
+    "feedback": "很好的回答！你准确描述了Redis和Zookeeper两种主流的分布式锁方案，并详细分析了实现细节和优缺点。特别值得赞赏的是：1) 提到了UUID验证防止误删锁；2) 说明了Zookeeper的watch机制；3) 结合实际项目经验提到了Redisson和watchdog。\n\n如果能补充以下内容会更完美：\n1. Redis主从切换问题的具体场景（主库宕机前锁未同步到从库）\n2. RedLock算法（在多个Redis实例上加锁提高可靠性）\n3. 数据库方案作为对比（SELECT FOR UPDATE）\n4. 简单的代码示例\n\n整体来说达到了Senior级别的要求。"
+  },
+  "qualityMetrics": {
+    "answerLength": 378,
+    "technicalTerms": 12,
+    "hasExample": true,
+    "hasExplanation": true
+  }
+}

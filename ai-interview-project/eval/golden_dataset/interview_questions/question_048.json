@@ -1,0 +1,14 @@
+{
+  "questionId": "system_design_l3_048",
+  "difficulty": "L3 - Mid",
+  "domain": "System Design",
+  "techStack": ["分布式", "ID生成"],
+  "question": "如何设计一个分布式唯一ID生成器？请比较不同方案的优缺点。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["UUID", "数据库自增", "Snowflake", "Redis", "号段模式"],
+    "sampleGoodAnswer": "常见方案：\n\n1. UUID：128位全局唯一，无序，占用空间大，索引性能差\n2. 数据库自增：简单但性能瓶颈，单点故障\n3. Redis INCR：性能高但依赖Redis，需要持久化\n4. Snowflake（雪花算法）：64位=1位符号+41位时间戳+10位机器ID+12位序列号。优点：有序、高性能（QPS>100万）、时间可排序。缺点：依赖时钟，时钟回拨需处理\n5. 号段模式：预分配号段，数据库压力小。\n\n推荐Snowflake变种：解决时钟回拨（拒绝服务或等待），优化机器ID（Zookeeper分配）。实际案例：美团Leaf、百度UidGenerator。选择依据：性能要求、有序性需求、运维复杂度。",
+    "evaluationCriteria": {"excellent": "多种方案对比、详细优缺点、实际案例", "good": "准确描述主要方案", "average": "知道几种方案但不系统", "poor": "理解不准确"}
+  },
+  "qualityMetrics": {"relevance": 0.98, "difficulty": 0.82, "discriminability": 0.90}
+}

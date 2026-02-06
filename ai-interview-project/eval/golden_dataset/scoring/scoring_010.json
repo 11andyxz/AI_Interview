@@ -1,0 +1,24 @@
+{
+  "scoringId": "scoring_010",
+  "questionId": "react_performance_001",
+  "question": "React应用性能优化有哪些方法？",
+  "candidateAnswer": "用React.memo包裹组件就可以了，还有useMemo和useCallback。",
+  "evaluation": {
+    "score": 3.0,
+    "level": "Poor",
+    "strengths": ["提到了三个关键API"],
+    "weaknesses": ["回答过于简单", "没有说明使用场景", "缺少原理解释", "没有其他优化方法", "没有实际例子"],
+    "technicalAccuracy": 0.60,
+    "completeness": 0.30,
+    "clarity": 0.50,
+    "depth": 0.20,
+    "feedback": "回答过于简单。虽然提到了React.memo、useMemo和useCallback，但缺少：1) 每个API的使用场景和原理；2) 其他重要优化方法（代码分割、懒加载、虚拟列表）；3) 实际案例；4) 性能分析工具（React DevTools Profiler）。建议系统学习React性能优化，理解底层渲染机制。"
+  },
+  "qualityMetrics": {
+    "answerLength": 35,
+    "technicalTerms": 3,
+    "hasExample": false,
+    "hasExplanation": false,
+    "hasCodeExamples": false
+  }
+}

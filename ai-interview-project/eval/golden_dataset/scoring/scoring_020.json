@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_020",
+  "questionId": "docker_optimization_001",
+  "question": "如何优化Docker镜像大小？",
+  "candidateAnswer": "几个优化方法：\n1. 多阶段构建\n2. 使用alpine基础镜像\n3. 合并RUN命令\n4. 清理缓存\n5. .dockerignore文件",
+  "evaluation": {
+    "score": 5.0,
+    "level": "Fair",
+    "strengths": ["提到了主要方法"],
+    "weaknesses": ["每个方法没有展开", "缺少示例", "没有实际效果数据", "过于简略"],
+    "technicalAccuracy": 0.80,
+    "completeness": 0.50,
+    "clarity": 0.55,
+    "depth": 0.40,
+    "feedback": "回答正确但过于简略。每个方法都应该展开说明：1) 多阶段构建的Dockerfile示例；2) alpine vs ubuntu大小对比；3) 合并RUN命令的原因（层数优化）；4) 清理具体做法（apt-get clean、rm -rf）；5) 优化前后对比数据（如从1GB降到200MB）。"
+  },
+  "qualityMetrics": {"answerLength": 85, "technicalTerms": 6, "hasExample": false, "hasExplanation": false, "hasCodeExamples": false}
+}

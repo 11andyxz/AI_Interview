@@ -1,0 +1,33 @@
+{
+  "scoringId": "scoring_001",
+  "questionId": "backend_l3_001",
+  "question": "请解释Spring Boot中的自动配置（Auto-Configuration）机制是如何工作的？",
+  "candidateAnswer": "Spring Boot的自动配置主要是通过@EnableAutoConfiguration这个注解实现的。这个注解会去扫描所有jar包下面的META-INF/spring.factories文件，里面定义了很多自动配置类。这些配置类会用条件注解，比如@ConditionalOnClass、@ConditionalOnMissingBean等，只有满足条件才会生效。举个例子，如果你的项目里有DataSource这个类，那DataSourceAutoConfiguration就会自动配置数据源。这样开发者就不用写很多xml配置了，Spring Boot会根据你添加的依赖自动配置好。如果想自定义，可以在application.properties里覆盖默认配置，或者自己写一个@Configuration类。",
+  "evaluation": {
+    "score": 8.5,
+    "level": "Good",
+    "strengths": [
+      "准确描述了@EnableAutoConfiguration的作用",
+      "正确解释了spring.factories机制",
+      "提到了关键的条件注解",
+      "给出了DataSource的实际例子",
+      "说明了自定义配置的方法"
+    ],
+    "improvements": [
+      "可以更详细解释条件注解的执行时机",
+      "缺少对自动配置类加载顺序的说明",
+      "没有提到@SpringBootApplication的组合注解作用"
+    ],
+    "technicalAccuracy": 0.90,
+    "completeness": 0.85,
+    "clarity": 0.90,
+    "depth": 0.80,
+    "feedback": "回答很好！你准确地描述了Spring Boot自动配置的核心机制，包括@EnableAutoConfiguration、spring.factories和条件注解。举的DataSource例子也很恰当。如果能进一步说明@Order或@AutoConfigureAfter等控制加载顺序的注解，以及@SpringBootApplication这个组合注解的作用，会更加完整。"
+  },
+  "qualityMetrics": {
+    "answerLength": 245,
+    "technicalTerms": 8,
+    "hasExample": true,
+    "hasExplanation": true
+  }
+}

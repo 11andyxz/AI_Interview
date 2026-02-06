@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_020",
+  "scenario": "Mid-level Microservices - Service Communication",
+  "difficulty": "L3 - Mid",
+  "domain": "Backend",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "微服务之间如何通信？", "candidate": "微服务通信主要有两种：1) 同步通信，用REST API或gRPC，适合实时查询；2) 异步通信，用消息队列（Kafka、RabbitMQ），适合解耦和异步处理。还有服务发现（Consul、Eureka）来找到服务地址。", "evaluation": {"score": 7.0, "strengths": ["两种方式都提到", "场景区分"], "concerns": ["可以更详细", "优缺点未说明"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "REST和gRPC各有什么优缺点？什么时候选哪个？", "candidate": "REST：\n优点：\n- 简单易用，HTTP协议，浏览器直接访问\n- 生态成熟，工具多（Swagger、Postman）\n- 可读性好，JSON格式\n\n缺点：\n- 性能较差，JSON序列化慢\n- HTTP/1.1多路复用差\n- 接口定义不严格，容易出错\n\ngRPC：\n优点：\n- 性能高，Protobuf序列化快，体积小\n- HTTP/2多路复用、双向流\n- 接口定义严格（.proto），类型安全\n- 支持流式传输\n\n缺点：\n- 浏览器支持差，需要grpc-web\n- 调试困难，二进制协议\n- 生态不如REST成熟\n\n选择：\n- 内部服务间：gRPC（性能、类型安全）\n- 对外API：REST（兼容性、易用性）\n- 高吞吐场景：gRPC（日志收集、监控上报）\n- 实时流式：gRPC（聊天、推送）\n\n实践：\n公司内部用gRPC，性能比REST提升30%，序列化快3倍。对外API用REST，方便第三方接入。", "evaluation": {"score": 8.5, "strengths": ["对比全面", "场景选择清晰", "实际数据"], "depth": "深入理解通信协议", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "微服务调用链路长，如何保证可靠性？", "candidate": "微服务可靠性保障：\n\n1. 超时控制：\n- 设置合理超时时间，避免长时间等待\n- 快速失败，不阻塞整个链路\n\n2. 重试机制：\n- 幂等性：确保重试不会产生副作用\n- 指数退避：第1次1s，第2次2s，第3次4s\n- 限制次数：最多3次\n\n3. 熔断降级（Hystrix/Sentinel）：\n- 熔断：连续失败达到阈值，暂停调用\n- 降级：返回默认值或缓存数据\n- 半开状态：定期尝试恢复\n\n4. 限流：\n- 令牌桶/漏桶算法\n- 保护服务不被打垮\n\n5. 链路追踪（Skywalking）：\n- TraceId全链路追踪\n- 定位慢服务\n- 分析依赖关系\n\n6. 监控告警：\n- 成功率、RT、QPS\n- 阈值告警，及时发现问题\n\n实战案例：\n订单服务调用支付服务超时：\n- 设置超时3秒\n- 重试2次（幂等设计）\n- 熔断：10秒内失败50%，熔断30秒\n- 降级：返回\"支付处理中，请稍后查询\"\n- 异步补偿：MQ异步重试支付\n\n效果：\n- 成功率从95%提升到99.5%\n- RT P99从5s降到500ms\n- 用户体验好，不会一直等待", "evaluation": {"score": 9.0, "strengths": ["可靠性措施全面", "实战案例详细", "数据支撑", "考虑用户体验"], "technicalDepth": "优秀", "practicalExperience": "丰富的微服务架构经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid to Senior (L3-L4)",
+    "strengths": ["微服务架构理解深入", "通信方式对比清晰", "可靠性方案完善", "实战经验丰富"],
+    "assessmentScore": 8.2,
+    "recommendation": "推荐，微服务架构能力强",
+    "nextSteps": "可以考察分布式事务或服务治理"
+  },
+  "qualityMetrics": {"conversationFlow": 0.90, "technicalDepth": 0.88, "coherence": 0.92, "progressiveness": 0.87}
+}

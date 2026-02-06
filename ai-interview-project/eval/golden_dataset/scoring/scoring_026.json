@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_026",
+  "questionId": "testing_strategy_001",
+  "question": "如何设计一个完整的测试策略？",
+  "candidateAnswer": "测试金字塔：单元测试（70%）、集成测试（20%）、E2E测试（10%）。单元测试用Jest/JUnit，快速反馈；集成测试验证模块交互；E2E测试模拟用户场景。还要有性能测试（JMeter）、安全测试、兼容性测试。CI自动运行测试，代码覆盖率要求80%+。测试左移，开发阶段就开始测试。",
+  "evaluation": {
+    "score": 6.5,
+    "level": "Fair",
+    "strengths": ["测试金字塔概念正确", "测试类型全面", "提到CI和覆盖率"],
+    "weaknesses": ["每种测试展开不足", "缺少具体实践", "TDD/BDD未提及"],
+    "technicalAccuracy": 0.85,
+    "completeness": 0.65,
+    "clarity": 0.75,
+    "depth": 0.55,
+    "feedback": "回答涵盖了主要测试类型。建议补充：1) 每种测试的具体实例和工具；2) TDD/BDD开发模式；3) Mock/Stub使用；4) 测试数据管理；5) 回归测试策略；6) 实际项目中的测试实践和效果。"
+  },
+  "qualityMetrics": {"answerLength": 200, "technicalTerms": 10, "hasExample": false, "hasExplanation": true, "hasCodeExamples": false}
+}

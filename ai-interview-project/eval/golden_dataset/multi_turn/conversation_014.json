@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_014",
+  "scenario": "Mid-level Security - Vulnerability Analysis",
+  "difficulty": "L3 - Mid",
+  "domain": "Security",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "什么是SQL注入？如何防止？", "candidate": "SQL注入是攻击者通过输入恶意SQL代码，改变查询逻辑。比如用户名输入 admin' OR '1'='1，会绕过密码验证。防止方法：1) 使用参数化查询（PreparedStatement）；2) 输入验证和过滤；3) 最小权限原则。", "evaluation": {"score": 7.0, "strengths": ["概念清楚", "举例说明", "防护方法"], "concerns": ["可以更深入"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "参数化查询为什么能防止SQL注入？", "candidate": "参数化查询（PreparedStatement）的原理是SQL语句和参数分离：\n\n1. 预编译：先发送SQL模板到数据库，比如 SELECT * FROM user WHERE name=? AND pwd=?\n2. 参数绑定：再发送参数值，数据库将参数作为数据处理，不会解析为SQL代码\n3. 执行：数据库不会重新解析SQL结构\n\n示例对比：\n```java\n// 不安全：拼接\nString sql = \"SELECT * FROM user WHERE name='\" + name + \"'\";\n// 安全：参数化\nPreparedStatement ps = conn.prepareStatement(\"SELECT * FROM user WHERE name=?\");\nps.setString(1, name);\n```\n\n即使用户输入 admin' OR '1'='1，参数化查询会把整个字符串作为name的值去查询，而不是作为SQL代码执行。\n\n注意：动态表名/列名无法参数化，需要白名单校验。", "evaluation": {"score": 8.5, "strengths": ["原理解释清楚", "代码示例", "注意事项"], "depth": "深入理解安全机制", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "还有其他常见Web安全漏洞吗？", "candidate": "常见Web漏洞（OWASP Top 10）：\n\n1. XSS（跨站脚本）：\n   - 攻击者注入JavaScript代码\n   - 防护：输出编码、CSP、HttpOnly Cookie\n\n2. CSRF（跨站请求伪造）：\n   - 利用用户登录态发起恶意请求\n   - 防护：CSRF Token、SameSite Cookie、Referer校验\n\n3. 越权访问：\n   - 水平越权：访问同级别其他用户数据\n   - 垂直越权：普通用户访问管理员功能\n   - 防护：严格权限校验、不信任客户端参数\n\n4. 敏感信息泄露：\n   - 错误信息暴露路径、版本\n   - 防护：统一异常处理、日志脱敏\n\n5. 不安全的反序列化：\n   - 恶意对象执行任意代码\n   - 防护：避免反序列化不可信数据、白名单\n\n实践经验：\n项目中修复了一个XSS漏洞，用户评论未转义，通过<script>标签窃取Cookie。解决：后端过滤<script>标签，前端用textContent而非innerHTML，设置HttpOnly。", "evaluation": {"score": 9.0, "strengths": ["漏洞分类全面", "防护措施具体", "实际案例", "OWASP知识"], "technicalDepth": "优秀", "practicalExperience": "有安全加固经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid to Senior (L3-L4)",
+    "strengths": ["安全知识全面", "深入理解攻击原理", "防护措施具体", "有实战经验"],
+    "assessmentScore": 8.2,
+    "recommendation": "推荐，安全意识强，适合安全相关工作",
+    "nextSteps": "可以考察加密、认证授权或渗透测试"
+  },
+  "qualityMetrics": {"conversationFlow": 0.90, "technicalDepth": 0.88, "coherence": 0.92, "progressiveness": 0.88}
+}

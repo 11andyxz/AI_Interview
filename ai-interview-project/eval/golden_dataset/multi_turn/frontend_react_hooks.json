@@ -1,0 +1,74 @@
+{
+  "conversationId": "multi_turn_002",
+  "scenario": "Mid-level Frontend Position - React Hooks Deep Dive",
+  "difficulty": "L3 - Mid-level",
+  "domain": "Frontend Development",
+  "turns": [
+    {
+      "turnNumber": 1,
+      "interviewer": "你在简历中提到熟悉React Hooks，能否介绍一下你常用的Hooks？",
+      "candidate": "好的。我常用的Hooks主要有：\n1. useState - 管理组件状态\n2. useEffect - 处理副作用，比如数据请求、订阅\n3. useContext - 跨组件传递数据\n4. useMemo - 缓存计算结果，优化性能\n5. useCallback - 缓存函数，避免子组件不必要的重渲染\n6. useRef - 获取DOM引用或存储不触发渲染的值\n\n实际项目中，useState和useEffect用得最多，useMemo和useCallback主要用于性能优化场景。",
+      "evaluation": {
+        "score": 7.0,
+        "strengths": ["列举了主要的Hooks", "说明了基本用途", "提到了性能优化"],
+        "concerns": ["缺少具体使用场景", "没有深入细节"],
+        "followUpNeeded": true
+      }
+    },
+    {
+      "turnNumber": 2,
+      "interviewer": "不错。那useEffect有哪些注意事项？依赖数组是如何工作的？",
+      "candidate": "useEffect的注意事项主要有：\n\n1. 依赖数组：第二个参数是依赖数组，只有数组中的值变化时才会重新执行effect。如果不传依赖数组，每次渲染都会执行；传空数组[]，只在mount时执行一次。\n\n2. 清理函数：如果effect返回一个函数，React会在组件卸载或下次effect执行前调用它，用于清理订阅、定时器等。\n\n3. 常见陷阱：\n- 遗漏依赖会导致闭包陷阱，使用旧的值\n- 依赖对象或数组要注意引用相等性，可能导致无限循环\n- 在effect中修改依赖的state要小心，可能死循环\n\n4. 执行时机：useEffect在浏览器绘制之后异步执行，如果需要同步执行用useLayoutEffect。\n\n我们项目中遇到过依赖遗漏的问题，开启了eslint-plugin-react-hooks规则来检查。",
+      "evaluation": {
+        "score": 8.5,
+        "strengths": [
+          "详细解释了依赖数组机制",
+          "提到了清理函数",
+          "说明了常见陷阱",
+          "区分了useEffect和useLayoutEffect",
+          "有实际问题解决经验（eslint规则）"
+        ],
+        "depth": "良好，理解比较深入",
+        "followUpNeeded": true
+      }
+    },
+    {
+      "turnNumber": 3,
+      "interviewer": "很好。假设有这样一个场景：组件中有一个输入框，每次输入都要调用API搜索，如何优化避免频繁请求？",
+      "candidate": "这个场景需要做防抖处理。我会这样实现：\n\n```javascript\nimport { useState, useEffect } from 'react';\nimport { debounce } from 'lodash';\n\nfunction SearchComponent() {\n  const [keyword, setKeyword] = useState('');\n  const [results, setResults] = useState([]);\n\n  useEffect(() => {\n    if (!keyword) {\n      setResults([]);\n      return;\n    }\n\n    const timer = setTimeout(() => {\n      fetch(`/api/search?q=${keyword}`)\n        .then(res => res.json())\n        .then(data => setResults(data));\n    }, 500);\n\n    return () => clearTimeout(timer);\n  }, [keyword]);\n\n  return (\n    <div>\n      <input \n        value={keyword} \n        onChange={(e) => setKeyword(e.target.value)} \n      />\n      {/* 展示results */}\n    </div>\n  );\n}\n```\n\n关键点：\n1. 使用setTimeout延迟500ms执行请求\n2. 在清理函数中clearTimeout，当keyword变化时取消上一次的定时器\n3. 这样只有用户停止输入500ms后才会发起请求\n\n也可以用lodash的debounce函数，但要注意useCallback的使用，确保debounced函数不会每次渲染都重新创建。",
+      "evaluation": {
+        "score": 9.0,
+        "strengths": [
+          "提供了完整的代码示例",
+          "正确实现了防抖逻辑",
+          "使用了清理函数",
+          "考虑了边界情况（keyword为空）",
+          "提到了alternative方案（lodash）",
+          "意识到useCallback的使用场景"
+        ],
+        "technicalDepth": "优秀，能独立解决实际问题",
+        "practicalExperience": "明显有实际开发经验",
+        "readyForNextTopic": true
+      }
+    }
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid-level (L3)",
+    "strengths": [
+      "熟练掌握React Hooks基础和进阶用法",
+      "理解useEffect的执行机制和常见陷阱",
+      "能够用代码解决实际问题",
+      "有性能优化意识",
+      "有实际项目经验和问题排查经验"
+    ],
+    "assessmentScore": 8.2,
+    "recommendation": "推荐，符合Mid-level要求，可以考虑Senior方向培养",
+    "nextSteps": "可以考察状态管理、复杂组件设计等更高级话题"
+  },
+  "qualityMetrics": {
+    "conversationFlow": 0.92,
+    "technicalDepth": 0.85,
+    "coherence": 0.95,
+    "progressiveness": 0.88
+  }
+}

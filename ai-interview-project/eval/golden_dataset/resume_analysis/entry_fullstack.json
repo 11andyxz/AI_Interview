@@ -1,0 +1,55 @@
+{
+  "candidateId": "golden_003",
+  "name": "王小明",
+  "position": "Entry-level Full Stack Developer",
+  "yearsOfExperience": 1,
+  "resume": "王小明，应届毕业生，1年实习经验，全栈开发。\n\n工作经历：\n2023-2024 字节跳动 - 全栈开发实习生\n- 参与飞书文档后台API开发\n- 使用Spring Boot + React开发内部管理系统\n- 独立完成用户权限模块的前后端开发\n\n技术栈：\n- 后端：Java, Spring Boot, MyBatis\n- 前端：React, JavaScript, HTML/CSS\n- 数据库：MySQL, Redis\n- 工具：Git, Maven, Docker\n\n教育背景：\n北京邮电大学 计算机科学与技术 本科 2020-2024\nGPA: 3.6/4.0\n\n项目经验：\n1. 飞书内部管理系统（实习项目）\n2. 毕设：基于微服务的电商系统\n3. 课程项目：在线考试系统",
+  "techStack": ["Java", "Spring Boot", "React"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "王小明",
+      "yearsOfExperience": 1,
+      "currentPosition": "全栈开发实习生",
+      "companies": ["字节跳动"]
+    },
+    "skills": {
+      "backend": ["Java", "Spring Boot", "MyBatis"],
+      "frontend": ["React", "JavaScript", "HTML/CSS"],
+      "database": ["MySQL", "Redis"],
+      "tools": ["Git", "Maven", "Docker"]
+    },
+    "experience": {
+      "totalYears": 1,
+      "highlights": [
+        "字节跳动飞书文档实习经验",
+        "独立完成权限模块前后端开发",
+        "全栈开发能力"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "名企实习经验",
+        "全栈开发视野",
+        "学习能力强"
+      ],
+      "concerns": [
+        "工作经验较少",
+        "技术深度有待提升"
+      ],
+      "matchLevel": "初级匹配",
+      "recommendedLevel": "Entry-level"
+    },
+    "interviewQuestions": [
+      "请详细描述你在字节跳动实习期间做的权限模块，涉及哪些技术点？",
+      "Spring Boot和Spring有什么区别？为什么选择Spring Boot？",
+      "你的微服务电商系统是如何设计的？遇到过什么技术挑战？",
+      "作为应届生，你认为自己的优势和劣势分别是什么？"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.88,
+    "relevance": 0.90,
+    "completeness": 0.95
+  }
+}

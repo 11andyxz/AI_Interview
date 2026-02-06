@@ -1,0 +1,39 @@
+{
+  "questionId": "security_l2_029",
+  "difficulty": "L2 - Junior",
+  "domain": "Security",
+  "techStack": ["Web安全", "XSS", "CSRF"],
+  "question": "请解释XSS和CSRF攻击的原理，以及如何防御这两种攻击？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "XSS（跨站脚本攻击）",
+      "CSRF（跨站请求伪造）",
+      "攻击原理和示例",
+      "防御方法",
+      "最佳实践"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述两种攻击和防御方法",
+      "completeness": "涵盖原理、示例、防御措施",
+      "clarity": "解释清晰，有具体案例",
+      "depth": "理解Web安全机制"
+    },
+    "sampleGoodAnswer": "XSS和CSRF是常见的Web安全漏洞：\n\nXSS（Cross-Site Scripting，跨站脚本攻击）：\n原理：攻击者注入恶意脚本到网页，在用户浏览器中执行\n\n类型：\n1. 存储型：恶意脚本存储在服务器（如评论区）\n   例如：<script>发送cookie到攻击者服务器</script>\n2. 反射型：恶意脚本在URL参数中，服务器直接返回\n   例如：search?q=<script>alert('XSS')</script>\n3. DOM型：客户端脚本直接操作DOM\n\n危害：窃取Cookie、劫持会话、篡改页面、钓鱼\n\n防御：\n1. 输入验证：过滤特殊字符\n2. 输出编码：HTML实体转义（< → &lt;）\n3. CSP（Content Security Policy）：限制脚本来源\n4. HttpOnly Cookie：JavaScript无法访问\n5. 使用框架的安全API（如React自动转义）\n\nCSRF（Cross-Site Request Forgery，跨站请求伪造）：\n原理：利用用户已登录的身份，诱导用户访问恶意链接，发起未授权请求\n\n示例：用户登录银行网站后，访问恶意页面：\n<img src=\"http://bank.com/transfer?to=attacker&amount=1000\">\n浏览器自动携带Cookie，完成转账\n\n防御：\n1. CSRF Token：表单提交时验证随机token\n2. SameSite Cookie：限制跨站请求携带Cookie\n3. 验证Referer：检查请求来源\n4. 二次验证：重要操作需要密码或验证码\n5. 使用POST而非GET进行状态变更\n\n区别：\nXSS是注入攻击，CSRF是伪造请求\nXSS利用用户对网站的信任，CSRF利用网站对用户的信任",
+    "evaluationCriteria": {
+      "excellent": "完整解释两种攻击、提供示例、多种防御方法",
+      "good": "准确描述核心原理和主要防御措施",
+      "average": "知道两种攻击但防御方法不清",
+      "poor": "理解有误或混淆两者"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.98,
+    "difficulty": 0.74,
+    "discriminability": 0.87
+  }
+}

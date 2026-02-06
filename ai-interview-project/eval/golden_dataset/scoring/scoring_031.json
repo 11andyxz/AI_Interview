@@ -1,0 +1,54 @@
+{
+  "question": "Explain the difference between REST and GraphQL, and when would you choose each?",
+  "candidateAnswer": "REST and GraphQL are both API design approaches. REST uses multiple endpoints for different resources (like /users, /posts), while GraphQL uses a single endpoint where clients specify exactly what data they need. REST can lead to over-fetching or under-fetching data, while GraphQL solves this by allowing clients to request nested data in one query. I would choose REST for simple CRUD applications where resources are well-defined, and GraphQL for complex UIs that need flexible data fetching, like mobile apps or dashboards where different components need different data shapes.",
+  "evaluation": {
+    "score": 8.5,
+    "level": "GOOD",
+    "strengths": [
+      "Clear explanation of core differences",
+      "Identified key problems (over-fetching/under-fetching)",
+      "Provided practical use cases for each approach",
+      "Good understanding of when to use each technology"
+    ],
+    "weaknesses": [
+      "Could mention versioning differences (REST typically versions APIs, GraphQL doesn't need to)",
+      "Missing discussion of caching (REST benefits from HTTP caching, GraphQL requires custom solutions)",
+      "No mention of tooling ecosystem or learning curve"
+    ],
+    "suggestions": [
+      "Discuss caching strategies for both approaches",
+      "Mention schema definition and type safety in GraphQL",
+      "Consider mentioning real-time features (subscriptions in GraphQL)"
+    ]
+  },
+  "qualityMetrics": {
+    "completeness": 0.82,
+    "tokenEfficiency": 0.88,
+    "vocabularyDiversity": 0.85,
+    "repetitionScore": 0.91,
+    "technicalAccuracy": 0.89,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {
+      "passed": true,
+      "message": "Response has proper structure with clear comparisons"
+    },
+    "contentQualityValidator": {
+      "passed": true,
+      "message": "Content is comprehensive and well-organized"
+    },
+    "toxicityValidator": {
+      "passed": true,
+      "message": "Content is professional and appropriate"
+    },
+    "relevanceValidator": {
+      "passed": true,
+      "message": "Answer directly addresses the question with relevant comparisons"
+    },
+    "scoringFairnessValidator": {
+      "passed": true,
+      "message": "Score of 8.5 is fair given the depth and accuracy of explanation"
+    }
+  }
+}

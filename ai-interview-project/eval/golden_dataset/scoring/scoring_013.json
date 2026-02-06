@@ -1,0 +1,24 @@
+{
+  "scoringId": "scoring_013",
+  "questionId": "python_async_001",
+  "question": "Python中asyncio的原理是什么？",
+  "candidateAnswer": "asyncio是基于事件循环和协程实现的异步I/O框架。核心是EventLoop，负责调度所有协程。当遇到await时，协程会yield控制权给事件循环，等待I/O完成后继续执行。适合I/O密集型任务，单线程实现高并发。",
+  "evaluation": {
+    "score": 6.0,
+    "level": "Fair",
+    "strengths": ["核心概念正确", "提到了事件循环和协程", "说明了适用场景"],
+    "weaknesses": ["缺少详细原理", "没有代码示例", "未说明与多线程区别", "过于简单"],
+    "technicalAccuracy": 0.85,
+    "completeness": 0.55,
+    "clarity": 0.70,
+    "depth": 0.50,
+    "feedback": "回答基本正确但不够深入。建议补充：1) 事件循环的详细机制（selector、回调）；2) 协程的底层实现（generator）；3) 代码示例展示async/await用法；4) 与多线程、多进程对比；5) 实际应用场景（爬虫、API服务）；6) 性能数据对比。"
+  },
+  "qualityMetrics": {
+    "answerLength": 120,
+    "technicalTerms": 6,
+    "hasExample": false,
+    "hasExplanation": true,
+    "hasCodeExamples": false
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "conversationId": "multi_turn_008",
+  "scenario": "Senior Database - Technical Deep Dive",
+  "difficulty": "L4 - Senior",
+  "domain": "Database",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "数据库出现死锁，如何排查和解决？", "candidate": "死锁是两个或多个事务互相等待对方释放锁。排查：1) SHOW ENGINE INNODB STATUS查看死锁日志；2) 查看最近的死锁信息和涉及的SQL；3) 分析事务的加锁顺序。解决：1) 保证事务按相同顺序访问资源；2) 缩短事务时间；3) 降低隔离级别（慎用）；4) 添加合适索引减少锁范围；5) 业务层重试机制。预防：设计时避免长事务，批量操作分批处理。", "evaluation": {"score": 8.0, "strengths": ["排查方法正确", "解决方案全面", "预防意识"], "concerns": ["可以更详细说明加锁顺序"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "能具体说说InnoDB的锁机制吗？", "candidate": "InnoDB有多种锁：\n\n1. 行锁（Row Lock）：\n- 共享锁（S）：读锁，多个事务可共享\n- 排他锁（X）：写锁，独占\n\n2. 间隙锁（Gap Lock）：\n- 锁定索引记录之间的间隙\n- 防止幻读\n\n3. Next-Key Lock：\n- 行锁+间隙锁的组合\n- 默认的锁算法\n\n4. 意向锁（Intention Lock）：\n- 表级锁，协调行锁和表锁\n\n5. 插入意向锁：\n- INSERT操作的特殊间隙锁\n\n加锁规则：\n- SELECT不加锁（MVCC）\n- SELECT ... FOR UPDATE加X锁\n- UPDATE/DELETE走索引加行锁，否则全表锁\n- 唯一索引等值查询加行锁\n- 非唯一索引加Next-Key Lock\n\n实际案例：\n之前遇到死锁，两个事务：\n事务A：UPDATE user SET name WHERE id=1; UPDATE order WHERE id=1;\n事务B：UPDATE order SET status WHERE id=1; UPDATE user WHERE id=1;\n解决：统一加锁顺序，先user后order。", "evaluation": {"score": 9.5, "strengths": ["锁类型全面", "加锁规则清晰", "实际案例有说服力"], "technicalDepth": "深入理解InnoDB", "practicalExperience": "丰富", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Senior (L4)",
+    "strengths": ["深入理解数据库锁机制", "实际排查经验丰富", "有预防和解决方案"],
+    "assessmentScore": 8.8,
+    "recommendation": "强烈推荐，Senior DBA level",
+    "nextSteps": "可以考察分库分表或性能优化"
+  },
+  "qualityMetrics": {"conversationFlow": 0.93, "technicalDepth": 0.95, "coherence": 0.95, "progressiveness": 0.90}
+}

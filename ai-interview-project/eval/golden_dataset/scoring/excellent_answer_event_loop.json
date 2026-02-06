@@ -1,0 +1,35 @@
+{
+  "scoringId": "scoring_007",
+  "questionId": "frontend_l4_002",
+  "question": "请详细解释JavaScript的事件循环（Event Loop）机制，包括宏任务和微任务的执行顺序。",
+  "candidateAnswer": "JavaScript的事件循环是单线程异步执行的核心机制。\n\n**基本流程：**\n1. 执行所有同步代码（调用栈）\n2. 检查微任务队列，执行所有微任务\n3. 执行一个宏任务\n4. 重复2-3\n\n**宏任务：** setTimeout、setInterval、I/O、UI渲染\n**微任务：** Promise.then、MutationObserver、queueMicrotask\n\n**关键点：** 每执行完一个宏任务，必须清空所有微任务，再执行下一个宏任务。\n\n**示例代码：**\n```javascript\nconsole.log('start');\n\nsetTimeout(() => console.log('timeout'), 0);\n\nPromise.resolve()\n  .then(() => console.log('promise1'))\n  .then(() => console.log('promise2'));\n\nconsole.log('end');\n\n// 输出：start end promise1 promise2 timeout\n```\n\n**分析：**\n1. 同步：start、end\n2. 微任务：promise1、promise2（链式then都是微任务）\n3. 宏任务：timeout\n\n**Node.js补充：**\nNode.js的事件循环有6个阶段，process.nextTick优先级高于Promise微任务。\n\n**实际应用：**\n理解事件循环对于处理异步操作顺序、避免阻塞UI、优化性能很重要。比如大量计算可以拆分到多个setTimeout中，避免长时间阻塞。",
+  "evaluation": {
+    "score": 9.2,
+    "level": "Excellent",
+    "strengths": [
+      "完整准确地解释了事件循环机制",
+      "清晰区分了宏任务和微任务",
+      "准确描述了执行顺序",
+      "提供了代码示例和详细分析",
+      "补充了Node.js的差异",
+      "联系实际应用场景",
+      "结构清晰，逻辑严谨"
+    ],
+    "improvements": [
+      "可以画图展示事件循环的各个组件",
+      "可以补充requestAnimationFrame的特殊性"
+    ],
+    "technicalAccuracy": 0.98,
+    "completeness": 0.92,
+    "clarity": 0.95,
+    "depth": 0.88,
+    "feedback": "非常优秀的回答！你深入而准确地解释了JavaScript事件循环机制。特别值得称赞的是：\n\n1. **结构清晰**：从基本流程 -> 任务分类 -> 执行顺序 -> 代码示例 -> 实际应用，层次分明\n\n2. **准确性高**：正确描述了'每个宏任务后清空所有微任务'这个关键点\n\n3. **示例到位**：代码示例简洁且有代表性，分析过程清楚\n\n4. **知识广度**：补充了Node.js的差异，展示了更全面的理解\n\n5. **实践联系**：说明了实际应用场景，不是纸上谈兵\n\n如果要追求完美，可以：\n- 补充requestAnimationFrame（它在微任务后、渲染前执行）\n- 提到调用栈、任务队列、Web APIs等概念\n- 画个简单的流程图\n\n但整体来说，已经达到了Senior级别的优秀水平。"
+  },
+  "qualityMetrics": {
+    "answerLength": 428,
+    "technicalTerms": 16,
+    "hasExample": true,
+    "hasExplanation": true,
+    "hasCodeExamples": true
+  }
+}

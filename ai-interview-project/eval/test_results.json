@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-02-05T20:45:19.434667",
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0
+  },
+  "results": [
+    {
+      "test": "resume_analysis_quality",
+      "status": "PASSED",
+      "score": 0.9591666666666666,
+      "threshold": 0.9
+    },
+    {
+      "test": "question_generation_consistency",
+      "status": "PASSED",
+      "relevance": 0.972,
+      "threshold": 0.85
+    },
+    {
+      "test": "scoring_fairness",
+      "status": "PASSED",
+      "max_variance": 7.4432292756478695,
+      "threshold": 15.0
+    },
+    {
+      "test": "multi_turn_coherence",
+      "status": "PASSED",
+      "coherence": 0.8916666666666666,
+      "threshold": 0.85
+    }
+  ]
+}

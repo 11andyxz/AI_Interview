@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_027",
+  "questionId": "code_review_001",
+  "question": "代码审查（Code Review）应该关注哪些方面？",
+  "candidateAnswer": "Code Review要看：1) 功能正确性，逻辑是否正确；2) 代码规范，遵循团队风格；3) 性能，有无低效代码；4) 安全，SQL注入、XSS等；5) 可测试性，是否好写测试；6) 可维护性，命名清晰、注释充分；7) 边界条件，空值、异常处理。态度要建设性，不是挑刺。自动化工具辅助（SonarQube），但人工审查不可替代。",
+  "evaluation": {
+    "score": 7.5,
+    "level": "Good",
+    "strengths": ["关注点全面", "提到态度重要性", "工具辅助", "边界条件重视"],
+    "weaknesses": ["缺少具体示例", "流程未详细说明", "冲突处理未提及"],
+    "technicalAccuracy": 0.90,
+    "completeness": 0.75,
+    "clarity": 0.85,
+    "depth": 0.70,
+    "feedback": "回答很好，关注点全面。建议补充：1) 具体审查checklist；2) 如何给出建设性反馈示例；3) PR大小建议（< 400行）；4) 审查流程（自测→提交→审查→修改→合并）；5) 冲突处理机制；6) 团队Code Review文化建设。"
+  },
+  "qualityMetrics": {"answerLength": 220, "technicalTerms": 8, "hasExample": false, "hasExplanation": true, "hasCodeExamples": false}
+}

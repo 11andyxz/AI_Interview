@@ -1,0 +1,40 @@
+{
+  "questionId": "frontend_l4_002",
+  "difficulty": "L4 - Senior",
+  "domain": "Frontend Development",
+  "techStack": ["JavaScript", "Browser"],
+  "question": "请详细解释JavaScript的事件循环（Event Loop）机制，包括宏任务和微任务的执行顺序。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasMechanismExplanation": true,
+      "hasTaskTypes": true,
+      "hasExecutionOrder": true,
+      "hasCodeExample": true
+    },
+    "keyPoints": [
+      "调用栈（Call Stack）",
+      "任务队列（Task Queue）",
+      "宏任务（Macro Task）：setTimeout、setInterval、I/O",
+      "微任务（Micro Task）：Promise.then、MutationObserver",
+      "执行顺序：同步代码 -> 微任务 -> 宏任务",
+      "每个宏任务后清空所有微任务"
+    ],
+    "qualityIndicators": {
+      "theoreticalDepth": "深入理解事件循环原理",
+      "practicalApplication": "能用代码示例说明",
+      "accuracy": "准确描述执行顺序"
+    },
+    "sampleGoodAnswer": "JavaScript的事件循环机制：\n\n**基本概念：**\n- 调用栈（Call Stack）：执行同步代码\n- 任务队列（Task Queue）：存放异步任务\n- 事件循环（Event Loop）：不断检查调用栈是否为空，如果为空则从任务队列取任务执行\n\n**任务类型：**\n1. 宏任务（Macro Task）：\n   - setTimeout / setInterval\n   - I/O操作\n   - setImmediate (Node.js)\n   - requestAnimationFrame\n\n2. 微任务（Micro Task）：\n   - Promise.then / catch / finally\n   - MutationObserver\n   - queueMicrotask\n   - process.nextTick (Node.js)\n\n**执行顺序：**\n1. 执行同步代码\n2. 执行所有微任务（直到微任务队列为空）\n3. 执行一个宏任务\n4. 重复步骤2-3\n\n**代码示例：**\n```javascript\nconsole.log('1');\n\nsetTimeout(() => {\n  console.log('2');\n  Promise.resolve().then(() => console.log('3'));\n}, 0);\n\nPromise.resolve().then(() => {\n  console.log('4');\n  setTimeout(() => console.log('5'), 0);\n});\n\nconsole.log('6');\n\n// 输出：1 6 4 2 3 5\n```\n\n**执行过程分析：**\n1. 同步代码：输出 1、6\n2. 清空微任务：执行Promise，输出 4，同时注册setTimeout\n3. 执行第一个宏任务：输出 2，注册微任务\n4. 清空微任务：输出 3\n5. 执行第二个宏任务：输出 5\n\n关键点：每执行完一个宏任务，都要清空所有微任务后再执行下一个宏任务。",
+    "evaluationCriteria": {
+      "excellent": "完整机制、任务类型、执行顺序、代码示例、详细分析",
+      "good": "机制正确、区分宏微任务、基本顺序正确",
+      "average": "基本概念正确但细节不足",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.99,
+    "difficulty": 0.82,
+    "discriminability": 0.93
+  }
+}

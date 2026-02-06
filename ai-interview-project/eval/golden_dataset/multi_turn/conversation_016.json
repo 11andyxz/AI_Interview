@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_016",
+  "scenario": "Mid-level Testing - Test Strategy",
+  "difficulty": "L3 - Mid",
+  "domain": "Testing",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "如何测试一个微服务接口？", "candidate": "测试微服务接口需要多层次：1) 单元测试：测试业务逻辑，Mock外部依赖；2) 集成测试：测试和数据库、Redis等的交互；3) 接口测试：用Postman或JMeter测试HTTP接口；4) 契约测试：用Pact测试服务间协议。", "evaluation": {"score": 7.0, "strengths": ["多层次测试理念", "工具提及"], "concerns": ["具体实践可以更详细"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "Mock和Stub有什么区别？什么时候用哪个？", "candidate": "Mock和Stub都是测试替身，但有区别：\n\nStub（桩）：\n- 提供预设的返回值\n- 关注状态验证（返回值是否正确）\n- 简单实现\n```java\nUserRepository stub = mock(UserRepository.class);\nwhen(stub.findById(1)).thenReturn(user);\n```\n\nMock（模拟）：\n- 验证交互行为\n- 关注行为验证（方法是否被调用）\n- 验证调用次数、参数等\n```java\nEmailService mock = mock(EmailService.class);\nservice.registerUser(user);\nverify(mock, times(1)).sendEmail(eq(user.getEmail()));\n```\n\n使用场景：\n- Stub：测试返回值相关逻辑，如计算、数据处理\n- Mock：测试交互行为，如是否发送了邮件、记录了日志\n\n实践：\n- 测试用户注册：用Mock验证是否发送了欢迎邮件\n- 测试价格计算：用Stub提供商品信息，验证计算结果", "evaluation": {"score": 8.5, "strengths": ["概念区分清晰", "代码示例", "场景说明"], "depth": "理解测试理念", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "微服务测试的痛点是什么？如何解决？", "candidate": "微服务测试痛点和解决方案：\n\n1. 环境依赖复杂：\n   - 痛点：一个服务依赖10+其他服务，环境难搭建\n   - 解决：Docker Compose本地环境，Testcontainers集成测试\n\n2. 数据一致性：\n   - 痛点：多个数据库，测试数据准备困难\n   - 解决：每个测试独立数据，@Transactional回滚，或用H2内存库\n\n3. 接口契约变更：\n   - 痛点：上游服务改接口，下游不知道就挂了\n   - 解决：契约测试（Pact），CI/CD检查兼容性\n\n4. 测试时间长：\n   - 痛点：集成测试启动服务慢，全链路测试更慢\n   - 解决：分层测试，单元测试占70%+，集成测试20%，E2E测试10%\n\n5. 测试环境不稳定：\n   - 痛点：共享测试环境，相互干扰\n   - 解决：动态环境，每个分支独立namespace（K8s）\n\n实践经验：\n项目中用Testcontainers + WireMock：\n- Testcontainers启动MySQL、Redis\n- WireMock模拟外部服务\n- 测试独立，可并行执行\n- 从30分钟降到5分钟\n\n测试金字塔：\n- 70% 单元测试（快，隔离）\n- 20% 集成测试（可信）\n- 10% E2E测试（覆盖核心流程）", "evaluation": {"score": 9.0, "strengths": ["痛点识别准确", "解决方案实用", "实践经验丰富", "测试金字塔理念"], "technicalDepth": "优秀", "practicalExperience": "有微服务测试经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid to Senior (L3-L4)",
+    "strengths": ["测试理念完善", "微服务测试经验丰富", "工程实践能力强"],
+    "assessmentScore": 8.2,
+    "recommendation": "推荐，测试能力突出，适合QA或测试架构师",
+    "nextSteps": "可以考察自动化测试框架或性能测试"
+  },
+  "qualityMetrics": {"conversationFlow": 0.90, "technicalDepth": 0.88, "coherence": 0.92, "progressiveness": 0.87}
+}

@@ -1,0 +1,24 @@
+{
+  "scoringId": "scoring_012",
+  "questionId": "system_design_cache_001",
+  "question": "如何设计一个高可用的缓存系统？",
+  "candidateAnswer": "我会这样设计：\n\n1. 架构选择：Redis Cluster集群模式\n   - 主从复制：每个master有1-2个slave\n   - 哨兵模式：监控master健康，自动故障转移\n   - 分片：数据分散到多个master节点\n\n2. 高可用保证：\n   - 数据持久化：RDB快照 + AOF日志双保险\n   - 主从切换：哨兵自动切换，应用无感知\n   - 多机房部署：跨AZ部署避免单点故障\n\n3. 性能优化：\n   - 连接池：JedisPool复用连接\n   - Pipeline：批量操作减少网络开销\n   - 本地缓存：Caffeine作为L1缓存，Redis作为L2\n\n4. 缓存策略：\n   - 过期时间：避免雪崩，设置随机过期\n   - 淘汰策略：LRU/LFU\n   - 预热：启动时加载热点数据\n\n5. 常见问题处理：\n   - 缓存穿透：布隆过滤器 + 空值缓存\n   - 缓存击穿：互斥锁 + 热点数据不过期\n   - 缓存雪崩：过期时间随机化 + 多级缓存\n\n6. 监控告警：\n   - 监控指标：命中率、QPS、延迟、内存使用\n   - 告警：连接数异常、响应慢、主从延迟大\n\n实际经验：\n之前负责的电商系统，Redis QPS达到10万+，通过：\n- 16个master节点分片\n- 本地缓存减少60%的Redis请求\n- 缓存命中率从85%优化到95%\n- P99延迟从50ms降到10ms",
+  "evaluation": {
+    "score": 9.0,
+    "level": "Excellent",
+    "strengths": ["架构设计完整", "多维度考虑（高可用、性能、监控）", "常见问题都覆盖", "有实际数据支撑", "结构清晰"],
+    "weaknesses": ["可以补充容量规划", "成本优化方面较少提及"],
+    "technicalAccuracy": 0.95,
+    "completeness": 0.90,
+    "clarity": 0.95,
+    "depth": 0.90,
+    "feedback": "非常优秀的回答！架构设计全面，从高可用到性能优化都考虑到了，实际数据很有说服力。特别好的是：1) 多级缓存设计；2) 三大缓存问题的解决方案；3) 监控指标完善。建议补充：1) 容量规划（如何评估需要多少节点）；2) 成本优化（冷热数据分离）；3) 数据一致性保证（缓存和数据库）。整体展现了Senior级别的系统设计能力。"
+  },
+  "qualityMetrics": {
+    "answerLength": 680,
+    "technicalTerms": 22,
+    "hasExample": true,
+    "hasExplanation": true,
+    "hasCodeExamples": false
+  }
+}

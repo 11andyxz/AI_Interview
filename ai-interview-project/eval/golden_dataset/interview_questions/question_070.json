@@ -1,0 +1,37 @@
+{
+  "questionId": "Q070",
+  "domain": "System Design",
+  "difficulty": "MID",
+  "techStack": ["Database Design", "SQL", "NoSQL", "Architecture"],
+  "question": "Design a database schema for a social media platform with posts, comments, likes, and followers. Discuss SQL vs NoSQL trade-offs.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "SQL option: Users, Posts, Comments, Likes, Followers tables with foreign keys",
+      "NoSQL option: Denormalized documents with embedded comments for read optimization",
+      "SQL pros: ACID transactions, strong consistency, complex queries with joins",
+      "NoSQL pros: horizontal scalability, flexible schema, better for read-heavy workloads",
+      "Hybrid approach: SQL for user/auth, NoSQL for posts/timeline for optimal performance"
+    ],
+    "codeExample": "-- SQL Schema\nCREATE TABLE users (\n    user_id BIGINT PRIMARY KEY,\n    username VARCHAR(50) UNIQUE,\n    email VARCHAR(255),\n    created_at TIMESTAMP\n);\n\nCREATE TABLE posts (\n    post_id BIGINT PRIMARY KEY,\n    user_id BIGINT REFERENCES users(user_id),\n    content TEXT,\n    created_at TIMESTAMP,\n    likes_count INT DEFAULT 0\n);\n\nCREATE TABLE followers (\n    follower_id BIGINT REFERENCES users(user_id),\n    followed_id BIGINT REFERENCES users(user_id),\n    created_at TIMESTAMP,\n    PRIMARY KEY (follower_id, followed_id)\n);",
+    "explanation": "For a social media platform, consider access patterns: timeline reads are frequent, writes less so. SQL approach uses normalized tables with indexes on user_id and created_at for timeline queries. NoSQL (MongoDB) could store posts with embedded comments for faster reads, but updates are more complex. At scale, hybrid works best: PostgreSQL for users/relationships (requiring ACID), Cassandra/MongoDB for posts/timeline (requiring partition tolerance and availability). Use caching heavily for hot data like trending posts."
+  },
+  "followUps": [
+    "How would you optimize queries for generating a user's timeline feed?",
+    "What indexing strategy would you use for the followers table to support both follower and following queries?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.86,
+    "tokenEfficiency": 0.80,
+    "vocabularyDiversity": 0.84,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.90,
+    "clarityScore": 0.85
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

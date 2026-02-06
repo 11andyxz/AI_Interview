@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_011",
+  "scenario": "Mid-level System Design - Mixed Topics",
+  "difficulty": "L3 - Mid",
+  "domain": "System Design",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "设计一个短链接服务，需要考虑哪些方面？", "candidate": "主要功能：长链接转短链接、短链接跳转。考虑：1) 短链生成算法，Hash或自增ID转62进制；2) 数据存储，MySQL或Redis；3) 高并发，缓存热点链接；4) 重定向，301永久或302临时。", "evaluation": {"score": 6.5, "strengths": ["核心功能清晰", "主要技术点提到"], "concerns": ["设计不够详细", "容量规划缺失"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "如果每天要处理1亿次访问，如何设计存储和缓存？", "candidate": "1亿次访问，假设读写比100:1，那就是100万次写、1亿次读。\n\n存储设计：\n- MySQL分库分表：按短链hash分16个库，每库32表\n- 单表100万条，总支持50亿条链接\n- 索引：短链为主键，长链建索引\n\n缓存设计：\n- Redis集群：8个master，每个2个slave\n- 热点数据（80/20原则）：2000万条缓存\n- 过期策略：LRU，7天过期\n- 缓存命中率目标95%+\n\n性能：\n- QPS=1亿/86400≈1200\n- 单台Redis支持10万QPS，8台足够\n- 预留3倍余量应对峰值\n\n监控：\n- 缓存命中率\n- 响应延迟P99<50ms\n- 数据库慢查询", "evaluation": {"score": 8.5, "strengths": ["容量计算合理", "架构设计完整", "性能评估清晰", "监控考虑"], "depth": "有系统设计能力", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "短链如何防止冲突和恶意生成？", "candidate": "防冲突：\n1. 自增ID+62进制编码：保证唯一性\n2. 雪花算法生成唯一ID\n3. Hash冲突用开放地址法或拉链法\n4. 先查询是否存在，存在返回现有短链\n\n防恶意：\n1. 限流：IP维度限制（每分钟10次）\n2. 验证码：频繁请求要求验证\n3. Token鉴权：注册用户才能生成\n4. 黑名单：恶意IP封禁\n5. 长链校验：检查是否合法URL，过滤钓鱼链接\n\n安全：\n- 短链加盐防猜测\n- HTTPS传输\n- SQL注入防护\n- XSS过滤", "evaluation": {"score": 8.0, "strengths": ["防护措施全面", "考虑安全性", "方案可行"], "technicalDepth": "不错", "practicalExperience": "有安全意识", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid (L3)",
+    "strengths": ["系统设计思路清晰", "容量规划合理", "安全意识强", "监控完善"],
+    "assessmentScore": 7.7,
+    "recommendation": "推荐，具备Mid级别系统设计能力",
+    "nextSteps": "可以考察更复杂的系统设计或高并发场景"
+  },
+  "qualityMetrics": {"conversationFlow": 0.88, "technicalDepth": 0.85, "coherence": 0.90, "progressiveness": 0.85}
+}

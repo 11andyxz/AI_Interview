@@ -1,0 +1,39 @@
+{
+  "questionId": "system_design_l2_028",
+  "difficulty": "L2 - Junior",
+  "domain": "System Design",
+  "techStack": ["负载均衡", "高可用"],
+  "question": "什么是负载均衡？请说明常见的负载均衡算法及其适用场景。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "负载均衡的作用",
+      "常见算法（轮询、随机、加权、最少连接、一致性哈希）",
+      "各算法的优缺点",
+      "实际应用场景",
+      "常见工具（Nginx、LVS）"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述负载均衡和算法",
+      "completeness": "涵盖多种算法和适用场景",
+      "clarity": "解释清晰，有对比说明",
+      "depth": "理解分布式系统设计"
+    },
+    "sampleGoodAnswer": "负载均衡是将请求分发到多个服务器，提高系统的可用性和性能。\n\n常见算法：\n\n1. 轮询（Round Robin）：\n- 逻辑：按顺序依次分配请求\n- 优点：简单公平，实现容易\n- 缺点：不考虑服务器性能差异\n- 场景：服务器配置相同\n\n2. 加权轮询（Weighted Round Robin）：\n- 逻辑：按权重比例分配，性能高的服务器权重大\n- 优点：考虑服务器差异\n- 场景：服务器配置不同\n\n3. 随机（Random）：\n- 逻辑：随机选择服务器\n- 优点：简单，请求量大时接近均匀\n- 场景：服务器配置相同，请求量大\n\n4. 最少连接（Least Connections）：\n- 逻辑：选择当前连接数最少的服务器\n- 优点：适应长短请求混合场景\n- 场景：请求处理时间差异大\n\n5. IP哈希（IP Hash）：\n- 逻辑：根据客户端IP哈希，同一IP总是分配到同一服务器\n- 优点：保证会话一致性\n- 场景：需要会话保持的应用\n\n6. 一致性哈希：\n- 逻辑：构建哈希环，节点变化时最小化数据迁移\n- 优点：适合分布式缓存\n- 场景：缓存集群、分布式存储\n\n常见工具：\n- Nginx：七层负载均衡（HTTP）\n- LVS：四层负载均衡（TCP/UDP）\n- HAProxy：高性能负载均衡\n- 云服务：AWS ELB、阿里云SLB",
+    "evaluationCriteria": {
+      "excellent": "完整解释多种算法、对比优缺点、说明场景和工具",
+      "good": "准确描述主要算法和基本概念",
+      "average": "知道负载均衡但算法不清楚",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.96,
+    "difficulty": 0.68,
+    "discriminability": 0.83
+  }
+}

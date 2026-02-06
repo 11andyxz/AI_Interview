@@ -1,0 +1,52 @@
+{
+  "candidateId": "golden_002",
+  "name": "李娜",
+  "position": "Mid-level Frontend Developer",
+  "yearsOfExperience": 3,
+  "resume": "李娜，3年前端开发经验，专注React生态。\n\n工作经历：\n2021-2024 美团 - 前端开发工程师\n- 负责美团外卖C端页面开发与维护\n- 使用React + TypeScript构建高性能SPA应用\n- 优化首屏加载时间，FCP从3s降至1.2s\n- 参与组件库建设，提升团队开发效率30%\n\n技术栈：\n- 前端：React, Vue, TypeScript, JavaScript\n- 状态管理：Redux, Zustand\n- 构建工具：Webpack, Vite\n- 样式：CSS3, Sass, Tailwind CSS\n- 测试：Jest, React Testing Library\n\n教育背景：\n华中科技大学 软件工程 本科 2017-2021\n\n项目经验：\n1. 美团外卖订单系统前端重构\n2. 组件库开发（20+组件）\n3. 移动端H5页面优化",
+  "techStack": ["React", "TypeScript", "Vue", "Webpack"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "李娜",
+      "yearsOfExperience": 3,
+      "currentPosition": "前端开发工程师",
+      "companies": ["美团"]
+    },
+    "skills": {
+      "frontend": ["React", "Vue", "TypeScript", "JavaScript"],
+      "stateManagement": ["Redux", "Zustand"],
+      "tools": ["Webpack", "Vite"],
+      "styling": ["CSS3", "Sass", "Tailwind CSS"],
+      "testing": ["Jest", "React Testing Library"]
+    },
+    "experience": {
+      "totalYears": 3,
+      "highlights": [
+        "美团外卖C端开发经验",
+        "性能优化：FCP从3s降至1.2s",
+        "组件库建设，提升效率30%"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "扎实的React技术栈",
+        "性能优化经验",
+        "组件化开发能力强"
+      ],
+      "matchLevel": "中等匹配",
+      "recommendedLevel": "Mid-level"
+    },
+    "interviewQuestions": [
+      "请描述你如何将FCP从3秒优化到1.2秒的过程，使用了哪些具体技术手段？",
+      "在组件库开发中，你是如何设计组件API来保证易用性和灵活性的？",
+      "React和Vue的状态管理有什么区别？你更倾向使用哪个，为什么？",
+      "请描述一个你遇到的复杂前端性能问题，以及你的解决方案。"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.92,
+    "relevance": 0.95,
+    "completeness": 0.98
+  }
+}

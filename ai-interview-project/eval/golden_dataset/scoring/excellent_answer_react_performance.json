@@ -1,0 +1,35 @@
+{
+  "scoringId": "scoring_003",
+  "questionId": "frontend_l4_001",
+  "question": "在React应用中，有一个包含10000行数据的列表需要渲染，如何优化性能？",
+  "candidateAnswer": "这个问题我在实际项目中遇到过，我会用虚拟滚动来优化。\n\n方案1：虚拟滚动（Virtual Scrolling）\n使用react-window或react-virtualized库，只渲染可视区域的DOM元素。假设视口高度500px，每行高度50px，那只需要渲染10个左右的DOM节点，而不是10000个。当用户滚动时，动态计算应该渲染哪些行。\n\n优点：性能最好，内存占用低，滚动流畅\n缺点：需要固定行高或动态计算，实现相对复杂\n\n方案2：分页加载\n将10000条数据分成100页，每页100条。用户通过翻页按钮查看不同页面。\n\n优点：实现简单，用户可以快速跳转到指定页\n缺点：用户体验不如连续滚动，需要多次点击\n\n方案3：无限滚动\n初始加载50条，滚动到底部时再加载50条。使用Intersection Observer API监听滚动位置。\n\n优点：用户体验好，初始加载快\n缺点：无法快速跳到列表末尾，搜索引擎不友好\n\n其他优化：\n- 使用React.memo包裹列表项组件，避免不必要的重渲染\n- 确保key值稳定且唯一（用id而不是index）\n- 避免在render函数中创建新对象或函数\n- 使用useMemo缓存计算结果\n\n实际选择取决于业务场景：如果是后台管理系统，推荐虚拟滚动；如果是社交媒体信息流，推荐无限滚动。",
+  "evaluation": {
+    "score": 9.5,
+    "level": "Excellent",
+    "strengths": [
+      "提供了3种完整的方案",
+      "每种方案都详细分析了优缺点",
+      "给出了具体的实现细节（库名、API等）",
+      "提到了额外的React性能优化技巧",
+      "结合实际业务场景给出建议",
+      "有实际项目经验的体现",
+      "回答结构清晰，逻辑严谨"
+    ],
+    "improvements": [
+      "可以补充一个代码示例会更完美",
+      "可以提到虚拟滚动的具体计算公式"
+    ],
+    "technicalAccuracy": 1.0,
+    "completeness": 0.95,
+    "clarity": 1.0,
+    "depth": 0.95,
+    "feedback": "非常出色的回答！你展示了深厚的React性能优化经验。三种方案都很合适，分析了各自的优缺点和适用场景。特别值得赞赏的是：1) 提到了具体的库和API；2) 给出了虚拟滚动的计算逻辑；3) 考虑了React.memo、key值等细节优化；4) 结合实际业务场景给出建议。如果能补充一个react-window的代码示例，展示如何计算scrollTop和渲染偏移，会更加完美。"
+  },
+  "qualityMetrics": {
+    "answerLength": 512,
+    "technicalTerms": 15,
+    "hasExample": true,
+    "hasExplanation": true,
+    "hasCodeExamples": false
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "candidateId": "golden_006",
+  "name": "张敏",
+  "position": "Mid-level iOS Developer",
+  "yearsOfExperience": 4,
+  "resume": "张敏，4年iOS开发经验，专注原生开发与性能优化。\n\n工作经历：\n2022-2024 小米 - iOS开发工程师\n- 负责小米商城App iOS端核心功能开发\n- 主导App启动优化，冷启动时间从2.5s降至1.2s\n- 参与SwiftUI重构，提升开发效率40%\n- 使用Combine框架实现响应式编程\n\n2020-2022 快手 - iOS开发工程师\n- 负责短视频播放器优化，首帧渲染时间降低50%\n- 开发直播功能模块\n- 内存优化，降低OOM率30%\n\n技术栈：\n- 语言：Swift, Objective-C\n- UI：UIKit, SwiftUI, SnapKit\n- 架构：MVVM, VIPER\n- 网络：Alamofire, URLSession\n- 数据：Core Data, Realm\n- 工具：CocoaPods, SPM, Fastlane\n- 性能：Instruments, 崩溃分析\n\n教育背景：\n北京理工大学 软件工程 本科 2016-2020\n\n项目经验：\n1. 小米商城App（200万+日活）\n2. 快手短视频播放器优化\n3. 直播模块（WebRTC）",
+  "techStack": ["Swift", "iOS", "SwiftUI"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "张敏",
+      "yearsOfExperience": 4,
+      "currentPosition": "iOS开发工程师",
+      "companies": ["小米", "快手"]
+    },
+    "skills": {
+      "languages": ["Swift", "Objective-C"],
+      "ui": ["UIKit", "SwiftUI", "SnapKit"],
+      "architecture": ["MVVM", "VIPER"],
+      "networking": ["Alamofire", "URLSession"],
+      "storage": ["Core Data", "Realm"],
+      "tools": ["CocoaPods", "SPM", "Fastlane", "Instruments"]
+    },
+    "experience": {
+      "totalYears": 4,
+      "highlights": [
+        "小米商城App开发（200万+日活）",
+        "启动优化：2.5s -> 1.2s",
+        "SwiftUI重构，效率提升40%",
+        "播放器首帧渲染优化50%",
+        "内存优化，OOM率降低30%"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "丰富的性能优化经验",
+        "掌握Swift和SwiftUI现代技术",
+        "大厂背景（小米、快手）",
+        "大用户量App开发经验",
+        "全面的iOS技术栈"
+      ],
+      "matchLevel": "中高度匹配",
+      "recommendedLevel": "Mid-level/Senior"
+    },
+    "interviewQuestions": [
+      "请详细描述你是如何将App冷启动时间从2.5秒优化到1.2秒的？涉及哪些优化手段？",
+      "SwiftUI和UIKit的区别是什么？在什么场景下选择SwiftUI？",
+      "短视频播放器的首帧渲染优化有哪些方法？你是如何做到降低50%的？",
+      "Combine和RxSwift有什么区别？你更倾向于使用哪个？",
+      "iOS内存优化有哪些常见手段？如何定位和解决OOM问题？"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.94,
+    "relevance": 0.97,
+    "completeness": 0.98
+  }
+}

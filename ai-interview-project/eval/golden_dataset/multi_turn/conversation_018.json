@@ -1,0 +1,18 @@
+{
+  "conversationId": "multi_turn_018",
+  "scenario": "Senior Performance - Optimization Discussion",
+  "difficulty": "L4 - Senior",
+  "domain": "Performance",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "线上服务RT突然上涨，如何排查？", "candidate": "RT（Response Time）上涨需要系统化排查：\n1. 监控：Grafana/Prometheus查看QPS、RT、错误率、资源使用\n2. 日志：ELK查看慢查询、异常日志\n3. 链路追踪：Skywalking/Zipkin定位慢接口\n4. 资源：top、free、iostat查看CPU、内存、磁盘IO\n5. 网络：netstat、tcpdump查看连接数、丢包\n6. 数据库：慢查询日志、EXPLAIN分析\n7. 缓存：Redis监控，命中率、连接数", "evaluation": {"score": 8.0, "strengths": ["排查思路系统", "工具齐全"], "concerns": ["可以更具体"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "假设发现是某个SQL慢，如何优化？", "candidate": "SQL优化步骤：\n\n1. 定位问题：\n```sql\nEXPLAIN SELECT * FROM orders WHERE user_id=123 AND status='pending';\n```\n看执行计划：type、key、rows、Extra\n\n2. 常见问题和优化：\n\na) 没有索引（type=ALL，全表扫描）：\n- 创建索引：`CREATE INDEX idx_user_status ON orders(user_id, status)`\n- 联合索引注意顺序（最左前缀）\n\nb) 索引失效：\n- 函数操作：`WHERE YEAR(created_at)=2024` → 改为 `WHERE created_at>='2024-01-01'`\n- 类型转换：`WHERE phone='123'`（phone是int） → 改为 `WHERE phone=123`\n- 前导模糊查询：`WHERE name LIKE '%abc'` → 无法优化，考虑全文索引\n\nc) SELECT * 问题：\n- 改为只查需要的字段，减少数据传输\n- 利用覆盖索引\n\nd) JOIN优化：\n- 小表驱动大表\n- JOIN字段建索引\n- 避免笛卡尔积\n\ne) 分页优化：\n```sql\n-- 慢：LIMIT 1000000, 10\nSELECT * FROM orders WHERE id > 1000000 LIMIT 10;\n-- 或用覆盖索引：\nSELECT * FROM orders o \nJOIN (SELECT id FROM orders LIMIT 1000000,10) t ON o.id=t.id;\n```\n\n3. 验证效果：\n- 对比优化前后的执行时间\n- 压测验证\n- 监控上线后的RT\n\n实战案例：\n订单查询RT从800ms降到50ms：\n- 问题：user_id有索引，但WHERE user_id=? AND DATE(created_at)='2024-01-01'\n- 函数DATE()导致索引失效\n- 改为 created_at BETWEEN '2024-01-01 00:00:00' AND '2024-01-01 23:59:59'\n- RT降到50ms，QPS从200提升到2000", "evaluation": {"score": 9.5, "strengths": ["方法论完整", "案例详细", "EXPLAIN分析", "数据支撑"], "technicalDepth": "深入理解数据库", "practicalExperience": "丰富的优化经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Senior (L4)",
+    "strengths": ["性能优化经验丰富", "排查方法系统", "SQL优化能力强", "数据驱动"],
+    "assessmentScore": 8.8,
+    "recommendation": "强烈推荐，Senior Performance Engineer level",
+    "nextSteps": "可以讨论架构优化或缓存策略"
+  },
+  "qualityMetrics": {"conversationFlow": 0.93, "technicalDepth": 0.95, "coherence": 0.95, "progressiveness": 0.90}
+}

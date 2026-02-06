@@ -1,6 +1,8 @@
 package com.aiinterview.service;
 
 import com.aiinterview.model.openai.OpenAiMessage;
+import com.aiinterview.ml.validation.*;
+import com.aiinterview.ml.monitoring.QualityMonitor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.annotation.Counted;
@@ -20,6 +22,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OpenAiService {
@@ -39,6 +42,12 @@ public class OpenAiService {
 
     @Value("${openai.max-tokens}")
     private Integer maxTokens;
+    
+    @Autowired(required = false)
+    private ValidationPipeline validationPipeline;
+    
+    @Autowired(required = false)
+    private QualityMonitor qualityMonitor;
 
     /**
      * Call OpenAI API with messages (non-streaming)
@@ -230,6 +239,105 @@ public class OpenAiService {
      */
     public boolean hasApiKey() {
         return true; // WebClient bean creation will fail if no API key, so if we get here, it's configured
+    }
+    
+    /**
+     * Chat with validation and quality monitoring
+     * Validates output structure and tracks quality metrics
+     */
+    public Mono<ValidatedAIOutput> chatWithValidation(List<OpenAiMessage> messages, ValidationContext context) {
+        long startTime = System.currentTimeMillis();
+        
+        return chat(messages)
+            .map(response -> {
+                long latency = System.currentTimeMillis() - startTime;
+                
+                // Parse response if possible
+                AIOutput output = AIOutput.builder()
+                    .rawResponse(response)
+                    .model(model)
+                    .latencyMs(latency)
+                    .requestType(context.getRequestType() != null ? 
+                                ValidationContext.RequestType.valueOf(context.getRequestType()) : null)
+                    .build();
+                
+                // Try to parse as JSON
+                try {
+                    Map<String, Object> parsedData = objectMapper.readValue(response, Map.class);
+                    output.setParsedData(parsedData);
+                } catch (Exception e) {
+                    logger.debug("Response is not valid JSON, using raw text");
+                }
+                
+                // Set model version in context
+                if (context.getModelVersion() == null) {
+                    context.setModelVersion(model);
+                }
+                
+                // Run validation pipeline
+                AggregatedValidationResult validationResult = null;
+                if (validationPipeline != null) {
+                    validationResult = validationPipeline.validateAll(output, context);
+                    
+                    if (!validationResult.isPassed()) {
+                        logger.warn("Validation failed for {} request. Failures: {}", 
+                                   context.getRequestType(), validationResult.getFailures());
+                    }
+                }
+                
+                // Calculate quality metrics
+                QualityMonitor.QualityMetrics qualityMetrics = null;
+                if (qualityMonitor != null) {
+                    qualityMetrics = qualityMonitor.calculateQualityMetrics(output, context);
+                    
+                    // Record validation results if available
+                    if (validationResult != null) {
+                        qualityMonitor.recordValidationResults(validationResult, context);
+                    }
+                }
+                
+                return new ValidatedAIOutput(output, validationResult, qualityMetrics);
+            });
+    }
+    
+    /**
+     * Simple chat with validation
+     */
+    public Mono<ValidatedAIOutput> simpleChatWithValidation(String systemPrompt, String userPrompt, 
+                                                             ValidationContext context) {
+        List<OpenAiMessage> messages = List.of(
+            new OpenAiMessage("system", systemPrompt),
+            new OpenAiMessage("user", userPrompt)
+        );
+        return chatWithValidation(messages, context);
+    }
+    
+    /**
+     * Wrapper class for validated AI output
+     */
+    public static class ValidatedAIOutput {
+        private final AIOutput output;
+        private final AggregatedValidationResult validationResult;
+        private final QualityMonitor.QualityMetrics qualityMetrics;
+        
+        public ValidatedAIOutput(AIOutput output, AggregatedValidationResult validationResult,
+                                QualityMonitor.QualityMetrics qualityMetrics) {
+            this.output = output;
+            this.validationResult = validationResult;
+            this.qualityMetrics = qualityMetrics;
+        }
+        
+        public AIOutput getOutput() { return output; }
+        public AggregatedValidationResult getValidationResult() { return validationResult; }
+        public QualityMonitor.QualityMetrics getQualityMetrics() { return qualityMetrics; }
+        
+        public boolean isPassed() {
+            return validationResult == null || validationResult.isPassed();
+        }
+        
+        public String getRawResponse() {
+            return output.getRawResponse();
+        }
     }
 }
 

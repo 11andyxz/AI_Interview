@@ -1,0 +1,37 @@
+{
+  "questionId": "Q077",
+  "domain": "Testing",
+  "difficulty": "MID",
+  "techStack": ["Testing", "Integration Testing", "Spring Boot", "TestContainers"],
+  "question": "Design an integration testing strategy for a Spring Boot REST API that uses PostgreSQL. How do you handle database state between tests?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Integration tests verify multiple components work together (controller + service + repository + database)",
+      "Use @SpringBootTest for full application context, @WebMvcTest for controller layer only",
+      "TestContainers provides real database instance in Docker, better than H2 for testing",
+      "Database cleanup strategies: @Transactional with rollback, @DirtiesContext, manual cleanup in @AfterEach",
+      "Test data builders or fixtures for consistent test setup"
+    ],
+    "codeExample": "@SpringBootTest\n@Testcontainers\nclass UserApiIntegrationTest {\n    @Container\n    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(\"postgres:14\")\n        .withDatabaseName(\"testdb\");\n    \n    @Autowired\n    private TestRestTemplate restTemplate;\n    \n    @Autowired\n    private UserRepository userRepository;\n    \n    @AfterEach\n    void cleanup() {\n        userRepository.deleteAll();\n    }\n    \n    @Test\n    void testCreateUser_returnsCreated() {\n        UserDto userDto = new UserDto(\"john@example.com\", \"John Doe\");\n        \n        ResponseEntity<UserDto> response = restTemplate.postForEntity(\n            \"/api/users\", userDto, UserDto.class);\n        \n        assertEquals(HttpStatus.CREATED, response.getStatusCode());\n        assertNotNull(response.getBody().getId());\n    }\n}",
+    "explanation": "Integration tests validate end-to-end flows through multiple layers. Use TestContainers to spin up real PostgreSQL in Docker - this catches database-specific issues H2 misses. For test isolation: (1) @Transactional with rollback is fast but may hide transaction issues. (2) Delete all data in @AfterEach is reliable. (3) @DirtiesContext recreates context but is slow. Use test data builders for maintainable test setup. @SpringBootTest loads full context; use @WebMvcTest for controller-only tests with mocked services for faster execution."
+  },
+  "followUps": [
+    "What's the difference between @SpringBootTest and @WebMvcTest?",
+    "How would you test API endpoints that require authentication?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.87,
+    "tokenEfficiency": 0.79,
+    "vocabularyDiversity": 0.84,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.90,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

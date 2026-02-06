@@ -1,0 +1,43 @@
+{
+  "questionId": "backend_l5_001",
+  "difficulty": "L5 - Staff/Principal",
+  "domain": "Backend Development",
+  "techStack": ["High Concurrency", "Architecture"],
+  "question": "设计一个秒杀系统，需要支持10万用户同时抢购100件商品，如何保证系统的高可用和数据一致性？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasArchitectureDesign": true,
+      "hasLayeredSolution": true,
+      "hasDataConsistency": true,
+      "hasPerformanceAnalysis": true
+    },
+    "keyPoints": [
+      "流量削峰（前端限流、队列）",
+      "缓存预热",
+      "库存扣减方案",
+      "超卖预防",
+      "数据一致性保障",
+      "降级熔断",
+      "读写分离",
+      "分布式锁"
+    ],
+    "qualityIndicators": {
+      "comprehensiveness": "覆盖架构各层面",
+      "technicalDepth": "深入分析关键技术点",
+      "practicalExperience": "有实战经验或深入思考",
+      "edgeCases": "考虑异常情况和容错"
+    },
+    "sampleGoodAnswer": "秒杀系统架构设计：\n\n**1. 前端层面**\n- 按钮置灰，防止重复提交\n- 答题验证码，防刷\n- 静态资源CDN加速\n\n**2. 接入层**\n- Nginx限流：令牌桶算法，每秒放行5000请求\n- 用户级别限流：同一用户1秒内只能请求1次\n- IP黑名单\n\n**3. 应用层**\n- 服务端限流：Sentinel熔断降级\n- 异步化：请求进入MQ，返回排队中\n- 库存预热：Redis存储库存，使用Lua脚本原子扣减\n\n**4. 库存扣减方案**\n```lua\nlocal stock = redis.call('get', 'stock:' .. KEYS[1])\nif tonumber(stock) > 0 then\n  redis.call('decr', 'stock:' .. KEYS[1])\n  return 1\nelse\n  return 0\nend\n```\n\n**5. 数据一致性**\n- Redis扣减成功后，异步写入数据库\n- 使用分布式事务（TCC）或最终一致性\n- 定时任务对账，Redis与数据库数据一致性校验\n\n**6. 超卖预防**\n- Redis原子操作\n- 数据库层加唯一索引（user_id + product_id）\n- 库存字段用 stock = stock - 1 WHERE stock > 0\n\n**7. 容错机制**\n- Redis宕机：直接返回失败，不降级到数据库（避免压垮DB）\n- MQ堆积：设置最大排队数，超过直接返回失败\n- 数据库主从：读写分离，主库只写，从库读\n\n**8. 监控告警**\n- 实时监控：QPS、延迟、成功率\n- 告警：失败率>5%立即告警\n- 限流指标：被限流的请求量\n\n**容量预估**：\n10万并发，按5秒内完成计算，QPS = 20000\nRedis单实例可支持10万QPS，足够\n应用服务器按500 QPS/台计算，需要40台\n\n核心思想：**限流削峰 + 异步处理 + 缓存抗压**",
+    "evaluationCriteria": {
+      "excellent": "完整架构、详细方案、有代码示例、容量规划、多层防护",
+      "good": "架构合理、核心方案完整、考虑一致性",
+      "average": "基本方案但细节不足，或遗漏关键问题",
+      "poor": "架构不合理或无法支撑要求的并发"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 1.0,
+    "difficulty": 0.92,
+    "discriminability": 0.96
+  }
+}

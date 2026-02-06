@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_019",
+  "questionId": "security_xss_001",
+  "question": "如何防御XSS攻击？",
+  "candidateAnswer": "XSS（跨站脚本攻击）防御措施：\n\n1. 输入验证：\n- 白名单验证：只允许特定字符\n- 长度限制：防止过长输入\n- 类型检查：email、URL格式验证\n\n2. 输出编码（最重要）：\n- HTML实体转义：< → &lt;, > → &gt;\n- JavaScript转义：JSON.stringify\n- URL编码：encodeURIComponent\n- CSS转义\n\n3. CSP（Content Security Policy）：\n设置HTTP头限制资源来源：\nContent-Security-Policy: default-src 'self'; script-src 'self' https://trusted.com\n\n禁止内联脚本、只允许特定域名脚本\n\n4. HttpOnly Cookie：\nSet-Cookie: sessionId=xxx; HttpOnly; Secure\nJavaScript无法访问，防止Cookie被窃取\n\n5. 使用安全框架：\n- React自动转义（{变量}）\n- Vue的v-text而不是v-html\n- Angular的模板语法自动转义\n\n6. 输入过滤（补充）：\n- DOMPurify清理HTML\n- 移除危险标签（script、iframe）\n- 移除事件处理器（onclick、onerror）\n\n7. 实际案例：\n之前项目评论功能存在XSS：\n- 问题：直接innerHTML渲染用户输入\n- 修复：使用DOMPurify + CSP\n- 效果：通过安全扫描，无XSS漏洞\n\n优先级：\n输出编码 > CSP > 输入验证\n因为输入来源多样，输出是最后防线",
+  "evaluation": {
+    "score": 9.5,
+    "level": "Excellent",
+    "strengths": ["防御措施全面", "优先级清晰", "框架集成说明", "有实际案例", "结构清晰"],
+    "weaknesses": ["可以补充XSS类型说明"],
+    "technicalAccuracy": 0.95,
+    "completeness": 0.95,
+    "clarity": 0.95,
+    "depth": 0.90,
+    "feedback": "非常出色的回答！防御措施全面且有优先级，特别好的是提供了实际案例和框架使用方法。建议补充：1) XSS三种类型（存储型、反射型、DOM型）；2) 每种类型的具体防御重点；3) 安全测试方法（如何验证XSS漏洞）。整体展现了深厚的安全意识和实践经验。"
+  },
+  "qualityMetrics": {"answerLength": 720, "technicalTerms": 18, "hasExample": true, "hasExplanation": true, "hasCodeExamples": true}
+}

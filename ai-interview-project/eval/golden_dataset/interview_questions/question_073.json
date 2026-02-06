@@ -1,0 +1,37 @@
+{
+  "questionId": "Q073",
+  "domain": "Security",
+  "difficulty": "MID",
+  "techStack": ["Security", "Authorization", "RBAC", "Spring Security"],
+  "question": "Implement role-based access control (RBAC) in a Spring Boot application. Explain the difference between RBAC and attribute-based access control (ABAC).",
+  "expectedAnswer": {
+    "keyPoints": [
+      "RBAC assigns permissions to roles, users inherit permissions through role membership",
+      "Spring Security uses @PreAuthorize, @Secured annotations for method-level security",
+      "ABAC makes decisions based on attributes (user, resource, environment), more flexible than RBAC",
+      "RBAC simpler to implement and manage, ABAC better for fine-grained complex policies",
+      "Consider hierarchical roles for large organizations"
+    ],
+    "codeExample": "@Configuration\n@EnableGlobalMethodSecurity(prePostEnabled = true)\npublic class SecurityConfig extends WebSecurityConfigurerAdapter {\n    @Override\n    protected void configure(HttpSecurity http) throws Exception {\n        http.authorizeRequests()\n            .antMatchers(\"/api/admin/**\").hasRole(\"ADMIN\")\n            .antMatchers(\"/api/user/**\").hasAnyRole(\"USER\", \"ADMIN\")\n            .anyRequest().authenticated();\n    }\n}\n\n@RestController\npublic class DocumentController {\n    @PreAuthorize(\"hasRole('ADMIN') or @documentSecurity.isOwner(authentication, #docId)\")\n    @GetMapping(\"/documents/{docId}\")\n    public Document getDocument(@PathVariable Long docId) {\n        return documentService.findById(docId);\n    }\n}",
+    "explanation": "RBAC groups permissions into roles (ADMIN, USER, MANAGER). Users are assigned roles, simplifying permission management. Spring Security integrates RBAC through UserDetailsService loading granted authorities. ABAC evaluates policies based on attributes: user department, resource classification, time of day, etc. ABAC offers more flexibility (e.g., 'allow if user.department == resource.department AND time < 18:00') but requires policy engine and is more complex. Choose RBAC for straightforward hierarchical permissions, ABAC for dynamic complex rules."
+  },
+  "followUps": [
+    "How would you implement permission inheritance in a role hierarchy?",
+    "What are the performance implications of fine-grained authorization checks?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.87,
+    "tokenEfficiency": 0.80,
+    "vocabularyDiversity": 0.84,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.91,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

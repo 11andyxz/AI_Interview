@@ -1,0 +1,37 @@
+{
+  "questionId": "Q090",
+  "domain": "API Design",
+  "difficulty": "SENIOR",
+  "techStack": ["API Design", "Versioning", "Backward Compatibility", "Architecture"],
+  "question": "You need to evolve a public REST API used by thousands of clients. Discuss API versioning strategies and how to maintain backward compatibility.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Versioning strategies: URI versioning (/v1/users), header versioning (Accept: application/vnd.api.v2+json), parameter versioning",
+      "URI versioning most common and explicit, header versioning cleaner but less visible",
+      "Backward compatibility: additive changes safe (new fields, endpoints), breaking changes need new version",
+      "Deprecation process: announce early, support multiple versions, sunset policy (e.g., 12 months)",
+      "Use semantic versioning, document breaking vs non-breaking changes clearly"
+    ],
+    "codeExample": "// URI versioning\n@RestController\n@RequestMapping(\"/api/v1/users\")\npublic class UserControllerV1 {\n    @GetMapping\n    public List<UserV1Dto> getUsers() {\n        return userService.findAll();\n    }\n}\n\n@RestController\n@RequestMapping(\"/api/v2/users\")\npublic class UserControllerV2 {\n    @GetMapping\n    public PagedResponse<UserV2Dto> getUsers(\n            @RequestParam(defaultValue = \"0\") int page,\n            @RequestParam(defaultValue = \"20\") int size) {\n        return userService.findAllPaged(page, size);\n    }\n}\n\n// Header versioning\n@RestController\n@RequestMapping(\"/api/users\")\npublic class UserController {\n    @GetMapping(headers = \"API-Version=1\")\n    public List<UserV1Dto> getUsersV1() { }\n    \n    @GetMapping(headers = \"API-Version=2\")\n    public PagedResponse<UserV2Dto> getUsersV2(\n            @RequestParam int page, @RequestParam int size) { }\n}",
+    "explanation": "API versioning is critical for public APIs with external consumers. URI versioning (/v1, /v2) is most popular - explicit and easy to test/document. Header versioning keeps URIs clean but less discoverable. For backward compatibility: (1) Additive changes are safe: new optional fields, new endpoints. (2) Breaking changes require new version: removing fields, changing data types, modifying behavior. (3) Maintain old versions with deprecation timeline. Best practices: announce deprecation 6-12 months before removal, provide migration guide, use deprecation headers (Sunset, Deprecation), monitor API usage to identify clients on old versions. Consider evolving single version with optional features when possible (GitHub's approach)."
+  },
+  "followUps": [
+    "How would you handle gradual migration of clients from v1 to v2?",
+    "What are the trade-offs between running multiple API versions simultaneously?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.89,
+    "tokenEfficiency": 0.82,
+    "vocabularyDiversity": 0.86,
+    "repetitionScore": 0.90,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

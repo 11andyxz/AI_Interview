@@ -1,0 +1,37 @@
+{
+  "questionId": "Q089",
+  "domain": "API Design",
+  "difficulty": "MID",
+  "techStack": ["GraphQL", "API Design", "Schema Design"],
+  "question": "Explain GraphQL and compare it with REST. When would you choose GraphQL over REST? Discuss the N+1 query problem.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "GraphQL: query language allowing clients to request exactly needed data in single request",
+      "Advantages: no over/under-fetching, strongly typed schema, single endpoint, real-time with subscriptions",
+      "REST advantages: simpler caching, established patterns, better for simple CRUD",
+      "N+1 problem: fetching list then making separate queries for each item's relations",
+      "Solutions: DataLoader for batching, field-level resolvers with proper query optimization"
+    ],
+    "codeExample": "# GraphQL Schema\ntype User {\n  id: ID!\n  name: String!\n  email: String!\n  posts: [Post!]!\n}\n\ntype Post {\n  id: ID!\n  title: String!\n  content: String!\n  author: User!\n}\n\ntype Query {\n  user(id: ID!): User\n  posts(limit: Int, offset: Int): [Post!]!\n}\n\n# Query example\nquery {\n  user(id: \"123\") {\n    name\n    email\n    posts {\n      title\n      content\n    }\n  }\n}\n\n// Resolver with DataLoader to solve N+1\n@Component\npublic class UserResolver implements GraphQLResolver<User> {\n    public List<Post> posts(User user, DataLoader<Long, List<Post>> postLoader) {\n        return postLoader.load(user.getId()); // Batches queries\n    }\n}",
+    "explanation": "GraphQL allows clients to specify exact data requirements in a single query, avoiding multiple round trips. Instead of REST's fixed endpoints (/users, /users/123/posts), GraphQL has one endpoint with flexible queries. Benefits: reduces over-fetching (getting unwanted fields) and under-fetching (needing multiple requests). Schema provides type safety and documentation. N+1 problem: querying users then looping to fetch each user's posts results in 1 + N database queries. Solution: DataLoader batches and caches requests within execution context. Choose GraphQL for: mobile apps needing flexible queries, complex data relationships, rapid frontend iteration. Choose REST for: simple CRUD, heavy caching needs, public APIs."
+  },
+  "followUps": [
+    "How do you implement authorization in GraphQL at the field level?",
+    "What are GraphQL subscriptions and how are they implemented?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.87,
+    "tokenEfficiency": 0.80,
+    "vocabularyDiversity": 0.84,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.91,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

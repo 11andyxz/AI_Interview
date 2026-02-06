@@ -1,0 +1,14 @@
+{
+  "questionId": "system_design_l4_052",
+  "difficulty": "L4 - Senior",
+  "domain": "System Design",
+  "techStack": ["系统设计", "高并发"],
+  "question": "设计一个类似微博的Feed流系统，支持关注、发帖、Timeline查看，QPS达到10万级别。请说明架构设计和关键技术选型。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["推拉结合", "Redis缓存", "消息队列", "数据库分片", "CDN加速"],
+    "sampleGoodAnswer": "架构设计：\n\n1. Feed生成策略：\n- 推模式（大V）：发帖时写入粉丝Feed，读快写慢\n- 拉模式（普通用户）：读时聚合关注列表，写快读慢\n- 推拉结合：活跃用户推，不活跃用户拉\n\n2. 存储架构：\n- MySQL分库分表存帖子（按用户ID hash）\n- Redis存热点Feed（ZSET，score为时间戳）\n- HBase存历史Feed（海量数据）\n- CDN缓存图片视频\n\n3. 缓存设计：\n- L1：本地缓存（Caffeine）最热数据\n- L2：Redis缓存Timeline（ZRANGE获取最新N条）\n- L3：数据库回源\n\n4. 性能优化：\n- 异步写入：Kafka消息队列削峰\n- 批量操作：批量写入粉丝Feed\n- 限流保护：Sentinel/Hystrix\n- 降级策略：Feed延迟更新、展示缓存数据\n\n5. 数据流：\n用户发帖 → 写MySQL → 发Kafka消息 → 消费者异步写粉丝Feed到Redis → 粉丝刷新Timeline从Redis读取\n\n技术选型：\n- 网关：Spring Cloud Gateway\n- 缓存：Redis Cluster\n- 数据库：MySQL（Sharding-JDBC）+ HBase\n- 消息队列：Kafka\n- 搜索：Elasticsearch\n\n容量规划：\n- 10万QPS，假设读写比9:1\n- 写入1万QPS → Kafka 1万/s → 消费者集群处理\n- 读取9万QPS → Redis集群（10台，每台1万QPS）\n\n监控：\n- Feed延迟监控\n- 缓存命中率\n- 消息积压告警\n- 数据库慢查询",
+    "evaluationCriteria": {"excellent": "完整架构、技术选型、性能优化、容量规划", "good": "核心设计合理", "average": "基本思路但不完整", "poor": "设计有明显缺陷"}
+  },
+  "qualityMetrics": {"relevance": 0.98, "difficulty": 0.90, "discriminability": 0.94}
+}

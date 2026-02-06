@@ -1,0 +1,39 @@
+{
+  "questionId": "database_l2_025",
+  "difficulty": "L2 - Junior",
+  "domain": "Database",
+  "techStack": ["数据库", "事务"],
+  "question": "请解释数据库事务的ACID特性，并说明为什么需要事务？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "Atomicity（原子性）",
+      "Consistency（一致性）",
+      "Isolation（隔离性）",
+      "Durability（持久性）",
+      "事务的必要性和应用场景"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述ACID四个特性",
+      "completeness": "涵盖每个特性的含义和实例",
+      "clarity": "解释清晰，有实际案例",
+      "depth": "理解事务的重要性和实现机制"
+    },
+    "sampleGoodAnswer": "ACID是数据库事务的四个核心特性，保证数据的可靠性：\n\nA - Atomicity（原子性）：\n事务中的所有操作要么全部成功，要么全部失败回滚。不存在部分成功的情况。\n例如：转账操作，A账户扣款和B账户入账必须同时成功或失败。\n\nC - Consistency（一致性）：\n事务执行前后，数据库从一个一致状态转换到另一个一致状态。\n例如：转账前后总金额不变，不能凭空产生或消失钱。\n\nI - Isolation（隔离性）：\n并发执行的事务互不干扰，一个事务的中间状态对其他事务不可见。\n隔离级别：读未提交、读已提交、可重复读、串行化。\n例如：两个转账操作同时进行，不会互相影响。\n\nD - Durability（持久性）：\n事务提交后，数据永久保存，即使系统崩溃也不会丢失。\n实现：通过WAL（Write-Ahead Logging）预写日志。\n\n为什么需要事务：\n1. 保证数据完整性：避免部分更新\n2. 并发控制：多用户同时操作不冲突\n3. 错误恢复：失败时回滚到一致状态\n4. 业务逻辑保障：复杂操作的正确性\n\n典型场景：电商下单、银行转账、库存扣减。",
+    "evaluationCriteria": {
+      "excellent": "完整解释ACID、提供实例、说明必要性",
+      "good": "准确描述四个特性和基本概念",
+      "average": "知道ACID但理解不深入",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.97,
+    "difficulty": 0.67,
+    "discriminability": 0.83
+  }
+}

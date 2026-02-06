@@ -1,0 +1,14 @@
+{
+  "questionId": "security_l4_058",
+  "difficulty": "L4 - Senior",
+  "domain": "Security",
+  "techStack": ["安全架构", "零信任"],
+  "question": "如何设计一个企业级的安全架构？请说明零信任架构、身份认证、数据加密和安全审计方案。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["零信任", "IAM", "加密", "审计", "渗透测试"],
+    "sampleGoodAnswer": "企业级安全架构：\n\n1. 零信任架构（Zero Trust）：\n原则：永不信任，始终验证\n\n组件：\n- 身份验证：多因素认证（MFA）\n- 设备验证：设备指纹、安全状态\n- 微分段：网络隔离，最小权限\n- 动态访问控制：基于上下文（位置、时间、风险）\n\n实现：\n- 所有流量通过网关认证\n- 服务间mTLS双向认证\n- 动态策略引擎（OPA）\n- 持续监控异常行为\n\n2. 身份和访问管理（IAM）：\n\na) 认证（Authentication）：\n- SSO单点登录（SAML/OAuth2/OIDC）\n- MFA多因素（短信/TOTP/生物识别）\n- 无密码认证（FIDO2/WebAuthn）\n\nb) 授权（Authorization）：\n- RBAC：基于角色（用户→角色→权限）\n- ABAC：基于属性（用户属性+资源属性+环境）\n- 最小权限原则\n- 定期权限审查\n\nc) 账号生命周期：\n- 入职自动开通\n- 离职立即回收\n- 长期未使用账号禁用\n\n3. 数据安全：\n\na) 传输加密：\n- TLS 1.3强加密\n- Perfect Forward Secrecy\n- 证书管理（Let's Encrypt）\n\nb) 存储加密：\n- 数据库：TDE（Transparent Data Encryption）\n- 文件系统：LUKS/BitLocker\n- 对象存储：S3 SSE\n- 密钥管理：KMS/Vault\n\nc) 数据分类：\n- 公开/内部/机密/绝密\n- DLP防泄漏（监控、阻断）\n- 数据脱敏（日志、测试环境）\n\n4. 网络安全：\n\n纵深防御：\n- 边界：WAF（Web Application Firewall）\n- 网络：防火墙、IDS/IPS\n- 主机：HIDS、EDR\n- 应用：代码扫描、依赖检查\n- 数据：加密、备份\n\n隔离：\n- DMZ隔离公网服务\n- 内网分段（VLAN）\n- 容器网络策略（NetworkPolicy）\n\n5. 应用安全：\n\nSDLC安全：\n- 设计阶段：威胁建模\n- 开发阶段：安全编码规范\n- 测试阶段：SAST/DAST\n- 部署阶段：镜像扫描\n- 运行阶段：RASP\n\nOWASP Top 10防护：\n- SQL注入：参数化查询\n- XSS：输出转义、CSP\n- CSRF：Token验证\n- 认证失败：强密码、MFA\n- 敏感数据泄露：加密\n- 访问控制缺失：统一鉴权\n- 安全配置错误：配置检查\n- XXE：禁用外部实体\n- 反序列化：白名单验证\n- 日志和监控：异常检测\n\n6. 安全审计：\n\n日志收集：\n- 认证日志（登录/登出）\n- 授权日志（权限变更）\n- 操作日志（CRUD）\n- 系统日志（变更、告警）\n\n分析：\n- SIEM（Splunk/ELK）\n- 异常检测（ML模型）\n- 实时告警\n\n合规：\n- 日志不可篡改（区块链）\n- 保留时间（1年+）\n- 定期审计\n- SOC 2/ISO 27001认证\n\n7. 应急响应：\n\n预案：\n- DDoS攻击：流量清洗\n- 数据泄露：隔离、通知\n- 勒索软件：备份恢复\n- APT攻击：取证、溯源\n\n流程：\n1. 检测：监控告警\n2. 分析：确认威胁\n3. 遏制：隔离影响\n4. 根除：清除威胁\n5. 恢复：业务恢复\n6. 总结：改进措施\n\n8. 安全测试：\n\n定期：\n- 漏洞扫描（每周）\n- 渗透测试（每季度）\n- 红蓝对抗（每年）\n\n范围：\n- 网络层：端口扫描、嗅探\n- 应用层：注入、越权、逻辑漏洞\n- 社工：钓鱼邮件\n\n9. 安全文化：\n\n培训：\n- 新员工安全培训\n- 开发安全编码培训\n- 定期钓鱼演练\n\n制度：\n- 安全政策\n- 事件上报机制\n- 奖励计划（漏洞赏金）\n\n技术栈：\n- IAM：Keycloak/Auth0\n- 密钥管理：HashiCorp Vault\n- WAF：Cloudflare/ModSecurity\n- 审计：Splunk/ELK\n- 扫描：OWASP ZAP/Burp Suite\n- 监控：Wazuh/Falco",
+    "evaluationCriteria": {"excellent": "完整架构、多层防护、合规审计、应急响应", "good": "核心组件清晰", "average": "基本概念但不深入", "poor": "缺少架构思维"}
+  },
+  "qualityMetrics": {"relevance": 0.98, "difficulty": 0.91, "discriminability": 0.95}
+}

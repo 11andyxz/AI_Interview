@@ -1,0 +1,37 @@
+{
+  "questionId": "Q074",
+  "domain": "Security",
+  "difficulty": "SENIOR",
+  "techStack": ["Security", "Cryptography", "PKI", "TLS"],
+  "question": "Explain public key infrastructure (PKI) and how TLS/SSL handshake works. What's the difference between symmetric and asymmetric encryption?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Symmetric encryption uses same key for encrypt/decrypt (AES), fast but key distribution problem",
+      "Asymmetric uses key pair: public key encrypts, private key decrypts (RSA), solves key distribution but slower",
+      "PKI uses Certificate Authorities to verify public key ownership through digital certificates",
+      "TLS handshake: client hello → server certificate → key exchange → symmetric session key established",
+      "Hybrid approach: asymmetric for key exchange, symmetric for bulk data encryption"
+    ],
+    "codeExample": "// Certificate validation example\npublic class TLSValidator {\n    public boolean validateCertificate(X509Certificate cert) throws Exception {\n        // Check validity period\n        cert.checkValidity();\n        \n        // Verify signature with CA's public key\n        cert.verify(caPublicKey);\n        \n        // Check certificate chain\n        CertPath certPath = certFactory.generateCertPath(certChain);\n        PKIXParameters params = new PKIXParameters(trustAnchors);\n        CertPathValidator validator = CertPathValidator.getInstance(\"PKIX\");\n        validator.validate(certPath, params);\n        \n        // Check for revocation\n        return !isRevoked(cert.getSerialNumber());\n    }\n}",
+    "explanation": "TLS handshake combines asymmetric and symmetric encryption. Flow: (1) Client sends supported cipher suites. (2) Server responds with certificate containing public key. (3) Client verifies certificate chain against trusted CAs. (4) Client generates session key, encrypts with server's public key. (5) Both parties use symmetric encryption (AES) with shared session key for data transfer. PKI ensures trust through certificate chain: root CA → intermediate CA → end-entity certificate. This hybrid approach provides both security (asymmetric) and performance (symmetric)."
+  },
+  "followUps": [
+    "How does certificate pinning enhance security and what are its trade-offs?",
+    "Explain Perfect Forward Secrecy and why it's important for TLS."
+  ],
+  "qualityMetrics": {
+    "completeness": 0.89,
+    "tokenEfficiency": 0.82,
+    "vocabularyDiversity": 0.86,
+    "repetitionScore": 0.90,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

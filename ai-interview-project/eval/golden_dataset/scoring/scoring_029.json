@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_029",
+  "questionId": "data_structure_001",
+  "question": "请说明HashMap的实现原理和性能特点。",
+  "candidateAnswer": "HashMap基于数组+链表/红黑树。通过hash函数计算key的hash值，再取模得到数组索引。hash冲突用链表解决，链表长度>8转红黑树。扩容时机是size > capacity * loadFactor（默认0.75），扩容为原来2倍。查询、插入、删除平均O(1)，最坏O(n)（退化成链表）或O(log n)（红黑树）。线程不安全，并发用ConcurrentHashMap。",
+  "evaluation": {
+    "score": 7.0,
+    "level": "Good",
+    "strengths": ["核心原理正确", "扩容机制说明", "时间复杂度分析", "并发方案提及"],
+    "weaknesses": ["hash函数未详细说明", "红黑树转换条件不完整", "缺少实际应用场景"],
+    "technicalAccuracy": 0.85,
+    "completeness": 0.75,
+    "clarity": 0.80,
+    "depth": 0.65,
+    "feedback": "回答不错，核心原理清楚。建议补充：1) hash函数具体实现（高16位异或低16位）；2) 链表转红黑树还需要capacity>=64；3) 为什么负载因子是0.75（时间空间权衡）；4) JDK 7 vs 8的差异；5) 实际应用场景和注意事项。"
+  },
+  "qualityMetrics": {"answerLength": 220, "technicalTerms": 13, "hasExample": false, "hasExplanation": true, "hasCodeExamples": false}
+}

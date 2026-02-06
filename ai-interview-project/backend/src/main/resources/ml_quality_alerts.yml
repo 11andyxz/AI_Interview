@@ -1,0 +1,196 @@
+# ML Quality Alert Rules
+# Defines thresholds and actions for quality degradation detection
+
+quality_alerts:
+  critical:
+    - name: "High Hallucination Rate"
+      metric: "ml.hallucination.rate"
+      threshold: 0.05  # Trigger if >5% hallucination rate
+      window: "1h"
+      aggregation: "avg"
+      action: "Switch to backup prompt template"
+      notification:
+        slack: true
+        email: true
+        
+    - name: "Low Relevance Score"
+      metric: "ml.relevance.score"
+      threshold: 0.75  # Trigger if <75% relevance
+      comparison: "lt"  # less than
+      window: "30m"
+      aggregation: "avg"
+      action: "Trigger manual review queue"
+      notification:
+        slack: true
+        email: true
+        
+    - name: "Scoring Drift Detected"
+      metric: "ml.scoring.std_deviation"
+      threshold: 0.20  # Trigger if >20% variance
+      window: "6h"
+      aggregation: "stddev"
+      action: "Recalibrate scoring model"
+      notification:
+        slack: true
+        email: true
+        pagerduty: true
+        
+    - name: "Validation Failure Spike"
+      metric: "ml.validation.failure_count"
+      threshold: 10  # More than 10 failures
+      window: "15m"
+      aggregation: "sum"
+      action: "Rollback to previous prompt version"
+      notification:
+        slack: true
+        pagerduty: true
+        
+    - name: "Low Output Completeness"
+      metric: "ml.output.completeness"
+      threshold: 0.80  # <80% complete outputs
+      comparison: "lt"
+      window: "1h"
+      aggregation: "avg"
+      action: "Switch to more explicit prompt"
+      notification:
+        slack: true
+        email: true
+
+  warning:
+    - name: "Decreased Question Quality"
+      metric: "ml.clarity.score"
+      threshold: 7.5  # <7.5/10 clarity score
+      comparison: "lt"
+      window: "3h"
+      aggregation: "avg"
+      action: "Log for review"
+      notification:
+        slack: true
+        
+    - name: "Token Inefficiency"
+      metric: "ml.token.efficiency"
+      threshold: 0.6  # Quality/token ratio below 0.6
+      comparison: "lt"
+      window: "12h"
+      aggregation: "avg"
+      action: "Optimize prompt for conciseness"
+      notification:
+        slack: true
+        
+    - name: "Low Vocabulary Diversity"
+      metric: "ml.vocabulary.diversity"
+      threshold: 0.40  # <40% unique tokens
+      comparison: "lt"
+      window: "6h"
+      aggregation: "avg"
+      action: "Review for repetitive outputs"
+      notification:
+        slack: true
+        
+    - name: "High Repetition Rate"
+      metric: "ml.repetition.score"
+      threshold: 0.70  # Repetition score <0.7 (lower is worse)
+      comparison: "lt"
+      window: "4h"
+      aggregation: "avg"
+      action: "Add anti-repetition constraints"
+      notification:
+        slack: true
+        
+    - name: "Technical Accuracy Drop"
+      metric: "ml.technical.accuracy"
+      threshold: 0.85  # <85% technical accuracy
+      comparison: "lt"
+      window: "6h"
+      aggregation: "avg"
+      action: "Review technical term usage"
+      notification:
+        slack: true
+        
+    - name: "Toxicity Detection"
+      metric: "ml.validator.toxicityvalidator"
+      threshold: 0.90  # Toxicity validator score <0.9
+      comparison: "lt"
+      window: "1h"
+      aggregation: "min"  # Any single failure is concerning
+      action: "Flag for immediate review"
+      notification:
+        slack: true
+        email: true
+
+  info:
+    - name: "Increased Response Time"
+      metric: "ai_request_latency_ms"
+      threshold: 5000  # >5 seconds
+      window: "30m"
+      aggregation: "p95"  # 95th percentile
+      action: "Monitor API performance"
+      notification:
+        slack: false
+        
+    - name: "High Token Usage"
+      metric: "ai_token_usage"
+      threshold: 2000  # >2000 tokens per request
+      window: "1h"
+      aggregation: "avg"
+      action: "Review prompt length"
+      notification:
+        slack: false
+
+# Alert routing configuration
+notification_channels:
+  slack:
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channels:
+      critical: "#ml-alerts-critical"
+      warning: "#ml-alerts-warning"
+      info: "#ml-alerts-info"
+      
+  email:
+    smtp_host: "${SMTP_HOST}"
+    smtp_port: 587
+    from: "ml-alerts@aiinterview.com"
+    to:
+      critical: ["team-lead@aiinterview.com", "on-call@aiinterview.com"]
+      warning: ["ml-team@aiinterview.com"]
+      
+  pagerduty:
+    api_key: "${PAGERDUTY_API_KEY}"
+    service_key: "${PAGERDUTY_SERVICE_KEY}"
+
+# Quality thresholds for different request types
+quality_thresholds:
+  RESUME_ANALYSIS:
+    min_completeness: 0.90
+    min_relevance: 0.85
+    min_clarity: 8.0
+    
+  GENERATE_QUESTIONS:
+    min_relevance: 0.90
+    min_clarity: 8.5
+    min_technical_accuracy: 0.85
+    
+  SCORE_ANSWER:
+    min_completeness: 0.95
+    min_clarity: 8.0
+    scoring_variance_max: 0.15
+
+# Baseline metrics (from golden dataset)
+baseline_metrics:
+  completeness: 0.95
+  token_efficiency: 0.75
+  vocabulary_diversity: 0.65
+  repetition_score: 0.92
+  technical_accuracy: 0.90
+  clarity_score: 8.5
+  
+# Drift detection configuration
+drift_detection:
+  enabled: true
+  comparison_window: "7d"  # Compare with last 7 days
+  alert_threshold: 0.15  # Alert if >15% drift from baseline
+  metrics:
+    - "ml.output.completeness"
+    - "ml.clarity.score"
+    - "ml.technical.accuracy"
+    - "ml.relevance.score"

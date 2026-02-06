@@ -1,0 +1,37 @@
+{
+  "questionId": "Q068",
+  "domain": "System Design",
+  "difficulty": "SENIOR",
+  "techStack": ["System Design", "Scalability", "Distributed Systems", "Architecture"],
+  "question": "Design a scalable URL shortening service like bit.ly that handles 100 million URLs and 10 billion redirects per month. Discuss data partitioning, caching, and high availability.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Base62 encoding for short URLs, counter-based or hash-based generation",
+      "Horizontal partitioning by hash of short URL or consistent hashing",
+      "Multi-layer caching: CDN for popular URLs, distributed cache (Redis) with LRU eviction",
+      "High availability: multi-region deployment, database replication, load balancers",
+      "Analytics tracking requires separate data pipeline to avoid slowing redirects"
+    ],
+    "codeExample": "// URL shortening logic\npublic class UrlShortener {\n    private static final String BASE62 = \"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\";\n    \n    public String encode(long id) {\n        StringBuilder sb = new StringBuilder();\n        while (id > 0) {\n            sb.append(BASE62.charAt((int)(id % 62)));\n            id /= 62;\n        }\n        return sb.reverse().toString();\n    }\n    \n    @Cacheable(\"urls\")\n    public String getLongUrl(String shortUrl) {\n        long id = decode(shortUrl);\n        return urlRepository.findById(id).getLongUrl();\n    }\n}",
+    "explanation": "For this scale, the system needs: (1) Application servers behind load balancers for horizontal scaling. (2) Database sharding by hash of short URL to distribute load - use consistent hashing for adding nodes. (3) Aggressive caching: CDN caches redirect responses, Redis caches mappings with 80%+ hit rate. (4) Write-heavy nature requires optimized database writes, possibly using write-behind caching. (5) Analytics processed asynchronously via message queue. (6) Multi-region deployment with geo-routing for low latency."
+  },
+  "followUps": [
+    "How would you prevent duplicate short URLs when using distributed ID generation?",
+    "What database would you choose and why? SQL vs NoSQL trade-offs?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.91,
+    "tokenEfficiency": 0.82,
+    "vocabularyDiversity": 0.88,
+    "repetitionScore": 0.90,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

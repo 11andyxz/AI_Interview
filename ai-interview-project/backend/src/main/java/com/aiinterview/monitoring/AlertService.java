@@ -47,6 +47,8 @@ public class AlertService {
     private void loadAlertRules() {
         try {
             Yaml yaml = new Yaml();
+            
+            // Load main alerts.yml
             InputStream inputStream = this.getClass().getResourceAsStream("/alerts.yml");
             if (inputStream != null) {
                 Map<String, Object> config = yaml.load(inputStream);
@@ -59,8 +61,29 @@ public class AlertService {
                     alertRules.addAll((List<Map<String, Object>>) alerts.get("warning"));
                 }
             }
+            
+            // Load ml_quality_alerts.yml
+            InputStream mlAlertsStream = this.getClass().getResourceAsStream("/ml_quality_alerts.yml");
+            if (mlAlertsStream != null) {
+                Map<String, Object> mlConfig = yaml.load(mlAlertsStream);
+                Map<String, Object> qualityAlerts = (Map<String, Object>) mlConfig.get("quality_alerts");
+                
+                if (qualityAlerts != null) {
+                    if (qualityAlerts.containsKey("critical")) {
+                        alertRules.addAll((List<Map<String, Object>>) qualityAlerts.get("critical"));
+                    }
+                    if (qualityAlerts.containsKey("warning")) {
+                        alertRules.addAll((List<Map<String, Object>>) qualityAlerts.get("warning"));
+                    }
+                    if (qualityAlerts.containsKey("info")) {
+                        alertRules.addAll((List<Map<String, Object>>) qualityAlerts.get("info"));
+                    }
+                }
+                
+                System.out.println("[AlertService] Loaded " + alertRules.size() + " alert rules (including ML quality alerts)");
+            }
         } catch (Exception e) {
-            System.err.println("[AlertService] Failed to load alerts.yml: " + e.getMessage());
+            System.err.println("[AlertService] Failed to load alert configuration: " + e.getMessage());
         }
     }
     

@@ -1,0 +1,40 @@
+{
+  "questionId": "backend_l3_002",
+  "difficulty": "L3 - Mid-level",
+  "domain": "Backend Development",
+  "techStack": ["MySQL", "SQL"],
+  "question": "有一个用户订单表，查询某个用户最近30天的订单列表很慢（表有1000万数据）。请分析可能的原因并提出优化方案。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasProblemAnalysis": true,
+      "hasMultipleSolutions": true,
+      "hasSQLExamples": true
+    },
+    "keyPoints": [
+      "索引缺失或不合理",
+      "查询条件分析",
+      "索引设计（user_id + create_time联合索引）",
+      "EXPLAIN分析",
+      "分页优化",
+      "覆盖索引",
+      "分表分库"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确诊断性能问题",
+      "practicalSolutions": "提供可落地的优化方案",
+      "sqlKnowledge": "展示SQL优化基础知识"
+    },
+    "sampleGoodAnswer": "可能原因：\n1. 缺少索引，导致全表扫描\n2. 索引不合理，比如只有单列索引\n3. 查询字段过多，回表操作多\n\n优化方案：\n1. 添加联合索引：CREATE INDEX idx_user_time ON orders(user_id, create_time DESC)。这样可以快速定位用户的订单，并按时间排序。\n\n2. 使用覆盖索引：如果只需要订单ID和时间，可以：\nSELECT order_id, create_time FROM orders \nWHERE user_id = ? AND create_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)\n\n3. 分页优化：避免LIMIT 10000, 20这种深分页，改用：\nWHERE user_id = ? AND create_time >= ? AND order_id > last_id LIMIT 20\n\n4. 分表：按user_id或时间维度分表，减少单表数据量。\n\n首先用EXPLAIN分析查询计划，确认是否走索引，type是否为ref或range，rows扫描行数是否合理。",
+    "evaluationCriteria": {
+      "excellent": "全面分析、多种方案、有SQL示例、提到EXPLAIN",
+      "good": "正确诊断、2-3种方案、基本可行",
+      "average": "只提到索引但不够具体",
+      "poor": "理解有误或方案不可行"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.96,
+    "difficulty": 0.65,
+    "discriminability": 0.82
+  }
+}

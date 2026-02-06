@@ -1,0 +1,14 @@
+{
+  "questionId": "ml_l3_036",
+  "difficulty": "L3 - Mid",
+  "domain": "Machine Learning",
+  "techStack": ["ML", "模型部署"],
+  "question": "如何将机器学习模型部署到生产环境？请说明模型服务化的架构设计和性能优化方法。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["模型服务化方案", "性能优化（批处理、模型压缩）", "监控和A/B测试", "版本管理", "实际架构"],
+    "sampleGoodAnswer": "模型部署是机器学习工程化的关键环节。\n\n部署方案：\n\n1. REST API服务：\n- Flask/FastAPI包装模型\n- 同步请求，延迟低\n- 适合：实时预测，QPS < 1000\n\n2. 批处理服务：\n- 定时任务，批量预测\n- 吞吐量高\n- 适合：推荐系统、离线计算\n\n3. 流式处理：\n- Kafka + Flink实时处理\n- 低延迟，高吞吐\n- 适合：实时监控、欺诈检测\n\n性能优化：\n\n1. 模型优化：\n- 量化（FP32 → INT8）\n- 剪枝（移除冗余参数）\n- 蒸馏（小模型学习大模型）\n- ONNX Runtime加速\n\n2. 批处理（Batching）：\n- 积累多个请求一起推理\n- GPU利用率提升\n- Dynamic Batching自动调整batch size\n\n3. 模型缓存：\n- 相同输入直接返回缓存结果\n- Redis存储热点预测\n\n4. 多级架构：\n- 边缘设备：轻量模型\n- 服务器：完整模型\n\n监控和迭代：\n\n1. 模型监控：\n- 预测延迟、QPS\n- 预测分布（检测数据漂移）\n- 模型准确率\n\n2. A/B测试：\n- 新模型灰度发布\n- 对比业务指标\n- 逐步放量\n\n3. 版本管理：\n- MLflow管理模型版本\n- 支持快速回滚\n\n实际架构（推荐系统）：\n\n离线：\n- 每天训练模型\n- 存储到S3/HDFS\n\n在线：\n- TensorFlow Serving加载模型\n- Kubernetes部署，自动扩缩容\n- Redis缓存热门推荐\n- Prometheus监控指标\n\n性能指标：\n- P99延迟 < 50ms\n- QPS > 10000\n- GPU利用率 > 80%",
+    "evaluationCriteria": {"excellent": "系统的部署方案、详细的优化策略、监控和迭代、实际架构", "good": "准确描述主要方案和优化方法", "average": "知道基本部署但缺少系统性", "poor": "缺少实践经验"}
+  },
+  "qualityMetrics": {"relevance": 0.97, "difficulty": 0.82, "discriminability": 0.90}
+}

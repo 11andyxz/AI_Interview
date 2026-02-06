@@ -1,0 +1,14 @@
+{
+  "questionId": "cloud_l3_042",
+  "difficulty": "L3 - Mid",
+  "domain": "Cloud",
+  "techStack": ["AWS", "架构设计"],
+  "question": "如何在AWS上设计一个高可用的三层Web应用架构？请说明各组件的作用和最佳实践。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["多可用区", "ELB负载均衡", "Auto Scaling", "RDS多AZ", "S3静态资源"],
+    "sampleGoodAnswer": "AWS高可用三层架构：\n\n第一层（Web层）：\n- ELB（Elastic Load Balancer）分发流量\n- EC2 Auto Scaling组，跨多个可用区\n- CloudFront CDN加速静态资源\n- S3存储静态文件\n\n第二层（应用层）：\n- EC2或ECS（容器）部署应用\n- Auto Scaling根据CPU/内存自动扩缩容\n- 跨至少2个可用区部署\n- ALB（Application Load Balancer）路由\n\n第三层（数据层）：\n- RDS Multi-AZ部署（主备自动切换）\n- ElastiCache（Redis）缓存层\n- Aurora（MySQL兼容）更高可用性\n- 定期备份到S3\n\n网络设计：\n- VPC划分公有子网（Web层）和私有子网（应用+数据层）\n- NAT Gateway允许私有子网访问Internet\n- Security Group控制访问权限\n- 至少跨2个可用区\n\n监控和安全：\n- CloudWatch监控指标和日志\n- SNS告警通知\n- WAF防护Web攻击\n- IAM角色控制权限\n- KMS加密敏感数据\n\n最佳实践：\n1. 多可用区部署（至少2个AZ）\n2. 无状态应用设计\n3. 数据库读写分离\n4. 使用托管服务（RDS、ElastiCache）\n5. 定期备份和灾难恢复演练\n6. 基础设施即代码（CloudFormation/Terraform）\n\n成本优化：\n- Reserved Instances长期资源\n- Spot Instances非关键任务\n- S3生命周期策略\n- Auto Scaling避免过度配置",
+    "evaluationCriteria": {"excellent": "完整架构、多层设计、最佳实践、成本优化", "good": "准确描述主要组件和高可用设计", "average": "知道基本组件但架构不系统", "poor": "缺少实践经验"}
+  },
+  "qualityMetrics": {"relevance": 0.96, "difficulty": 0.82, "discriminability": 0.89}
+}

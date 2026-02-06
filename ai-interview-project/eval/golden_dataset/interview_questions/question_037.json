@@ -1,0 +1,14 @@
+{
+  "questionId": "devops_l3_037",
+  "difficulty": "L3 - Mid",
+  "domain": "DevOps",
+  "techStack": ["Kubernetes", "微服务"],
+  "question": "如何在Kubernetes上实现微服务的灰度发布？请说明具体方案和实施步骤。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["灰度发布策略", "Ingress流量控制", "Istio Service Mesh", "金丝雀部署", "监控和回滚"],
+    "sampleGoodAnswer": "K8s灰度发布通过流量控制逐步验证新版本。\n\n方案1：Deployment + Service权重：\n1. 创建新版本Deployment（v2）\n2. 调整Service selector同时指向v1和v2\n3. 通过副本数控制流量比例\n4. 逐步增加v2副本，减少v1副本\n5. 监控指标，问题时回滚\n\n方案2：Ingress流量分割：\n使用Nginx Ingress的canary注解：\nannotations:\n  nginx.ingress.kubernetes.io/canary: \"true\"\n  nginx.ingress.kubernetes.io/canary-weight: \"10\"  # 10%流量到新版本\n\n方案3：Istio Service Mesh：\napiVersion: networking.istio.io/v1alpha3\nkind: VirtualService\nspec:\n  http:\n  - match:\n    - headers:\n        user-type:\n          exact: beta  # Beta用户走新版本\n    route:\n    - destination:\n        host: myapp\n        subset: v2\n  - route:\n    - destination:\n        host: myapp\n        subset: v1\n      weight: 90\n    - destination:\n        host: myapp\n        subset: v2\n      weight: 10\n\n实施步骤：\n1. 准备新版本镜像和配置\n2. 小流量灰度（1-5%）\n3. 监控关键指标（错误率、延迟、业务指标）\n4. 逐步放量（5% → 10% → 50% → 100%）\n5. 全量后观察24小时\n6. 下线老版本\n\n监控和回滚：\n- Prometheus监控延迟、错误率\n- Grafana可视化对比v1/v2指标\n- 发现问题立即回滚：kubectl rollout undo\n- 自动化：Flagger根据指标自动灰度\n\n最佳实践：\n1. 先灰度到内部用户\n2. 业务低峰期进行\n3. 准备快速回滚方案\n4. 设置告警阈值\n5. 保持老版本可用性",
+    "evaluationCriteria": {"excellent": "多种方案、详细步骤、监控回滚、最佳实践", "good": "准确描述主要方案和流程", "average": "知道灰度但实施细节不清", "poor": "缺少实践经验"}
+  },
+  "qualityMetrics": {"relevance": 0.97, "difficulty": 0.80, "discriminability": 0.89}
+}

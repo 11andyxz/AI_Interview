@@ -1,0 +1,14 @@
+{
+  "questionId": "database_l3_040",
+  "difficulty": "L3 - Mid",
+  "domain": "Database",
+  "techStack": ["MySQL", "事务隔离"],
+  "question": "请解释MySQL的四种事务隔离级别，以及它们分别解决什么问题？",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["读未提交", "读已提交", "可重复读", "串行化", "脏读/不可重复读/幻读"],
+    "sampleGoodAnswer": "四种隔离级别从低到高：\n\n1. READ UNCOMMITTED（读未提交）：可读取未提交数据，存在脏读、不可重复读、幻读\n2. READ COMMITTED（读已提交）：只读已提交数据，解决脏读，但有不可重复读和幻读。Oracle默认级别\n3. REPEATABLE READ（可重复读）：事务内多次读取结果一致，解决脏读和不可重复读，MySQL默认级别，通过MVCC和Next-Key Lock解决幻读\n4. SERIALIZABLE（串行化）：完全串行执行，解决所有问题，性能最差\n\n问题定义：\n- 脏读：读到未提交的数据\n- 不可重复读：同一查询两次结果不同（UPDATE）\n- 幻读：查询范围内记录数变化（INSERT/DELETE）\n\nMySQL InnoDB使用MVCC实现可重复读，避免大部分锁。",
+    "evaluationCriteria": {"excellent": "完整解释四种级别、解决的问题、实现机制", "good": "准确描述级别和主要区别", "average": "知道级别但问题不清楚", "poor": "理解有误"}
+  },
+  "qualityMetrics": {"relevance": 0.97, "difficulty": 0.81, "discriminability": 0.89}
+}

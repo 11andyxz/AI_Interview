@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_030",
+  "questionId": "clean_code_001",
+  "question": "什么是整洁代码（Clean Code）？如何写出高质量代码？",
+  "candidateAnswer": "整洁代码是易读、易维护、可测试的代码。原则：1) 有意义的命名，见名知意；2) 函数短小，单一职责；3) 减少注释，代码自解释；4) DRY原则，避免重复；5) 遵循SOLID原则；6) 异常处理得当；7) 单元测试覆盖。实践：代码审查、重构、持续改进。好的代码读起来像散文，不需要费力理解。坚持小步重构，不追求一步到位。",
+  "evaluation": {
+    "score": 8.0,
+    "level": "Good",
+    "strengths": ["原则列举完整", "实践方法提及", "理念正确", "持续改进意识"],
+    "weaknesses": ["缺少具体代码示例", "SOLID未展开", "重构技巧不足"],
+    "technicalAccuracy": 0.90,
+    "completeness": 0.80,
+    "clarity": 0.85,
+    "depth": 0.75,
+    "feedback": "回答很好，整洁代码原则清晰。建议补充：1) 好代码vs坏代码的对比示例；2) SOLID五大原则详细解释；3) 常见代码坏味道（长函数、大类、重复代码）；4) 重构技巧（提取函数、提取类）；5) 工具辅助（SonarQube、ESLint）。"
+  },
+  "qualityMetrics": {"answerLength": 240, "technicalTerms": 9, "hasExample": false, "hasExplanation": true, "hasCodeExamples": false}
+}

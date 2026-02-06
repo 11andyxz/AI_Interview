@@ -1,0 +1,37 @@
+{
+  "questionId": "Q087",
+  "domain": "Cloud & Infrastructure",
+  "difficulty": "MID",
+  "techStack": ["Monitoring", "Observability", "Prometheus", "ELK", "Logging"],
+  "question": "Design a comprehensive monitoring and logging solution for a distributed microservices system. What metrics and logs would you collect?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Three pillars: Metrics (Prometheus/Grafana), Logs (ELK stack), Traces (Jaeger/Zipkin)",
+      "Metrics: RED (Rate, Errors, Duration) for services, resource utilization (CPU, memory, disk)",
+      "Logs: Structured logging (JSON), centralized aggregation, correlation IDs for distributed tracing",
+      "Alerts: Define SLOs/SLIs, alert on anomalies and threshold breaches, avoid alert fatigue",
+      "Distributed tracing tracks requests across service boundaries with trace context propagation"
+    ],
+    "codeExample": "@RestController\npublic class OrderController {\n    private static final Logger log = LoggerFactory.getLogger(OrderController.class);\n    private final MeterRegistry registry;\n    \n    @GetMapping(\"/orders/{id}\")\n    public Order getOrder(@PathVariable Long id, @RequestHeader(\"X-Trace-Id\") String traceId) {\n        Timer.Sample sample = Timer.start(registry);\n        MDC.put(\"traceId\", traceId); // For log correlation\n        \n        try {\n            log.info(\"Fetching order\", kv(\"orderId\", id));\n            Order order = orderService.getOrder(id);\n            registry.counter(\"orders.retrieved\", \"status\", \"success\").increment();\n            return order;\n        } catch (Exception e) {\n            log.error(\"Order fetch failed\", e, kv(\"orderId\", id));\n            registry.counter(\"orders.retrieved\", \"status\", \"error\").increment();\n            throw e;\n        } finally {\n            sample.stop(registry.timer(\"orders.fetch.duration\"));\n            MDC.clear();\n        }\n    }\n}",
+    "explanation": "Comprehensive observability requires three pillars: Metrics provide quantitative data (request rate, latency percentiles, error rate) visualized in Grafana dashboards. Prometheus scrapes metrics from service endpoints. Logs capture detailed event information - use structured logging (JSON) and centralized collection (Elasticsearch, Logstash, Kibana). Include correlation IDs to trace requests across services. Distributed tracing (Jaeger) shows request flow through microservices, identifying bottlenecks. Critical metrics: Service-level: request rate, error rate, latency (p50, p95, p99). Infrastructure: CPU, memory, disk I/O, network. Business: orders/minute, cart abandonment. Set up alerts on SLO violations, but avoid alert fatigue with proper thresholds."
+  },
+  "followUps": [
+    "What's the difference between logging, metrics, and tracing?",
+    "How would you implement sampling for high-volume traces?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.87,
+    "tokenEfficiency": 0.80,
+    "vocabularyDiversity": 0.85,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.91,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

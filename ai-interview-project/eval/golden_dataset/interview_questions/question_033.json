@@ -1,0 +1,39 @@
+{
+  "questionId": "database_l3_033",
+  "difficulty": "L3 - Mid",
+  "domain": "Database",
+  "techStack": ["MySQL", "索引优化"],
+  "question": "在MySQL中，什么情况下索引会失效？如何分析和优化慢查询？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "索引失效场景",
+      "EXPLAIN分析",
+      "索引优化策略",
+      "覆盖索引",
+      "实际案例"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述索引失效原因和优化方法",
+      "completeness": "涵盖多种场景和分析工具",
+      "clarity": "解释清晰，有SQL示例",
+      "depth": "理解MySQL执行计划和优化器"
+    },
+    "sampleGoodAnswer": "索引失效是常见的性能问题，需要系统分析和优化。\n\n索引失效的常见场景：\n\n1. 使用函数或表达式：\n-- 失效\nSELECT * FROM user WHERE YEAR(create_time) = 2024;\n-- 优化\nSELECT * FROM user WHERE create_time >= '2024-01-01' AND create_time < '2025-01-01';\n\n2. 类型转换：\n-- 失效（name是varchar，传入数字）\nSELECT * FROM user WHERE name = 123;\n-- 优化\nSELECT * FROM user WHERE name = '123';\n\n3. 模糊查询以%开头：\n-- 失效\nSELECT * FROM user WHERE name LIKE '%张';\n-- 可用索引\nSELECT * FROM user WHERE name LIKE '张%';\n\n4. OR条件中有未建索引的列：\n-- 失效（age无索引）\nSELECT * FROM user WHERE name = '张三' OR age = 25;\n-- 优化：给age建索引，或改用UNION\n\n5. 违反最左前缀原则：\n-- 索引：(name, age, city)\n-- 失效\nSELECT * FROM user WHERE age = 25;\n-- 生效\nSELECT * FROM user WHERE name = '张三' AND age = 25;\n\n6. NOT、!=、<>：\n-- 失效\nSELECT * FROM user WHERE status != 1;\n-- 优化：改为IN\nSELECT * FROM user WHERE status IN (0, 2, 3);\n\n7. IS NULL/IS NOT NULL：\n-- 可能失效（取决于NULL值比例）\nSELECT * FROM user WHERE email IS NULL;\n\n8. 查询结果集过大：\n-- 优化器认为全表扫描更快\nSELECT * FROM user WHERE age > 20; -- 如果80%数据满足\n\n慢查询分析流程：\n\n1. 开启慢查询日志：\nSET GLOBAL slow_query_log = ON;\nSET GLOBAL long_query_time = 1; -- 超过1秒记录\n\n2. 使用EXPLAIN分析：\nEXPLAIN SELECT * FROM order WHERE user_id = 123 AND status = 1;\n\n关键字段：\n- type：访问类型（const > eq_ref > ref > range > index > ALL）\n- possible_keys：可能使用的索引\n- key：实际使用的索引\n- rows：扫描行数\n- Extra：额外信息（Using filesort、Using temporary需优化）\n\n3. 优化策略：\n\na) 添加合适的索引：\n-- 单列索引\nCREATE INDEX idx_user_id ON order(user_id);\n\n-- 联合索引（注意顺序）\nCREATE INDEX idx_user_status ON order(user_id, status);\n\nb) 覆盖索引（避免回表）：\n-- 查询字段都在索引中\nCREATE INDEX idx_user_status_amount ON order(user_id, status, amount);\nSELECT amount FROM order WHERE user_id = 123 AND status = 1;\n\nc) 索引下推（ICP）：\n-- MySQL 5.6+自动优化\nSELECT * FROM user WHERE name = '张三' AND age > 20;\n\nd) 避免SELECT *：\n-- 只查询需要的字段\nSELECT id, name, age FROM user WHERE name = '张三';\n\ne) 分页优化：\n-- 深分页问题\nSELECT * FROM order LIMIT 100000, 20; -- 慢\n\n-- 优化：使用索引覆盖+延迟关联\nSELECT o.* FROM order o\nINNER JOIN (\n  SELECT id FROM order ORDER BY id LIMIT 100000, 20\n) t ON o.id = t.id;\n\n-- 或使用上次查询的最大ID\nSELECT * FROM order WHERE id > 100000 ORDER BY id LIMIT 20;\n\n实际案例：\n\n问题：订单查询慢（3秒）\nSQL：SELECT * FROM order WHERE DATE(create_time) = '2024-01-01';\n\n分析：\n1. EXPLAIN显示type=ALL，全表扫描\n2. DATE()函数导致索引失效\n\n优化：\n1. 修改SQL：\nSELECT * FROM order \nWHERE create_time >= '2024-01-01 00:00:00' \nAND create_time < '2024-01-02 00:00:00';\n\n2. 添加索引：\nCREATE INDEX idx_create_time ON order(create_time);\n\n3. 结果：\n- type改为range\n- 查询时间降至50ms\n- 扫描行数从100万降至1000\n\n监控和预防：\n1. 定期分析慢查询日志\n2. 使用pt-query-digest工具\n3. 开启performance_schema\n4. 上线前做压测和EXPLAIN\n5. Code Review检查SQL",
+    "evaluationCriteria": {
+      "excellent": "系统的分析方法、详细的优化策略、实际案例、性能对比",
+      "good": "准确描述主要失效场景和优化方法",
+      "average": "知道一些场景但缺少系统性",
+      "poor": "理解不准确或缺少实践"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.98,
+    "difficulty": 0.84,
+    "discriminability": 0.92
+  }
+}

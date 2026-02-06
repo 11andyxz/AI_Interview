@@ -1,0 +1,37 @@
+{
+  "questionId": "devops_l3_001",
+  "difficulty": "L3 - Mid-level",
+  "domain": "DevOps",
+  "techStack": ["Docker", "Kubernetes"],
+  "question": "请解释Docker和Kubernetes的关系，以及Kubernetes的核心组件有哪些？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasRelationshipExplanation": true,
+      "hasComponentList": true,
+      "hasRoleDescription": true
+    },
+    "keyPoints": [
+      "Docker是容器引擎，K8s是容器编排平台",
+      "Master组件：API Server、Scheduler、Controller Manager、etcd",
+      "Node组件：Kubelet、Kube-proxy、Container Runtime",
+      "各组件的作用"
+    ],
+    "qualityIndicators": {
+      "conceptClarity": "清晰理解两者的定位和关系",
+      "componentKnowledge": "了解核心组件及其职责",
+      "practicalUnderstanding": "理解实际运行机制"
+    },
+    "sampleGoodAnswer": "Docker和Kubernetes的关系：\n\nDocker是容器引擎，负责创建和运行容器；Kubernetes（K8s）是容器编排平台，负责管理大规模容器的部署、扩缩容、负载均衡等。简单说，Docker解决'如何运行容器'，K8s解决'如何管理大量容器'。\n\nK8s核心组件：\n\n**Master节点（控制平面）：**\n1. API Server：集群的入口，所有操作都通过它\n2. Scheduler：负责Pod调度，决定Pod运行在哪个Node\n3. Controller Manager：管理各种控制器（Deployment、ReplicaSet等）\n4. etcd：分布式KV存储，保存集群所有数据\n\n**Node节点（工作节点）：**\n1. Kubelet：Node上的agent，负责管理Pod生命周期\n2. Kube-proxy：负责网络代理和负载均衡\n3. Container Runtime：容器运行时，如Docker、containerd\n\n工作流程：用户通过kubectl提交请求到API Server -> Scheduler选择Node -> Kubelet在Node上启动容器 -> Kube-proxy配置网络规则。",
+    "evaluationCriteria": {
+      "excellent": "关系清晰、所有组件完整、详细说明职责、有工作流程",
+      "good": "关系正确、主要组件完整、基本说明职责",
+      "average": "关系基本正确、组件不全或职责不清",
+      "poor": "理解有误或组件严重缺失"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.95,
+    "difficulty": 0.60,
+    "discriminability": 0.80
+  }
+}

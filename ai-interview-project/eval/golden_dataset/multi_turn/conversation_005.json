@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_005",
+  "scenario": "Senior Frontend - Problem Solving",
+  "difficulty": "L4 - Senior",
+  "domain": "Frontend Development",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "用户反馈页面加载很慢，你会如何排查和优化？", "candidate": "首先用Chrome DevTools Performance面板录制加载过程，看瓶颈在哪。通常问题在：1) bundle太大，查看Network面板，如果JS文件超过1MB就需要代码分割；2) 图片未优化，用WebP格式、懒加载、CDN；3) 首屏渲染慢，检查是否阻塞渲染的资源；4) API请求慢，查看接口响应时间。", "evaluation": {"score": 7.0, "strengths": ["系统的排查思路", "工具使用正确", "多个优化方向"], "concerns": ["缺少具体数据", "实际案例不足"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "假设发现是bundle太大，有2MB，你会怎么优化？", "candidate": "2MB确实太大了。优化方案：\n\n1. 代码分割：React.lazy动态import，路由懒加载，首屏只加载必要代码\n2. Tree Shaking：检查是否有未使用的依赖，用webpack-bundle-analyzer分析\n3. 第三方库优化：\n   - moment.js太大，换成day.js\n   - lodash按需引入：import debounce from 'lodash/debounce'\n   - 检查重复依赖，用yarn-deduplicate\n4. 压缩：Terser压缩JS，gzip/brotli传输压缩\n5. CDN外链：React、Ant Design等走CDN，减少bundle大小\n\n实际案例：之前项目bundle从2.1MB优化到600KB，首屏时间从8秒降到2秒。", "evaluation": {"score": 9.0, "strengths": ["方案具体可行", "工具使用专业", "有实际数据", "考虑多个维度"], "depth": "深入理解前端工程化", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "很好。优化后如何验证效果？如何防止性能退化？", "candidate": "验证方法：\n1. Lighthouse跑分：Performance分数从40提升到90+\n2. 真实用户监控（RUM）：上报FCP、LCP、TTI指标\n3. 埋点对比：页面加载时间P50、P90\n4. A/B测试：对比优化前后转化率\n\n防止退化：\n1. CI中集成Lighthouse，低于阈值告警\n2. Bundle size限制：webpack-bundle-size-analyzer，超过阈值CI失败\n3. 代码审查：关注新引入的依赖\n4. 定期performance audit\n5. 设置性能预算（Performance Budget）：\n   - 首屏JS < 200KB\n   - 首屏CSS < 100KB\n   - LCP < 2.5s\n\n持续监控是关键，不能一次优化就不管了。", "evaluation": {"score": 9.5, "strengths": ["验证方法完整", "预防措施到位", "工程化思维", "性能预算概念"], "technicalDepth": "优秀，Senior级别", "practicalExperience": "丰富的实战经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Senior (L4)",
+    "strengths": ["系统的性能优化思路", "工具链掌握全面", "有实际优化经验", "工程化和监控意识强"],
+    "assessmentScore": 8.5,
+    "recommendation": "强烈推荐，具备Senior级别能力",
+    "nextSteps": "可以讨论架构设计和团队协作"
+  },
+  "qualityMetrics": {"conversationFlow": 0.95, "technicalDepth": 0.92, "coherence": 0.95, "progressiveness": 0.90}
+}

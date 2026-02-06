@@ -1,0 +1,14 @@
+{
+  "questionId": "python_l4_053",
+  "difficulty": "L4 - Senior",
+  "domain": "Python",
+  "techStack": ["Python", "架构设计"],
+  "question": "设计一个Python的异步任务调度系统（类似Celery），要求支持任务队列、失败重试、优先级调度。请说明架构和实现要点。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["消息队列", "Worker进程", "失败重试", "优先级队列", "监控"],
+    "sampleGoodAnswer": "架构设计：\n\n1. 核心组件：\n- Broker：消息队列（Redis/RabbitMQ）\n- Worker：任务执行进程池\n- Backend：结果存储（Redis/数据库）\n- Scheduler：定时任务调度\n\n2. 任务提交：\n@task(max_retries=3, priority=5)\nasync def my_task(x, y):\n    return x + y\n\nmy_task.delay(1, 2)  # 异步执行\n\n3. Worker设计：\n- multiprocessing.Pool多进程\n- asyncio事件循环处理I/O任务\n- prefetch控制每个worker预取任务数\n- graceful shutdown处理进行中任务\n\n4. 失败重试：\n- 指数退避：delay = base_delay * (2 ** retry_count)\n- 最大重试次数\n- 死信队列（DLQ）存储最终失败任务\n\n5. 优先级调度：\n- Redis多个队列：high_queue, normal_queue, low_queue\n- Worker轮询：先high再normal最后low\n- 防饥饿：低优先级任务超时后提升优先级\n\n6. 监控：\n- 任务状态：PENDING/RUNNING/SUCCESS/FAILURE\n- 执行时间统计\n- 队列长度监控\n- Worker健康检查\n\n关键代码：\nclass TaskQueue:\n    def __init__(self, broker_url):\n        self.redis = Redis.from_url(broker_url)\n    \n    def enqueue(self, task, priority='normal'):\n        queue_name = f'{priority}_queue'\n        task_data = pickle.dumps(task)\n        self.redis.lpush(queue_name, task_data)\n    \n    def dequeue(self):\n        for queue in ['high_queue', 'normal_queue', 'low_queue']:\n            task_data = self.redis.brpop(queue, timeout=1)\n            if task_data:\n                return pickle.loads(task_data[1])\n        return None\n\nclass Worker:\n    async def run(self):\n        while True:\n            task = self.queue.dequeue()\n            if task:\n                try:\n                    result = await self.execute(task)\n                    self.backend.store_result(task.id, result)\n                except Exception as e:\n                    if task.retry_count < task.max_retries:\n                        task.retry_count += 1\n                        await asyncio.sleep(2 ** task.retry_count)\n                        self.queue.enqueue(task, priority=task.priority)\n                    else:\n                        self.dlq.push(task)\n\n对比Celery：类似架构但简化，Celery更完善（routing、workflows、监控UI）。",
+    "evaluationCriteria": {"excellent": "完整架构、详细设计、代码示例、对比分析", "good": "核心组件清晰", "average": "基本思路但不完整", "poor": "设计有缺陷"}
+  },
+  "qualityMetrics": {"relevance": 0.97, "difficulty": 0.89, "discriminability": 0.93}
+}

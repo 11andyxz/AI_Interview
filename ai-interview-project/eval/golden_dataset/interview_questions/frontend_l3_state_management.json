@@ -1,0 +1,40 @@
+{
+  "questionId": "frontend_l3_001",
+  "difficulty": "L3 - Mid-level",
+  "domain": "Frontend Development",
+  "techStack": ["React", "State Management"],
+  "question": "React中有哪些状态管理方案？你在项目中是如何选择的？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasMultipleSolutions": true,
+      "hasComparison": true,
+      "hasSelectionCriteria": true
+    },
+    "keyPoints": [
+      "useState/useReducer（本地状态）",
+      "Context API",
+      "Redux/Redux Toolkit",
+      "Zustand",
+      "Recoil",
+      "Jotai",
+      "不同方案的适用场景"
+    ],
+    "qualityIndicators": {
+      "breadth": "了解多种状态管理方案",
+      "depth": "理解各方案的优缺点",
+      "practicality": "结合实际项目选型经验"
+    },
+    "sampleGoodAnswer": "React状态管理主要有这几种：\n\n1. useState/useReducer：适合组件内部状态，简单直接。\n\n2. Context API：适合跨层级传递数据（如主题、用户信息），但不适合频繁更新的状态，会导致不必要的重渲染。\n\n3. Redux：适合大型应用，状态复杂且需要时间旅行调试。缺点是样板代码多，学习成本高。Redux Toolkit简化了很多。\n\n4. Zustand：轻量级，API简单，性能好。适合中小型项目，我们最近的项目用的就是Zustand。\n\n5. Recoil/Jotai：原子化状态管理，细粒度更新，性能好。适合需要精细控制渲染的场景。\n\n选择标准：\n- 小型项目：useState + Context\n- 中型项目：Zustand或Redux Toolkit\n- 大型企业应用：Redux Toolkit（生态成熟，团队熟悉）\n- 性能要求高：Zustand或Jotai\n\n我们项目状态不复杂，选择了Zustand，代码量少，性能好，团队上手快。",
+    "evaluationCriteria": {
+      "excellent": "5种以上方案、详细对比、明确选型标准、有实际经验",
+      "good": "3-4种方案、基本对比、了解适用场景",
+      "average": "2-3种方案、对比不够深入",
+      "poor": "只知道一种或理解有误"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.94,
+    "difficulty": 0.68,
+    "discriminability": 0.85
+  }
+}

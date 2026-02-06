@@ -1,0 +1,14 @@
+{
+  "questionId": "algorithm_l4_060",
+  "difficulty": "L4 - Senior",
+  "domain": "Algorithms",
+  "techStack": ["算法设计", "系统优化"],
+  "question": "设计一个LRU（Least Recently Used）缓存，要求O(1)时间复杂度的get和put操作。请说明数据结构选择和实现要点。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["双向链表", "HashMap", "O(1)操作", "并发安全", "实际应用"],
+    "sampleGoodAnswer": "LRU缓存设计：\n\n核心数据结构：HashMap + 双向链表\n\n原理：\n- HashMap：O(1)查找key\n- 双向链表：O(1)移动节点\n- 链表头：最近访问\n- 链表尾：最久未访问\n\n操作：\n1. get(key)：\n   - HashMap查找节点\n   - 移动到链表头\n   - 返回value\n\n2. put(key, value)：\n   - 如果key存在：更新value，移动到链表头\n   - 如果key不存在：\n     - 容量未满：插入链表头\n     - 容量已满：删除链表尾，插入链表头\n\nPython实现：\nclass ListNode:\n    def __init__(self, key=0, value=0):\n        self.key = key\n        self.value = value\n        self.prev = None\n        self.next = None\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.cache = {}\n        self.capacity = capacity\n        self.head = ListNode()  # 虚拟头节点\n        self.tail = ListNode()  # 虚拟尾节点\n        self.head.next = self.tail\n        self.tail.prev = self.head\n    \n    def _move_to_head(self, node):\n        self._remove_node(node)\n        self._add_to_head(node)\n    \n    def _remove_node(self, node):\n        node.prev.next = node.next\n        node.next.prev = node.prev\n    \n    def _add_to_head(self, node):\n        node.next = self.head.next\n        node.prev = self.head\n        self.head.next.prev = node\n        self.head.next = node\n    \n    def _remove_tail(self):\n        node = self.tail.prev\n        self._remove_node(node)\n        return node\n    \n    def get(self, key):\n        if key not in self.cache:\n            return -1\n        node = self.cache[key]\n        self._move_to_head(node)\n        return node.value\n    \n    def put(self, key, value):\n        if key in self.cache:\n            node = self.cache[key]\n            node.value = value\n            self._move_to_head(node)\n        else:\n            node = ListNode(key, value)\n            self.cache[key] = node\n            self._add_to_head(node)\n            if len(self.cache) > self.capacity:\n                tail = self._remove_tail()\n                del self.cache[tail.key]\n\n时间复杂度：O(1)\n空间复杂度：O(capacity)\n\n并发版本：\n- 使用ReentrantLock保护操作\n- 读写锁优化（读多写少）\n- 分段锁提升并发度\n\n实际应用：\n- Redis LRU淘汰策略\n- CPU缓存\n- 页面置换算法\n- 浏览器缓存\n\n变种：\n- LFU（Least Frequently Used）：基于访问频率\n- FIFO：先进先出\n- LRU-K：考虑最近K次访问\n\n优化：\n- 预热：启动时加载热点数据\n- 分层：L1（内存） + L2（SSD）",
+    "evaluationCriteria": {"excellent": "完整实现、时间复杂度分析、并发处理、实际应用", "good": "核心算法正确", "average": "思路对但实现有问题", "poor": "算法错误"}
+  },
+  "qualityMetrics": {"relevance": 0.96, "difficulty": 0.84, "discriminability": 0.90}
+}

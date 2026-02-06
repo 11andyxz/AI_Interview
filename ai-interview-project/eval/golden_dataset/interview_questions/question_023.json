@@ -1,0 +1,39 @@
+{
+  "questionId": "java_l2_023",
+  "difficulty": "L2 - Junior",
+  "domain": "Java",
+  "techStack": ["Java", "并发"],
+  "question": "Java中synchronized和ReentrantLock的区别是什么？各自的使用场景是什么？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "synchronized是关键字，ReentrantLock是类",
+      "可中断性、公平锁、多条件变量",
+      "性能差异",
+      "使用便利性",
+      "适用场景"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确对比两种锁机制",
+      "completeness": "涵盖差异、优缺点、使用场景",
+      "clarity": "解释清晰，有代码示例",
+      "depth": "理解Java并发机制"
+    },
+    "sampleGoodAnswer": "synchronized和ReentrantLock都用于线程同步，但有重要差异：\n\n主要区别：\n1. 实现方式：synchronized是JVM内置关键字，ReentrantLock是JDK提供的类\n2. 锁释放：synchronized自动释放，ReentrantLock需手动unlock（需在finally中）\n3. 可中断性：ReentrantLock支持lockInterruptibly()响应中断\n4. 公平锁：ReentrantLock可选公平锁，synchronized非公平\n5. 条件变量：ReentrantLock支持多个Condition，synchronized只有一个等待队列\n6. 性能：JDK 6后synchronized优化（偏向锁、轻量级锁），性能接近\n\n代码示例：\n// synchronized\nsynchronized(lock) {\n  // 自动释放\n}\n\n// ReentrantLock\nLock lock = new ReentrantLock();\nlock.lock();\ntry {\n  // 业务代码\n} finally {\n  lock.unlock(); // 必须手动释放\n}\n\n使用场景：\nsynchronized：简单场景，代码量少，自动管理\nReentrantLock：需要中断、超时、公平锁、多条件变量等高级功能",
+    "evaluationCriteria": {
+      "excellent": "完整对比差异、提供代码示例、说明使用场景",
+      "good": "准确描述主要区别和基本用法",
+      "average": "知道两者都是锁但区别不清",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.96,
+    "difficulty": 0.71,
+    "discriminability": 0.85
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "questionId": "Q075",
+  "domain": "Security",
+  "difficulty": "MID",
+  "techStack": ["Security", "Web Security", "OWASP", "XSS", "CSRF"],
+  "question": "Explain XSS (Cross-Site Scripting) and CSRF (Cross-Site Request Forgery) attacks. How do you prevent each in a web application?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "XSS: attacker injects malicious scripts into trusted websites, executes in victim's browser context",
+      "XSS prevention: input validation, output encoding, Content Security Policy (CSP), HTTPOnly cookies",
+      "CSRF: attacker tricks user into executing unwanted actions on authenticated site",
+      "CSRF prevention: CSRF tokens, SameSite cookie attribute, verify Origin/Referer headers",
+      "Both require defense-in-depth approach with multiple layers"
+    ],
+    "codeExample": "// XSS Prevention\n@Service\npublic class CommentService {\n    public String sanitizeComment(String comment) {\n        return HtmlUtils.htmlEscape(comment); // Encode HTML entities\n    }\n}\n\n// CSRF Protection in Spring\n@Configuration\npublic class SecurityConfig extends WebSecurityConfigurerAdapter {\n    @Override\n    protected void configure(HttpSecurity http) throws Exception {\n        http.csrf()\n            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());\n    }\n}\n\n// Add CSRF token to forms\n<input type=\"hidden\" name=\"${_csrf.parameterName}\" value=\"${_csrf.token}\"/>",
+    "explanation": "XSS attacks inject JavaScript (e.g., <script>steal_cookies()</script>) into user-generated content. Types: stored (persisted in DB), reflected (via URL params), DOM-based (client-side). Prevention: escape all user input before rendering, use CSP headers, set HTTPOnly on cookies. CSRF exploits authenticated sessions by tricking users into submitting requests (e.g., malicious site with <img> tag to bank.com/transfer). Prevention: include unpredictable CSRF token in forms, validate on server, use SameSite=Strict cookies to prevent cross-origin cookie sending."
+  },
+  "followUps": [
+    "What is Content Security Policy (CSP) and how does it prevent XSS?",
+    "How does the SameSite cookie attribute protect against CSRF?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.88,
+    "tokenEfficiency": 0.81,
+    "vocabularyDiversity": 0.85,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.91,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

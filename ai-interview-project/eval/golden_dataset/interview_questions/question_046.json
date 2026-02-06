@@ -1,0 +1,14 @@
+{
+  "questionId": "react_l3_046",
+  "difficulty": "L3 - Mid",
+  "domain": "Frontend",
+  "techStack": ["React", "Hooks"],
+  "question": "请解释React Hooks的useState和useReducer的区别，以及何时使用useReducer？",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["useState简单状态", "useReducer复杂状态", "reducer函数", "dispatch action", "使用场景"],
+    "sampleGoodAnswer": "useState适合简单状态，useReducer适合复杂状态逻辑。区别：useState直接setState，useReducer通过dispatch action触发reducer更新。useReducer适用场景：1) 状态更新逻辑复杂；2) 多个子状态相互依赖；3) 下一状态依赖前一状态；4) 性能优化（dispatch引用稳定）。示例：const [state, dispatch] = useReducer(reducer, initialState); reducer: (state, action) => {switch(action.type) {case 'increment': return {count: state.count + 1}}}。类似Redux但局部化。",
+    "evaluationCriteria": {"excellent": "完整对比、使用场景、代码示例", "good": "准确描述区别", "average": "知道但场景不清", "poor": "理解有误"}
+  },
+  "qualityMetrics": {"relevance": 0.95, "difficulty": 0.76, "discriminability": 0.85}
+}

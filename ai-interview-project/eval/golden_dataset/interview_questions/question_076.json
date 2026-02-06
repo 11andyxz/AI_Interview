@@ -1,0 +1,37 @@
+{
+  "questionId": "Q076",
+  "domain": "Testing",
+  "difficulty": "JUNIOR",
+  "techStack": ["Testing", "JUnit", "Unit Testing", "Java"],
+  "question": "What are the key principles of writing good unit tests? Explain the Arrange-Act-Assert pattern.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Unit tests should be Fast, Isolated, Repeatable, Self-validating, Timely (FIRST principles)",
+      "Arrange-Act-Assert (AAA): setup test data, execute code under test, verify results",
+      "Tests should be independent, test one thing, have clear names describing behavior",
+      "Use test doubles (mocks, stubs) to isolate unit from dependencies",
+      "Aim for high coverage but focus on meaningful tests, not just coverage percentage"
+    ],
+    "codeExample": "@Test\npublic void testCalculateDiscount_withValidCoupon_appliesDiscount() {\n    // Arrange\n    ShoppingCart cart = new ShoppingCart();\n    cart.addItem(new Item(\"Book\", 100.0));\n    Coupon coupon = new Coupon(\"SAVE10\", 0.10);\n    \n    // Act\n    double total = cart.calculateTotal(coupon);\n    \n    // Assert\n    assertEquals(90.0, total, 0.01);\n    assertTrue(coupon.isUsed());\n}",
+    "explanation": "Good unit tests follow AAA pattern for clarity: Arrange sets up preconditions and inputs, Act invokes the method being tested, Assert verifies outcomes. Tests should be independent (no shared state), fast (milliseconds), and deterministic (no flaky tests). Use descriptive names like 'shouldReturnEmptyList_whenDatabaseIsEmpty'. Mock external dependencies (databases, APIs) to isolate the unit. Each test should verify one logical concept. Red-green-refactor cycle in TDD ensures tests fail first, then pass, then code is cleaned up."
+  },
+  "followUps": [
+    "What's the difference between a mock and a stub?",
+    "How do you handle testing methods that interact with external systems?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.84,
+    "tokenEfficiency": 0.77,
+    "vocabularyDiversity": 0.81,
+    "repetitionScore": 0.87,
+    "technicalAccuracy": 0.89,
+    "clarityScore": 0.85
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

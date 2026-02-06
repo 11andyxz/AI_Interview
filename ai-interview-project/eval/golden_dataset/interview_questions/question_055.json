@@ -1,0 +1,14 @@
+{
+  "questionId": "ml_l4_055",
+  "difficulty": "L4 - Senior",
+  "domain": "Machine Learning",
+  "techStack": ["深度学习", "模型优化"],
+  "question": "在生产环境中如何优化深度学习模型的推理性能？请从模型、硬件和工程三个维度说明优化方法。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["模型压缩", "量化", "TensorRT", "批处理", "异步推理"],
+    "sampleGoodAnswer": "三维度优化：\n\n1. 模型层面：\n- 剪枝（Pruning）：移除不重要的权重，减少参数量30-50%\n- 量化（Quantization）：FP32→INT8，模型大小降低4倍，推理速度提升2-4倍\n- 蒸馏（Distillation）：小模型学习大模型，保持90%+效果\n- 架构搜索（NAS）：MobileNet、EfficientNet等轻量架构\n\n2. 硬件加速：\n- TensorRT（NVIDIA）：图优化、kernel fusion、INT8校准\n- ONNX Runtime：跨平台推理框架\n- OpenVINO（Intel）：CPU优化\n- 专用芯片：TPU、华为Ascend\n\n3. 工程优化：\n- Dynamic Batching：聚合多个请求批量推理\n- 异步推理：Pipeline并行（预处理、推理、后处理）\n- 模型缓存：预加载模型到GPU显存\n- 多模型并发：Triton Inference Server\n- 预计算：embedding层结果缓存\n\n实践案例（BERT模型）：\n原始：FP32，延迟300ms，QPS=100\n优化后：INT8量化+TensorRT，延迟50ms，QPS=600\n\n优化流程：\n1. Profile定位瓶颈\n2. 量化（精度下降<1%）\n3. TensorRT编译\n4. Batching策略（batch=8最优）\n5. GPU并发（多stream）\n\n效果评估：\n- 延迟：P50, P99\n- 吞吐：QPS\n- 资源：GPU利用率、显存占用\n- 精度：准确率损失<2%可接受",
+    "evaluationCriteria": {"excellent": "系统方案、实践数据、多种技术、case study", "good": "核心方法清晰", "average": "知道一些技术但不系统", "poor": "缺少实践"}
+  },
+  "qualityMetrics": {"relevance": 0.98, "difficulty": 0.88, "discriminability": 0.92}
+}

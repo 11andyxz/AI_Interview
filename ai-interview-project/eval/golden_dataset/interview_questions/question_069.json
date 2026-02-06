@@ -1,0 +1,37 @@
+{
+  "questionId": "Q069",
+  "domain": "System Design",
+  "difficulty": "SENIOR",
+  "techStack": ["Microservices", "System Design", "Architecture", "Distributed Systems"],
+  "question": "You're migrating a monolithic e-commerce application to microservices. How would you identify service boundaries and handle distributed transactions?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Use domain-driven design (DDD) to identify bounded contexts: Order, Payment, Inventory, User services",
+      "Avoid distributed transactions; use Saga pattern with choreography or orchestration",
+      "Event-driven architecture with message broker for async communication",
+      "Each service owns its data, no shared databases between services",
+      "API gateway for client-facing unified interface, service mesh for inter-service communication"
+    ],
+    "codeExample": "// Saga orchestration example\n@Service\npublic class OrderSagaOrchestrator {\n    public void createOrder(OrderRequest request) {\n        String sagaId = UUID.randomUUID().toString();\n        \n        try {\n            // Step 1: Reserve inventory\n            inventoryService.reserve(request.getItems(), sagaId);\n            \n            // Step 2: Process payment\n            paymentService.charge(request.getPayment(), sagaId);\n            \n            // Step 3: Create order\n            orderService.create(request, sagaId);\n            \n        } catch (Exception e) {\n            // Compensating transactions\n            compensate(sagaId);\n            throw new OrderCreationException(e);\n        }\n    }\n}",
+    "explanation": "Service boundaries should align with business capabilities and domain models. For e-commerce: Order Service (order lifecycle), Payment Service (payment processing), Inventory Service (stock management), User Service (authentication/profile). Use Saga pattern for distributed transactions - either choreography (services emit events, others listen) or orchestration (central coordinator). Event sourcing helps maintain consistency. Communication: synchronous REST/gRPC for queries, async messaging for commands. Implement circuit breakers and retries for resilience."
+  },
+  "followUps": [
+    "How would you handle eventual consistency in the UI when using Saga pattern?",
+    "What monitoring and observability tools would you implement for microservices?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.90,
+    "tokenEfficiency": 0.81,
+    "vocabularyDiversity": 0.87,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

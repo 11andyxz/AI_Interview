@@ -1,0 +1,39 @@
+{
+  "questionId": "frontend_l2_016",
+  "difficulty": "L2 - Junior",
+  "domain": "Frontend",
+  "techStack": ["React", "Hooks"],
+  "question": "React中的useEffect是什么？它替代了类组件的哪些生命周期方法？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "处理副作用（side effects）",
+      "替代componentDidMount、componentDidUpdate、componentWillUnmount",
+      "依赖数组的作用",
+      "清理函数",
+      "代码示例"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述useEffect的用途和生命周期映射",
+      "completeness": "涵盖用法、依赖数组、清理机制",
+      "clarity": "解释清晰，有代码示例",
+      "depth": "理解副作用和依赖追踪"
+    },
+    "sampleGoodAnswer": "useEffect是React Hooks中用于处理副作用的Hook，副作用包括数据获取、订阅、手动DOM操作等。它整合了类组件的三个生命周期方法：\n\n1. componentDidMount：useEffect(() => {}, []) 空依赖数组，只在挂载时执行\n2. componentDidUpdate：useEffect(() => {}, [dep]) 依赖变化时执行\n3. componentWillUnmount：return清理函数，在卸载时执行\n\n示例：\nuseEffect(() => {\n  const timer = setInterval(() => {\n    setCount(c => c + 1);\n  }, 1000);\n  \n  return () => clearInterval(timer); // 清理\n}, []); // 空数组表示只在挂载时执行一次\n\n依赖数组：不传表示每次渲染都执行，空数组表示只执行一次，有依赖表示依赖变化时执行。清理函数用于取消订阅、清除定时器等。",
+    "evaluationCriteria": {
+      "excellent": "完整解释用途、生命周期映射、依赖机制、提供代码",
+      "good": "准确描述核心概念和基本用法",
+      "average": "知道useEffect但不清楚依赖机制",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.97,
+    "difficulty": 0.67,
+    "discriminability": 0.84
+  }
+}

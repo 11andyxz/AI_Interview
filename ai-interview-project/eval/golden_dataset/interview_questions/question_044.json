@@ -1,0 +1,14 @@
+{
+  "questionId": "java_l3_044",
+  "difficulty": "L3 - Mid",
+  "domain": "Java",
+  "techStack": ["Java", "并发"],
+  "question": "请解释Java中的ThreadLocal原理，以及可能导致的内存泄漏问题如何解决？",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["ThreadLocal原理", "ThreadLocalMap", "内存泄漏原因", "解决方案", "使用场景"],
+    "sampleGoodAnswer": "ThreadLocal为每个线程提供独立的变量副本。原理：每个Thread对象持有ThreadLocalMap，key是ThreadLocal对象（弱引用），value是变量值（强引用）。内存泄漏：ThreadLocal对象被回收后，key为null，但value仍被引用无法回收。解决方案：使用后调用remove()方法。典型场景：数据库连接、用户上下文、SimpleDateFormat线程安全。最佳实践：1) 使用完立即remove；2) 使用try-finally确保清理；3) 避免在线程池中使用未清理的ThreadLocal。",
+    "evaluationCriteria": {"excellent": "完整解释原理、内存泄漏分析、解决方案", "good": "准确描述核心概念", "average": "知道ThreadLocal但原理不清", "poor": "理解有误"}
+  },
+  "qualityMetrics": {"relevance": 0.96, "difficulty": 0.81, "discriminability": 0.89}
+}

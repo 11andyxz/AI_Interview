@@ -1,0 +1,14 @@
+{
+  "questionId": "algorithm_l3_043",
+  "difficulty": "L3 - Mid",
+  "domain": "Algorithms",
+  "techStack": ["算法", "动态规划"],
+  "question": "什么是动态规划？请用具体例子（如最长公共子序列）说明动态规划的解题思路。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["最优子结构", "重叠子问题", "状态转移方程", "LCS例子", "时间复杂度"],
+    "sampleGoodAnswer": "动态规划是解决最优化问题的算法设计方法。\n\n核心特征：\n1. 最优子结构：原问题的最优解包含子问题的最优解\n2. 重叠子问题：递归过程中重复计算相同子问题\n3. 无后效性：当前状态只依赖之前状态\n\n解题步骤：\n1. 定义状态（dp数组含义）\n2. 状态转移方程\n3. 初始化\n4. 计算顺序\n5. 返回结果\n\n例子：最长公共子序列（LCS）\n问题：给定两个字符串，找最长公共子序列长度\n输入：s1=\"ABCDGH\", s2=\"AEDFHR\"\n输出：3（\"ADH\"）\n\n1. 定义状态：\ndp[i][j] = s1前i个字符和s2前j个字符的LCS长度\n\n2. 状态转移：\nif s1[i-1] == s2[j-1]:\n  dp[i][j] = dp[i-1][j-1] + 1\nelse:\n  dp[i][j] = max(dp[i-1][j], dp[i][j-1])\n\n3. 初始化：\ndp[0][j] = 0, dp[i][0] = 0\n\n4. 代码：\ndef lcs(s1, s2):\n    m, n = len(s1), len(s2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    \n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if s1[i-1] == s2[j-1]:\n                dp[i][j] = dp[i-1][j-1] + 1\n            else:\n                dp[i][j] = max(dp[i-1][j], dp[i][j-1])\n    \n    return dp[m][n]\n\n时间复杂度：O(m*n)\n空间复杂度：O(m*n)，可优化到O(n)\n\n其他经典DP问题：\n- 0-1背包\n- 最长递增子序列\n- 编辑距离\n- 股票买卖\n- 爬楼梯\n\nDP vs 贪心 vs 分治：\n- DP：保存中间结果，自底向上\n- 贪心：局部最优，可能不是全局最优\n- 分治：子问题独立，不重叠",
+    "evaluationCriteria": {"excellent": "完整解释概念、详细例子、代码实现、时间复杂度", "good": "准确描述核心思想和基本例子", "average": "知道DP但不会应用", "poor": "理解有误"}
+  },
+  "qualityMetrics": {"relevance": 0.95, "difficulty": 0.80, "discriminability": 0.88}
+}

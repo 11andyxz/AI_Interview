@@ -1,0 +1,24 @@
+{
+  "scoringId": "scoring_009",
+  "questionId": "java_gc_001",
+  "question": "Java中如何进行垃圾回收调优？请说明常用的GC参数和调优思路。",
+  "candidateAnswer": "GC调优是Java性能优化的重要部分。\n\n首先要选择合适的GC：\n- G1 GC：适合大堆内存（>4GB），平衡吞吐量和延迟\n- CMS：低延迟但会产生碎片\n- ZGC/Shenandoah：超低延迟（<10ms）\n\n常用参数：\n-Xms4g -Xmx4g  # 堆大小相等避免动态调整\n-XX:+UseG1GC   # 使用G1垃圾回收器\n-XX:MaxGCPauseMillis=200  # 目标停顿时间\n-XX:+PrintGCDetails  # 打印GC日志\n-XX:+HeapDumpOnOutOfMemoryError  # OOM时dump堆\n\n调优思路：\n1. 分析GC日志：\n   - 观察GC频率和停顿时间\n   - 识别Full GC原因（老年代满、元空间不足）\n\n2. 堆大小调整：\n   - 堆太小：频繁GC\n   - 堆太大：GC停顿时间长\n   - 一般设置为最大堆使用量的1.5-2倍\n\n3. 新生代调优：\n   - 增大新生代：减少Minor GC频率\n   - 调整Eden/Survivor比例：-XX:SurvivorRatio=8\n\n4. 晋升阈值：\n   - -XX:MaxTenuringThreshold=15\n   - 避免短期对象过早进入老年代\n\n5. 并发线程数：\n   - -XX:ConcGCThreads=4\n   - 平衡GC和应用线程\n\n实际案例：\n某系统频繁Full GC，发现：\n- 老年代使用率持续增长\n- 通过MAT分析发现缓存未限制大小\n- 解决：使用Guava Cache限制容量\n- 效果：Full GC从每小时1次降至每天1次\n\n最佳实践：\n1. 监控GC指标（GC时间占比<5%）\n2. 避免创建大对象\n3. 对象池复用\n4. 及时释放资源\n5. 压测验证",
+  "evaluation": {
+    "score": 8.5,
+    "level": "Good",
+    "strengths": ["系统的调优思路", "丰富的参数说明", "实际案例支撑", "最佳实践总结"],
+    "weaknesses": ["可以补充更多GC类型对比", "缺少性能指标量化"],
+    "technicalAccuracy": 0.95,
+    "completeness": 0.85,
+    "clarity": 0.90,
+    "depth": 0.85,
+    "feedback": "很好的回答！展示了扎实的GC调优经验。参数说明全面，调优思路清晰，实际案例很有说服力。建议补充：1) 不同GC的详细对比（吞吐量vs延迟）；2) 量化指标（如吞吐量>95%，停顿<100ms）；3) GCEasy等工具的使用。"
+  },
+  "qualityMetrics": {
+    "answerLength": 580,
+    "technicalTerms": 18,
+    "hasExample": true,
+    "hasExplanation": true,
+    "hasCodeExamples": true
+  }
+}
