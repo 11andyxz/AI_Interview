@@ -14,6 +14,7 @@ from mysql.connector import Error
 import plotly.graph_objects as go
 import plotly.express as px
 from typing import List, Dict, Any
+from scipy import stats
 import os
 
 # Page configuration
@@ -488,6 +489,244 @@ def render_regression_tests():
                     st.write(f"**{key}**: {value}")
 
 
+def fetch_experiments() -> pd.DataFrame:
+    """Fetch experiments from database"""
+    connection = get_db_connection()
+    if not connection:
+        return pd.DataFrame()
+    
+    try:
+        query = """
+        SELECT 
+            id,
+            name,
+            type,
+            status,
+            traffic_split,
+            min_sample_size,
+            primary_metric,
+            started_at,
+            completed_at,
+            winner
+        FROM ml_experiments
+        ORDER BY created_at DESC
+        LIMIT 50
+        """
+        
+        df = pd.read_sql(query, connection)
+        return df
+    except Error as e:
+        st.warning(f"Could not fetch experiments: {e}")
+        return pd.DataFrame()
+    finally:
+        if connection.is_connected():
+            connection.close()
+
+
+def fetch_experiment_metrics(experiment_id: str) -> pd.DataFrame:
+    """Fetch metrics for a specific experiment"""
+    connection = get_db_connection()
+    if not connection:
+        return pd.DataFrame()
+    
+    try:
+        query = """
+        SELECT 
+            experiment_id,
+            variant,
+            quality_score,
+            latency_ms,
+            cost_usd,
+            validation_pass,
+            created_at
+        FROM experiment_metrics
+        WHERE experiment_id = %s
+        ORDER BY created_at DESC
+        """
+        
+        df = pd.read_sql(query, connection, params=(experiment_id,))
+        return df
+    except Error as e:
+        st.warning(f"Could not fetch experiment metrics: {e}")
+        return pd.DataFrame()
+    finally:
+        if connection.is_connected():
+            connection.close()
+
+
+def render_experiments():
+    """Render A/B experiments tab"""
+    st.header("🔬 A/B Experiments")
+    st.markdown("Monitor active experiments and analyze results")
+    
+    # Fetch experiments
+    experiments_df = fetch_experiments()
+    
+    if experiments_df.empty:
+        st.info("No experiments found. Experiments will appear here once created via the API.")
+        st.markdown("**Example: Create an experiment**")
+        st.code("""
+POST /api/ml/experiments
+{
+  "id": "prompt_variant_2024",
+  "name": "Test new prompt structure",
+  "type": "prompt_variant",
+  "baseline_config": "{\\"prompt_version\\": \\"v1.0\\"}",
+  "variant_config": "{\\"prompt_version\\": \\"v1.2\\"}",
+  "traffic_split": 0.5,
+  "min_sample_size": 100
+}
+        """, language="json")
+        return
+    
+    # Active experiments section
+    st.subheader("Active Experiments")
+    active_experiments = experiments_df[experiments_df['status'] == 'active']
+    
+    if not active_experiments.empty:
+        for _, exp in active_experiments.iterrows():
+            with st.expander(f"🟢 {exp['name']} ({exp['id']})"):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Type", exp['type'])
+                    st.metric("Traffic Split", f"{int(exp['traffic_split']*100)}%")
+                
+                with col2:
+                    st.metric("Status", exp['status'])
+                    st.metric("Min Samples", exp['min_sample_size'])
+                
+                with col3:
+                    st.metric("Primary Metric", exp['primary_metric'])
+                    started = exp['started_at']
+                    st.metric("Started", started.strftime("%Y-%m-%d") if started else "N/A")
+                
+                # Fetch and display metrics
+                metrics_df = fetch_experiment_metrics(exp['id'])
+                
+                if not metrics_df.empty:
+                    # Calculate stats
+                    baseline_df = metrics_df[metrics_df['variant'] == 'baseline']
+                    variant_df = metrics_df[metrics_df['variant'] == 'variant']
+                    
+                    st.markdown("**Sample Sizes:**")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Baseline", len(baseline_df))
+                    with col2:
+                        st.metric("Variant", len(variant_df))
+                    
+                    # Comparison chart
+                    if len(baseline_df) > 0 and len(variant_df) > 0:
+                        st.markdown("**Quality Score Comparison:**")
+                        
+                        fig = go.Figure()
+                        fig.add_trace(go.Box(
+                            y=baseline_df['quality_score'],
+                            name="Baseline",
+                            marker_color='lightblue'
+                        ))
+                        fig.add_trace(go.Box(
+                            y=variant_df['quality_score'],
+                            name="Variant",
+                            marker_color='lightgreen'
+                        ))
+                        fig.update_layout(
+                            yaxis_title="Quality Score",
+                            height=300
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Stats comparison
+                        st.markdown("**Statistics:**")
+                        comparison_data = {
+                            'Metric': ['Quality Score', 'Latency (ms)', 'Cost ($)', 'Pass Rate'],
+                            'Baseline': [
+                                f"{baseline_df['quality_score'].mean():.2f}",
+                                f"{baseline_df['latency_ms'].mean():.1f}",
+                                f"${baseline_df['cost_usd'].mean():.4f}",
+                                f"{baseline_df['validation_pass'].mean()*100:.1f}%"
+                            ],
+                            'Variant': [
+                                f"{variant_df['quality_score'].mean():.2f}",
+                                f"{variant_df['latency_ms'].mean():.1f}",
+                                f"${variant_df['cost_usd'].mean():.4f}",
+                                f"{variant_df['validation_pass'].mean()*100:.1f}%"
+                            ]
+                        }
+                        st.table(pd.DataFrame(comparison_data))
+                        
+                        # Statistical significance
+                        st.markdown("**Statistical Significance:**")
+                        
+                        # Perform Welch's t-test
+                        baseline_scores = baseline_df['quality_score'].values
+                        variant_scores = variant_df['quality_score'].values
+                        
+                        t_stat, p_value = stats.ttest_ind(baseline_scores, variant_scores, equal_var=False)
+                        
+                        # Calculate confidence intervals (95%)
+                        baseline_mean = baseline_scores.mean()
+                        variant_mean = variant_scores.mean()
+                        baseline_se = stats.sem(baseline_scores)
+                        variant_se = stats.sem(variant_scores)
+                        baseline_ci = stats.t.interval(0.95, len(baseline_scores)-1, baseline_mean, baseline_se)
+                        variant_ci = stats.t.interval(0.95, len(variant_scores)-1, variant_mean, variant_se)
+                        
+                        sig_col1, sig_col2, sig_col3 = st.columns(3)
+                        
+                        with sig_col1:
+                            st.metric("p-value", f"{p_value:.4f}")
+                            if p_value < 0.05:
+                                st.success("✓ Statistically significant (p < 0.05)")
+                            else:
+                                st.warning("✗ Not significant (p ≥ 0.05)")
+                        
+                        with sig_col2:
+                            st.metric("Baseline 95% CI", 
+                                     f"[{baseline_ci[0]:.2f}, {baseline_ci[1]:.2f}]")
+                        
+                        with sig_col3:
+                            st.metric("Variant 95% CI", 
+                                     f"[{variant_ci[0]:.2f}, {variant_ci[1]:.2f}]")
+                        
+                        # Effect size
+                        effect_size = (variant_mean - baseline_mean) / baseline_mean * 100
+                        st.metric("Effect Size", 
+                                 f"{effect_size:+.2f}%",
+                                 delta=f"{variant_mean - baseline_mean:.2f} points")
+                else:
+                    st.info("No metrics collected yet")
+    else:
+        st.info("No active experiments")
+    
+    # Completed experiments section
+    st.subheader("Completed Experiments")
+    completed_experiments = experiments_df[experiments_df['status'].isin(['completed', 'rolled_back'])]
+    
+    if not completed_experiments.empty:
+        for _, exp in completed_experiments.iterrows():
+            status_emoji = "✅" if exp['status'] == 'completed' else "🔄"
+            with st.expander(f"{status_emoji} {exp['name']} - Winner: {exp['winner'] or 'N/A'}"):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Status", exp['status'])
+                    st.metric("Winner", exp['winner'] or 'N/A')
+                
+                with col2:
+                    started = exp['started_at']
+                    st.metric("Started", started.strftime("%Y-%m-%d") if started else "N/A")
+                    completed = exp['completed_at']
+                    st.metric("Completed", completed.strftime("%Y-%m-%d") if completed else "N/A")
+                
+                with col3:
+                    st.metric("Type", exp['type'])
+                    st.metric("Primary Metric", exp['primary_metric'])
+    else:
+        st.info("No completed experiments yet")
+
+
 def main():
     """Main dashboard function"""
     # Render sidebar
@@ -506,12 +745,13 @@ def main():
         df = df[df['endpoint'].isin(endpoint_filter)]
     
     # Main content tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "📈 Quality Scores",
         "📝 Output Examples",
         "🚨 Error Gallery",
         "📊 Comparison",
-        "🧪 Regression Tests"
+        "🧪 Regression Tests",
+        "🔬 A/B Experiments"
     ])
     
     with tab1:
@@ -528,6 +768,9 @@ def main():
     
     with tab5:
         render_regression_tests()
+    
+    with tab6:
+        render_experiments()
 
 
 if __name__ == "__main__":
