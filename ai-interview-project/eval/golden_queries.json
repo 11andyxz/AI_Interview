@@ -1,0 +1,52 @@
+[
+  {
+    "query": "What is dependency injection in Spring?",
+    "relevant_ids": ["q001", "q002", "q003"],
+    "category": "Java"
+  },
+  {
+    "query": "Explain React hooks and their benefits",
+    "relevant_ids": ["q101", "q102"],
+    "category": "React"
+  },
+  {
+    "query": "How does async/await work in JavaScript?",
+    "relevant_ids": ["q201", "q202", "q203"],
+    "category": "JavaScript"
+  },
+  {
+    "query": "What is the difference between SQL and NoSQL?",
+    "relevant_ids": ["q301", "q302"],
+    "category": "Database"
+  },
+  {
+    "query": "Explain microservices architecture",
+    "relevant_ids": ["q401", "q402", "q403"],
+    "category": "Architecture"
+  },
+  {
+    "query": "How does garbage collection work in Java?",
+    "relevant_ids": ["q501", "q502"],
+    "category": "Java"
+  },
+  {
+    "query": "What are Docker containers?",
+    "relevant_ids": ["q601", "q602", "q603"],
+    "category": "DevOps"
+  },
+  {
+    "query": "Explain RESTful API design principles",
+    "relevant_ids": ["q701", "q702"],
+    "category": "API"
+  },
+  {
+    "query": "What is the event loop in Node.js?",
+    "relevant_ids": ["q801", "q802", "q803"],
+    "category": "Node.js"
+  },
+  {
+    "query": "How to optimize database queries?",
+    "relevant_ids": ["q901", "q902"],
+    "category": "Database"
+  }
+]

@@ -2,6 +2,7 @@ package com.aiinterview.ml.embedding;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +18,12 @@ import java.util.stream.Collectors;
  * Redis Stack setup:
  * - FT.CREATE idx:interview_knowledge ON HASH PREFIX 1 knowledge:
  *   SCHEMA content TEXT embedding VECTOR FLAT 6 DIM 1536 DISTANCE_METRIC COSINE
+ * 
+ * Only activated when redis.enabled=true in application.properties
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = false)
 public class RedisVectorStore implements VectorStore {
     
     private static final String KEY_PREFIX = "knowledge:";
@@ -212,9 +216,12 @@ public class RedisVectorStore implements VectorStore {
      * Serialize embedding to string for Redis storage
      */
     private String serializeEmbedding(float[] embedding) {
-        return Arrays.stream(embedding)
-            .mapToObj(String::valueOf)
-            .collect(Collectors.joining(","));
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < embedding.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(embedding[i]);
+        }
+        return sb.toString();
     }
     
     /**

@@ -12,9 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Tracks AI API costs and monitors budget utilization
+ * Legacy implementation - kept for reference
+ * @deprecated Use com.aiinterview.ml.observability.CostTracker instead
  */
 @Slf4j
-@Service
+@Service("legacyCostTracker")
 public class CostTracker {
     
     // Cost tracking maps

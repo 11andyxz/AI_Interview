@@ -1,7 +1,10 @@
 package com.aiinterview.ml.experiments;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -20,9 +23,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class PromptVersionLoader {
     
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final Map<String, PromptVersion> promptVersions = new ConcurrentHashMap<>();
     private final PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+    
+    public PromptVersionLoader() {
+        this.objectMapper = new ObjectMapper();
+        // Configure ObjectMapper to handle both snake_case and camelCase
+        this.objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
     
     @Data
     public static class PromptVersion {

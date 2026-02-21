@@ -1,5 +1,6 @@
 package com.aiinterview.monitoring;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Alert evaluation and notification service
  * Checks metrics against alert rules with duration thresholds per task requirements
  */
+@Slf4j
 @Service
 public class AlertService {
     
@@ -124,6 +126,17 @@ public class AlertService {
     }
     
     private boolean checkThreshold(String condition, double metricValue, Object threshold, String metricName) {
+        // Validate inputs
+        if (condition == null || condition.trim().isEmpty()) {
+            log.warn("Alert condition is null or empty for metric: {}", metricName);
+            return false;
+        }
+        
+        if (threshold == null) {
+            log.warn("Alert threshold is null for metric: {}", metricName);
+            return false;
+        }
+        
         double thresholdValue = ((Number) threshold).doubleValue();
         
         switch (condition) {

@@ -21,11 +21,35 @@ public class AggregatedValidationResult {
     private List<ValidationResult> individualResults;
     
     /**
+     * Convenience method - alias for isOverallPassed()
+     */
+    public boolean isPassed() {
+        return overallPassed;
+    }
+    
+    /**
+     * Alias for individualResults - for compatibility
+     */
+    public List<ValidationResult> getResults() {
+        return individualResults;
+    }
+    
+    /**
      * Get all failed validators
      */
     public List<ValidationResult> getFailures() {
         return individualResults.stream()
                 .filter(r -> !r.isPassed())
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get failure messages as strings
+     */
+    public List<String> getFailureMessages() {
+        return individualResults.stream()
+                .filter(r -> !r.isPassed())
+                .map(r -> r.getValidatorName() + ": " + r.getMessage())
                 .collect(Collectors.toList());
     }
     

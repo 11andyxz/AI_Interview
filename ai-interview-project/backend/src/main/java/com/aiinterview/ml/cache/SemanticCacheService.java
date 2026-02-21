@@ -2,6 +2,7 @@ package com.aiinterview.ml.cache;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +17,17 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SemanticCacheService {
     
     private final EmbeddingService embeddingService;
     private final RedisTemplate<String, Object> redisTemplate;
+    
+    public SemanticCacheService(
+            @Qualifier("cacheEmbeddingService") EmbeddingService embeddingService,
+            RedisTemplate<String, Object> redisTemplate) {
+        this.embeddingService = embeddingService;
+        this.redisTemplate = redisTemplate;
+    }
     
     // In-memory index of embeddings (in production, use vector database like Pinecone or Redis Vector Search)
     private final Map<String, List<CachedAIResponse>> scenarioCache = new ConcurrentHashMap<>();

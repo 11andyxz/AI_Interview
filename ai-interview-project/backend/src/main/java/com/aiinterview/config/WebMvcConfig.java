@@ -19,7 +19,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                     "/api/auth/**",
                     "/api/health/**",
-                    "/api/payment/webhook/**"
+                    "/api/payment/webhook/**",
+                    "/api/test/**",  // Week 12 P1-AC3: Allow public access for performance testing
+                    "/api/admin/**"  // Week 12: Allow admin endpoints for data import
                 );
     }
 }

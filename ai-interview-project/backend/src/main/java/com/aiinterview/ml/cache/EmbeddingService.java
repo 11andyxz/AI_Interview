@@ -16,7 +16,7 @@ import java.util.Random;
  * In production, this would call OpenAI Embeddings API or use a local embedding model.
  */
 @Slf4j
-@Service
+@Service("cacheEmbeddingService")
 public class EmbeddingService {
     
     private static final int EMBEDDING_DIMENSION = 384; // Typical small embedding size

@@ -44,7 +44,7 @@ public class QualityMonitor {
         double clarityScore = calculateClarityScore(content);
         
         // Record to database
-        String endpoint = context.getRequestType();
+        String endpoint = context.getRequestTypeName();
         String modelVersion = context.getModelVersion() != null ? context.getModelVersion() : "gpt-4o-mini";
         
         Map<String, Object> tags = new HashMap<>();
@@ -69,7 +69,7 @@ public class QualityMonitor {
      * Record validation results and quality scores
      */
     public void recordValidationResults(AggregatedValidationResult result, ValidationContext context) {
-        String endpoint = context.getRequestType();
+        String endpoint = context.getRequestTypeName();
         String modelVersion = context.getModelVersion() != null ? context.getModelVersion() : "gpt-4o-mini";
         
         Map<String, Object> tags = new HashMap<>();
@@ -88,7 +88,7 @@ public class QualityMonitor {
         
         // Record failure reasons if any
         if (!passed) {
-            List<String> failures = result.getFailures();
+            List<String> failures = result.getFailureMessages();
             log.warn("Validation failures detected: {}", failures);
             
             tags.put("failures", String.join(", ", failures));

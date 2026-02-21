@@ -82,6 +82,13 @@ public class Candidate {
     public void setResumeText(String resumeText) {
         this.resumeText = resumeText;
     }
+    
+    /**
+     * Alias for getResumeText() - for compatibility with Week 12 RAG integration
+     */
+    public String getResume() {
+        return resumeText;
+    }
 
     public String getPhone() {
         return phone;

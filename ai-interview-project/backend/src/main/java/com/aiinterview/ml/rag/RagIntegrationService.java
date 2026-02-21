@@ -71,21 +71,21 @@ public class RagIntegrationService {
             // Convert QAHistory to RAG format
             List<com.aiinterview.ml.rag.QAHistory> ragHistory = history.stream()
                 .map(qa -> com.aiinterview.ml.rag.QAHistory.builder()
-                    .question(qa.getQuestion())
-                    .answer(qa.getAnswer())
-                    .difficulty(qa.getDifficulty())
+                    .question(qa.getQuestionText())
+                    .answer(qa.getAnswerText())
+                    .difficulty(qa.getRubricLevel())
                     .score(qa.getScore())
                     .build())
                 .collect(Collectors.toList());
             
-            // Get resume context (if available)
-            String resumeContext = interview.getResumeContext();
+            // Get resume context (if available) - default to empty string
+            String resumeContext = "";
             
             // Generate with RAG
             return questionGenerator.generateNextQuestion(
                 interview.getId(),
-                interview.getRoleId(),
-                interview.getLevel(),
+                interview.getTitle(),  // Use title as role
+                "MEDIUM",  // Default level
                 ragHistory,
                 resumeContext
             );

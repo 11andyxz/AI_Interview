@@ -257,8 +257,7 @@ public class OpenAiService {
                     .rawResponse(response)
                     .model(model)
                     .latencyMs(latency)
-                    .requestType(context.getRequestType() != null ? 
-                                ValidationContext.RequestType.valueOf(context.getRequestType()) : null)
+                    .requestType(context.getRequestType())
                     .build();
                 
                 // Try to parse as JSON

@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+
+import java.util.HashMap;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Mono;
@@ -37,6 +39,15 @@ public class RagQuestionGenerator {
     @Autowired
     private ObjectMapper objectMapper;
     
+    @Autowired(required = false)
+    private HybridSearchEngine hybridSearchEngine;
+    
+    @Autowired(required = false)
+    private RerankerService rerankerService;
+    
+    @Autowired(required = false)
+    private ContextWindowManager contextWindowManager;
+    
     @Value("${openai.api.key}")
     private String apiKey;
     
@@ -48,6 +59,12 @@ public class RagQuestionGenerator {
     
     @Value("${ml.rag.top-k:5}")
     private int topK;
+    
+    @Value("${ml.rag.use-hybrid-search:true}")
+    private boolean useHybridSearch;
+    
+    @Value("${ml.rag.max-context-tokens:2048}")
+    private int maxContextTokens;
     
     /**
      * Generate next interview question based on context
@@ -71,25 +88,49 @@ public class RagQuestionGenerator {
                 // Build search query from context
                 String searchQuery = buildSearchQuery(roleId, level, history, resumeContext);
                 
-                // Retrieve relevant context from vector store
-                float[] queryEmbedding = embeddingService.generateEmbedding(searchQuery);
-                
                 Map<String, String> filters = new HashMap<>();
                 if (roleId != null) {
                     filters.put("role", roleId);
                 }
-                // Don't filter by difficulty - allow broader context
-                
-                List<SearchResult> retrievedContext = vectorStore.search(queryEmbedding, topK, filters);
+             
+                // Use hybrid search if available, otherwise fallback to vector-only
+                List<com.aiinterview.ml.rag.SearchResult> ragResults;
+                if (useHybridSearch && hybridSearchEngine != null) {
+                    log.info("Using hybrid search for question generation");
+                    // Fetch more candidates for reranking
+                    int candidateCount = topK * 3;
+                    ragResults = hybridSearchEngine.hybridSearch(searchQuery, filters, candidateCount, 0.7, 0.3);
+                    
+                    // Rerank results if available
+                    if (rerankerService != null && !ragResults.isEmpty()) {
+                        ragResults = rerankerService.rerank(searchQuery, ragResults, topK);
+                        log.info("Reranked {} results to top {}", candidateCount, ragResults.size());
+                    }
+                    
+                    // Select context within token budget
+                    if (contextWindowManager != null && !ragResults.isEmpty()) {
+                        ragResults = contextWindowManager.selectContext(ragResults, maxContextTokens, 0.5);
+                        log.info("Selected {} context items within {} token budget", ragResults.size(), maxContextTokens);
+                    }
+                } else {
+                    // Fallback to vector-only search
+                    log.info("Using vector-only search (hybrid search disabled or unavailable)");
+                    float[] queryEmbedding = embeddingService.generateEmbedding(searchQuery);
+                    List<com.aiinterview.ml.embedding.SearchResult> vectorResults = 
+                        vectorStore.search(queryEmbedding, topK, filters);
+                    
+                    // Convert to RAG SearchResult format
+                    ragResults = convertToRagSearchResults(vectorResults);
+                }
                 
                 // Build augmented prompt
-                String prompt = buildQuestionPrompt(roleId, level, history, resumeContext, retrievedContext);
+                String prompt = buildQuestionPrompt(roleId, level, history, resumeContext, ragResults);
                 
                 // Call LLM
                 String response = callOpenAI(prompt, 0.7);
                 
                 // Parse response
-                GeneratedQuestion question = parseQuestionResponse(response, retrievedContext);
+                GeneratedQuestion question = parseQuestionResponse(response, ragResults);
                 question.setDifficulty(level);
                 
                 log.info("Generated question for interview: {}, role: {}, level: {}", 
@@ -141,7 +182,7 @@ public class RagQuestionGenerator {
             String level,
             List<QAHistory> history,
             String resumeContext,
-            List<SearchResult> retrievedContext) {
+            List<com.aiinterview.ml.rag.SearchResult> retrievedContext) {
         
         StringBuilder prompt = new StringBuilder();
         
@@ -198,7 +239,7 @@ public class RagQuestionGenerator {
     /**
      * Parse LLM response into GeneratedQuestion
      */
-    private GeneratedQuestion parseQuestionResponse(String response, List<SearchResult> context) {
+    private GeneratedQuestion parseQuestionResponse(String response, List<com.aiinterview.ml.rag.SearchResult> context) {
         try {
             // Try to extract JSON from response
             String jsonStr = response;
@@ -214,15 +255,20 @@ public class RagQuestionGenerator {
             
             Map<String, Object> parsed = objectMapper.readValue(jsonStr, Map.class);
             
+            String contextSource = "vector_store";
+            if (useHybridSearch && hybridSearchEngine != null) {
+                contextSource = "hybrid_search";
+            }
+            
             return GeneratedQuestion.builder()
                 .question((String) parsed.get("question"))
                 .type((String) parsed.getOrDefault("type", "technical"))
                 .expectedAnswer((String) parsed.get("expectedAnswer"))
                 .context(context.stream()
-                    .map(SearchResult::getContent)
+                    .map(com.aiinterview.ml.rag.SearchResult::getContent)
                     .limit(3)
                     .collect(Collectors.joining("; ")))
-                .contextSource("vector_store")
+                .contextSource(contextSource)
                 .confidence(0.85)
                 .build();
             
@@ -236,6 +282,23 @@ public class RagQuestionGenerator {
                 .confidence(0.6)
                 .build();
         }
+    }
+    
+    /**
+     * Convert VectorStore SearchResults to RAG SearchResults
+     */
+    private List<com.aiinterview.ml.rag.SearchResult> convertToRagSearchResults(
+            List<com.aiinterview.ml.embedding.SearchResult> vectorResults) {
+        
+        return vectorResults.stream()
+            .map(vr -> com.aiinterview.ml.rag.SearchResult.builder()
+                .id(vr.getId())
+                .content(vr.getContent())
+                .score(vr.getScore())
+                .semanticScore(vr.getScore())
+                .metadata(vr.getMetadata() != null ? vr.getMetadata() : new HashMap<>())
+                .build())
+            .collect(Collectors.toList());
     }
     
     /**

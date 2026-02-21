@@ -41,8 +41,9 @@ public class ValidationContext {
     // Additional metadata
     private Map<String, Object> metadata;
     
-    // Helper methods
-    public String getRequestType() {
+    // Lombok will generate getRequestType() that returns RequestType enum
+    // We also provide a helper method for String representation
+    public String getRequestTypeName() {
         return requestType != null ? requestType.name() : null;
     }
     
