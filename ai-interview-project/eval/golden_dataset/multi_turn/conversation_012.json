@@ -1,0 +1,18 @@
+{
+  "conversationId": "multi_turn_012",
+  "scenario": "Senior Cloud - Architecture Discussion",
+  "difficulty": "L4 - Senior",
+  "domain": "Cloud Architecture",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "如何设计一个多region的全球化部署架构？", "candidate": "多region架构需要考虑：1) 就近接入，用Global Load Balancer（如AWS Route 53）根据地理位置路由；2) 数据同步，跨region复制（RDS Multi-Region、S3 Cross-Region Replication）；3) 灾备，主region故障自动切换；4) 一致性，根据业务选择最终一致性或强一致性。挑战：网络延迟、数据一致性、成本控制。", "evaluation": {"score": 7.5, "strengths": ["架构要点完整", "挑战识别", "技术选型"], "concerns": ["具体方案可以更详细"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "数据一致性这块能详细说说吗？不同业务如何权衡？", "candidate": "全球多region最大挑战是数据一致性，需要根据业务分类：\n\n1. 强一致性业务（支付、订单）：\n   - 方案：单region写入，其他region只读\n   - 写请求路由到主region（如US-East-1）\n   - 延迟高但数据准确\n   - 跨region分布式事务（Spanner、TiDB）\n\n2. 最终一致性业务（用户资料、评论）：\n   - 方案：每个region独立写入\n   - 异步同步到其他region\n   - 冲突解决：Last Write Wins或Version Vector\n   - 用户体验好，延迟低\n\n3. 混合方案：\n   - 核心数据强一致（订单金额）\n   - 非核心数据最终一致（订单状态）\n\n实际案例：\n电商系统：\n- 下单：路由到用户所在region主库\n- 支付：统一到主region处理\n- 商品浏览：CDN + 本地缓存\n- 库存扣减：主region写，异步同步\n\n监控：\n- 复制延迟（目标<1秒）\n- 冲突率\n- 跨region延迟\n\n成本优化：\n- 冷数据只在主region存储\n- 跨region流量费用高，减少不必要同步", "evaluation": {"score": 9.5, "strengths": ["分类清晰", "方案具体", "实际案例", "成本考虑"], "technicalDepth": "深入理解分布式系统", "practicalExperience": "丰富的全球化架构经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Senior (L4)",
+    "strengths": ["全球化架构经验丰富", "深入理解分布式一致性", "业务权衡能力强", "成本意识"],
+    "assessmentScore": 8.5,
+    "recommendation": "强烈推荐，Senior Architect level",
+    "nextSteps": "可以讨论团队协作或技术选型决策"
+  },
+  "qualityMetrics": {"conversationFlow": 0.95, "technicalDepth": 0.95, "coherence": 0.95, "progressiveness": 0.92}
+}

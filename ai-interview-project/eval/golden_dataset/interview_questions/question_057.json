@@ -1,0 +1,14 @@
+{
+  "questionId": "devops_l4_057",
+  "difficulty": "L4 - Senior",
+  "domain": "DevOps",
+  "techStack": ["DevOps", "SRE"],
+  "question": "作为SRE，如何设计和实施一个完整的可观测性体系？请说明监控、日志、追踪和告警策略。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["三大支柱", "Metrics/Logs/Traces", "告警策略", "SLO/SLI", "On-call"],
+    "sampleGoodAnswer": "可观测性三大支柱：Metrics、Logs、Traces\n\n1. Metrics（指标）：\n工具：Prometheus + Grafana\n\n黄金指标（Google SRE）：\n- Latency：延迟分布（P50/P90/P99）\n- Traffic：请求量（QPS）\n- Errors：错误率\n- Saturation：资源饱和度（CPU/内存/磁盘）\n\nRED方法（微服务）：\n- Rate：请求速率\n- Errors：错误数\n- Duration：响应时间\n\n业务指标：\n- 订单量、支付成功率、用户活跃度\n\n2. Logs（日志）：\n工具：ELK（Elasticsearch + Logstash + Kibana）/ Loki\n\n日志级别：\n- ERROR：需要关注的错误\n- WARN：潜在问题\n- INFO：关键业务流程\n- DEBUG：调试信息（生产关闭）\n\n结构化日志（JSON）：\n{\"timestamp\", \"level\", \"trace_id\", \"user_id\", \"action\", \"result\"}\n\n日志聚合：\n- 统一格式\n- 关联trace_id\n- 索引优化\n- 保留策略（热数据7天，冷数据30天）\n\n3. Traces（追踪）：\n工具：Jaeger / Zipkin / SkyWalking\n\n分布式追踪：\n- trace_id贯穿整个请求链路\n- span记录每个服务的耗时\n- 找出慢服务和瓶颈\n\n示例（下单请求）：\nAPI Gateway [100ms]\n  ├─ Order Service [50ms]\n  │   ├─ MySQL [20ms]\n  │   └─ Redis [5ms]\n  └─ Inventory Service [80ms] ← 瓶颈\n      └─ MySQL [75ms] ← 慢查询\n\n4. SLO/SLI/SLA：\n\nSLI（Service Level Indicator）：\n- 可用性：99.95%\n- 延迟：P99 < 200ms\n- 错误率：< 0.1%\n\nSLO（Service Level Objective）：\n- 目标：30天内可用性 ≥ 99.9%\n- 错误预算：30天 * 24小时 * 0.1% = 43分钟\n\nSLA（Service Level Agreement）：\n- 对外承诺，低于SLO\n- 违反有赔偿\n\n5. 告警策略：\n\n分级：\nP0（紧急）：\n- 服务完全不可用\n- 数据丢失风险\n- 立即响应，电话+短信\n\nP1（严重）：\n- 核心功能降级\n- 错误率>5%\n- 15分钟内响应\n\nP2（警告）：\n- 非核心功能异常\n- 性能下降\n- 1小时内响应\n\n告警规则：\n- 基于SLO：错误预算消耗过快\n- 多窗口：短窗口（5分钟）检测突发，长窗口（30分钟）确认趋势\n- 避免告警疲劳：合理阈值、聚合、静默期\n\n6. On-call轮值：\n- 轮班制（每周轮换）\n- Runbook：故障处理手册\n- 升级机制：15分钟未响应自动升级\n- 事后复盘：Postmortem（无责文化）\n\n7. 工具链整合：\nPrometheus（指标） → Grafana（可视化） → AlertManager（告警） → PagerDuty（On-call）\nELK（日志） → 关联trace_id → Jaeger（追踪）\n\n8. 最佳实践：\n- 一切皆代码：告警规则、Dashboard配置版本化\n- 混沌工程：定期故障演练\n- 容量规划：提前扩容\n- 成本优化：日志采样、指标降精度\n- 安全合规：日志脱敏、审计\n\n实施步骤：\n1. 基础设施：搭建监控平台\n2. 接入应用：SDK埋点、日志采集\n3. 定义SLO：与业务对齐\n4. 配置告警：从严重到一般\n5. 建立流程：On-call、复盘\n6. 持续优化：根据实际调整",
+    "evaluationCriteria": {"excellent": "系统方案、SRE实践、工具链、实施流程", "good": "核心概念清晰", "average": "知道监控但不系统", "poor": "缺少SRE经验"}
+  },
+  "qualityMetrics": {"relevance": 0.98, "difficulty": 0.90, "discriminability": 0.94}
+}

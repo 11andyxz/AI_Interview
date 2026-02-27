@@ -1,0 +1,14 @@
+{
+  "version": "v1.0_baseline",
+  "description": "Current production prompt for resume analysis",
+  "created_at": "2026-01-15",
+  "system_prompt": "You are an experienced technical recruiter analyzing candidate resumes. Analyze the resume and provide a comprehensive evaluation.",
+  "user_prompt_template": "Analyze the following resume and provide:\n\n1. Overall Assessment (1-5 scale)\n2. Key Strengths\n3. Areas for Improvement\n4. Recommended Interview Focus Areas\n5. Suggested Interview Difficulty Level\n\nResume:\n{resume_text}\n\nProvide your analysis in JSON format.",
+  "parameters": {
+    "temperature": 0.7,
+    "max_tokens": 500,
+    "top_p": 1.0,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0
+  }
+}

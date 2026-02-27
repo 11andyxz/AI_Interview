@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_007",
+  "scenario": "Mid-level DevOps - Challenge Follow-up",
+  "difficulty": "L3 - Mid",
+  "domain": "DevOps",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "在Kubernetes上部署应用，突然所有Pod都Pending，你会怎么排查？", "candidate": "首先kubectl describe pod查看Events，看具体原因。常见问题：1) 资源不足，节点CPU/内存已满；2) 镜像拉取失败，ImagePullBackOff；3) 存储挂载失败，PV/PVC问题；4) 节点NotReady，网络或kubelet问题。", "evaluation": {"score": 7.0, "strengths": ["排查命令正确", "问题分类合理"], "concerns": ["缺少具体处理步骤"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "假设发现是节点资源不足，但实际监控显示资源使用率只有50%，可能是什么原因？", "candidate": "这种情况我遇到过！可能是：\n1. 资源请求（request）设置过高：Pod request总和超过节点capacity，即使实际使用率低\n2. Pod反亲和性：调度策略限制导致无法调度\n3. Taints和Tolerations：节点有污点，Pod没有容忍\n4. 节点标签选择器：Pod的nodeSelector或nodeAffinity不匹配\n\n排查方法：\nkubectl describe node查看Allocated resources，看request占用情况\nkubectl get node --show-labels查看标签\nkubectl describe node | grep Taint查看污点\n\n解决方案：\n降低不合理的resource request，或增加节点。", "evaluation": {"score": 8.5, "strengths": ["有实际经验", "排查方法详细", "命令准确", "解决方案可行"], "depth": "深入理解K8s调度", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "很好。如何设置合理的resource request和limit？", "candidate": "这需要基于实际监控数据：\n\n1. 监控实际使用：\n- Prometheus采集Pod CPU/内存使用\n- 观察一段时间（如1周）P95、P99值\n\n2. 设置原则：\n- request设置为P95值：保证调度到合适节点\n- limit设置为P99值的1.5倍：允许burst但不无限\n\n3. 示例：\nresources:\n  requests:\n    cpu: 500m      # P95: 400m，留余量\n    memory: 512Mi  # P95: 450Mi\n  limits:\n    cpu: 1000m     # burst到2倍\n    memory: 1Gi    # OOM保护\n\n4. 注意事项：\n- CPU是可压缩资源，超limit会throttle不会kill\n- 内存不可压缩，超limit会OOM kill\n- request影响调度，limit影响运行时\n- 生产环境必须设置，避免资源竞争\n\n5. VPA（Vertical Pod Autoscaler）：\n可以自动调整request，根据历史数据推荐\n\n实践：团队使用Goldilocks工具分析合理值。", "evaluation": {"score": 9.0, "strengths": ["方法论完整", "理解资源模型", "有实际工具", "示例清晰"], "technicalDepth": "优秀，深入理解", "practicalExperience": "丰富", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid to Senior (L3-L4)",
+    "strengths": ["K8s实战经验丰富", "排查思路系统", "理解底层机制", "工具使用熟练"],
+    "assessmentScore": 8.5,
+    "recommendation": "强烈推荐，接近Senior水平",
+    "nextSteps": "可以考察集群架构设计或CI/CD流程"
+  },
+  "qualityMetrics": {"conversationFlow": 0.92, "technicalDepth": 0.90, "coherence": 0.95, "progressiveness": 0.88}
+}

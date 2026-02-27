@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_017",
+  "questionId": "frontend_webpack_001",
+  "question": "如何优化Webpack打包性能？",
+  "candidateAnswer": "主要从几个方面优化：\n\n1. 缩小构建范围：\n- 使用include/exclude限制loader范围\n- 配置resolve.modules减少搜索路径\n- 使用noParse跳过不需要解析的库\n\n2. 并行构建：\n- thread-loader多线程编译\n- parallel-webpack多配置并行\n- HappyPack（已过时，用thread-loader）\n\n3. 缓存：\n- cache-loader缓存编译结果\n- babel-loader配置cacheDirectory\n- hard-source-webpack-plugin\n\n4. DLL：\n- DllPlugin预编译第三方库\n- 减少重复构建时间\n\n5. 其他优化：\n- 升级Webpack版本（性能持续改进）\n- 开发环境用eval-cheap-module-source-map\n- 生产环境Tree Shaking\n- 使用更快的工具（如esbuild、SWC）\n\n6. 监控分析：\n- speed-measure-webpack-plugin分析各阶段耗时\n- webpack-bundle-analyzer分析bundle大小\n\n实践效果：\n项目从构建90秒优化到30秒，主要是：\n- thread-loader并行编译\n- cache-loader缓存\n- DllPlugin分离第三方库\n\n现代替代方案：\n考虑使用Vite（基于esbuild，冷启动快10-100倍）",
+  "evaluation": {
+    "score": 8.5,
+    "level": "Excellent",
+    "strengths": ["多维度优化", "工具推荐全面", "有实践数据", "提到现代替代方案"],
+    "weaknesses": ["配置示例可以更详细", "某些工具已过时可以标注"],
+    "technicalAccuracy": 0.90,
+    "completeness": 0.90,
+    "clarity": 0.90,
+    "depth": 0.80,
+    "feedback": "非常好的回答！优化方法系统全面，实践数据有说服力。特别好的是提到了Vite等现代方案。建议补充：1) 具体配置代码示例；2) 标注已过时的工具（HappyPack）；3) 增量构建原理；4) 不同项目规模的优化策略。"
+  },
+  "qualityMetrics": {"answerLength": 620, "technicalTerms": 16, "hasExample": true, "hasExplanation": true, "hasCodeExamples": false}
+}

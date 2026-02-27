@@ -1,0 +1,37 @@
+{
+  "questionId": "Q080",
+  "domain": "Performance Optimization",
+  "difficulty": "JUNIOR",
+  "techStack": ["Performance", "Profiling", "Java", "JVM"],
+  "question": "What tools and techniques would you use to profile a Java application to identify performance bottlenecks?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "JVM profilers: VisualVM, JProfiler, YourKit for CPU and memory profiling",
+      "Application Performance Monitoring: New Relic, Datadog, AppDynamics for production",
+      "CPU profiling identifies hot methods consuming most execution time",
+      "Memory profiling detects leaks, excessive allocations, heap usage",
+      "Use sampling profiling in production (low overhead), instrumentation for detailed analysis"
+    ],
+    "codeExample": "// Add JMX monitoring\n@Configuration\npublic class MonitoringConfig {\n    @Bean\n    public MeterRegistry meterRegistry() {\n        return new SimpleMeterRegistry();\n    }\n}\n\n@Service\npublic class OrderService {\n    @Timed(value = \"order.process\", description = \"Time to process order\")\n    public void processOrder(Order order) {\n        // Method execution time automatically tracked\n    }\n}\n\n// Enable JMX in application.properties\nspring.jmx.enabled=true\nmanagement.endpoints.jmx.exposure.include=*",
+    "explanation": "Start with application metrics (response times, throughput) to identify problem areas. Use profilers to drill down: CPU profiling shows which methods consume time (look for hot spots in flame graphs). Memory profiling reveals object allocation rates and heap usage patterns. In development, use VisualVM (free) or commercial tools like JProfiler. In production, use APM tools with sampling profilers (1-5% overhead). Look for: tight loops, inefficient algorithms, excessive GC, blocking I/O. Always profile with realistic data volumes and load patterns."
+  },
+  "followUps": [
+    "What's the difference between sampling and instrumentation profiling?",
+    "How do you interpret a flame graph from a CPU profiler?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.84,
+    "tokenEfficiency": 0.76,
+    "vocabularyDiversity": 0.82,
+    "repetitionScore": 0.87,
+    "technicalAccuracy": 0.89,
+    "clarityScore": 0.85
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

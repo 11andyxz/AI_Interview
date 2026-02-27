@@ -1,0 +1,36 @@
+{
+  "questionId": "Q066",
+  "domain": "Algorithms & Data Structures",
+  "difficulty": "MID",
+  "techStack": ["Data Structures", "Hash Tables", "Java"],
+  "question": "Explain how hash tables work internally, including collision resolution strategies. What's the time complexity for common operations?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Hash table uses hash function to map keys to array indices for O(1) average access",
+      "Collisions handled by chaining (linked lists) or open addressing (probing)",
+      "Load factor determines when to resize; typical threshold is 0.75",
+      "Average O(1) for insert/search/delete, worst case O(n) with many collisions"
+    ],
+    "codeExample": "// Simple hash table with chaining\nclass HashTable<K, V> {\n    private static class Node<K, V> {\n        K key;\n        V value;\n        Node<K, V> next;\n    }\n    \n    private Node<K, V>[] buckets;\n    private int size;\n    \n    public V get(K key) {\n        int index = hash(key);\n        Node<K, V> node = buckets[index];\n        while (node != null) {\n            if (node.key.equals(key)) return node.value;\n            node = node.next;\n        }\n        return null;\n    }\n}",
+    "explanation": "Hash tables achieve constant-time operations by computing an index directly from the key using a hash function. When two keys hash to the same index (collision), chaining stores multiple entries as a linked list, while open addressing finds the next available slot. Good hash functions distribute keys uniformly to minimize collisions. When load factor exceeds threshold, the table resizes (typically doubles) and rehashes all entries."
+  },
+  "followUps": [
+    "What makes a good hash function? What properties should it have?",
+    "Explain the difference between separate chaining and linear probing for collision resolution."
+  ],
+  "qualityMetrics": {
+    "completeness": 0.86,
+    "tokenEfficiency": 0.81,
+    "vocabularyDiversity": 0.84,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.91,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

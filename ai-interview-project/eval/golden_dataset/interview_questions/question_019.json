@@ -1,0 +1,39 @@
+{
+  "questionId": "security_l2_019",
+  "difficulty": "L2 - Junior",
+  "domain": "Security",
+  "techStack": ["Web安全", "HTTPS"],
+  "question": "什么是HTTPS？它与HTTP有什么区别？为什么说HTTPS更安全？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "HTTPS = HTTP + SSL/TLS",
+      "加密传输",
+      "证书验证",
+      "防止中间人攻击",
+      "端口差异（80 vs 443）"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述HTTPS的安全机制",
+      "completeness": "涵盖加密、认证、完整性保护",
+      "clarity": "解释清晰易懂",
+      "depth": "理解SSL/TLS握手和加密原理"
+    },
+    "sampleGoodAnswer": "HTTPS（HTTP Secure）是HTTP协议的加密版本，使用SSL/TLS协议对通信内容加密。\n\n主要区别：\n1. 端口：HTTP使用80，HTTPS使用443\n2. 加密：HTTP明文传输，HTTPS加密传输\n3. 证书：HTTPS需要CA颁发的数字证书\n4. SEO：搜索引擎优先HTTPS网站\n\nHTTPS更安全的原因：\n1. 加密传输：使用对称加密（AES）保护数据，防止窃听\n2. 身份认证：通过数字证书验证服务器身份，防止钓鱼网站\n3. 数据完整性：使用MAC（消息认证码）防止数据篡改\n4. 防中间人攻击：结合加密和认证，攻击者无法伪装或篡改数据\n\n工作流程：客户端和服务器通过SSL/TLS握手协商加密算法和密钥，然后用会话密钥加密通信内容。",
+    "evaluationCriteria": {
+      "excellent": "完整解释HTTPS原理、安全机制、工作流程",
+      "good": "准确描述核心差异和安全优势",
+      "average": "知道HTTPS加密但不清楚原理",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.94,
+    "difficulty": 0.63,
+    "discriminability": 0.80
+  }
+}

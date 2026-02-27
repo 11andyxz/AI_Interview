@@ -1,0 +1,60 @@
+{
+  "scenario": "question_generation",
+  "description": "Interview question generation prompt versions and performance metrics",
+  "versions": [
+    {
+      "version": "v2.0_baseline",
+      "created_at": "2026-01-15",
+      "status": "baseline",
+      "avg_latency_ms": 1520,
+      "avg_tokens": 350,
+      "quality_score": 7.5,
+      "cost_per_request": 0.0023,
+      "pass_rate": 0.84,
+      "active": true,
+      "traffic_percentage": 50,
+      "sample_size": 520,
+      "notes": "Generic questions, sometimes miss difficulty calibration"
+    },
+    {
+      "version": "v2.1_difficulty_aware",
+      "created_at": "2026-02-02",
+      "status": "testing",
+      "avg_latency_ms": 1450,
+      "avg_tokens": 320,
+      "quality_score": 8.1,
+      "cost_per_request": 0.0021,
+      "pass_rate": 0.89,
+      "active": true,
+      "traffic_percentage": 30,
+      "sample_size": 310,
+      "notes": "Better difficulty matching, more consistent output"
+    },
+    {
+      "version": "v2.2_context_enhanced",
+      "created_at": "2026-02-05",
+      "status": "experiment",
+      "avg_latency_ms": 1380,
+      "avg_tokens": 290,
+      "quality_score": 8.6,
+      "cost_per_request": 0.0019,
+      "pass_rate": 0.93,
+      "active": true,
+      "traffic_percentage": 20,
+      "sample_size": 95,
+      "notes": "Highly personalized, best candidate experience"
+    }
+  ],
+  "current_experiment": {
+    "name": "question_gen_context_enhancement",
+    "start_date": "2026-02-05",
+    "end_date": "2026-02-12",
+    "hypothesis": "Context-aware questions improve relevance and reduce token usage",
+    "success_criteria": {
+      "quality_score": ">8.3",
+      "pass_rate": ">0.90",
+      "cost_reduction": ">15%"
+    },
+    "status": "in_progress"
+  }
+}

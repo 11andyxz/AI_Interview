@@ -1,0 +1,332 @@
+# Load Test Scenarios Configuration
+# Defines different load testing scenarios for the AI Interview Platform
+
+# Scenario 1: Normal Load
+normal:
+  name: "Normal Load - Typical Business Hours"
+  description: "Simulates typical usage during business hours"
+  users: 10
+  duration: 600  # 10 minutes in seconds
+  ramp_up: 60    # Ramp up to 10 users over 1 minute
+  think_time:
+    min: 2
+    max: 5
+  endpoints:
+    - path: "/api/auth/login"
+      weight: 10
+      method: "POST"
+      body:
+        username: "test-user-{user_id}@example.com"
+        password: "testpass123"
+    - path: "/api/interviews"
+      weight: 20
+      method: "GET"
+      requires_auth: true
+    - path: "/api/interviews"
+      weight: 15
+      method: "POST"
+      requires_auth: true
+      body:
+        positionType: "Software Engineer"
+        programmingLanguages: ["Java", "Python"]
+        language: "English"
+        interviewType: "general"
+    - path: "/api/interviews/{interview_id}"
+      weight: 20
+      method: "GET"
+      requires_auth: true
+    - path: "/api/interviews/{interview_id}/report"
+      weight: 10
+      method: "GET"
+      requires_auth: true
+    - path: "/api/user/resume"
+      weight: 10
+      method: "GET"
+      requires_auth: true
+    - path: "/api/ai/generate"
+      weight: 15
+      method: "POST"
+      requires_auth: true
+      body:
+        prompt: "Generate an interview question about Java Spring Boot"
+        role: "backend_java"
+  success_criteria:
+    p95_latency: 3000  # ms
+    p99_latency: 5000  # ms
+    error_rate: 0.0    # 0%
+    throughput_min: 50 # requests per second
+
+# Scenario 2: Peak Load
+peak:
+  name: "Peak Load - High Traffic Period"
+  description: "Simulates peak usage with 2x normal load"
+  users: 20
+  duration: 900  # 15 minutes
+  ramp_up: 120   # Ramp up to 20 users over 2 minutes
+  think_time:
+    min: 1
+    max: 3
+  endpoints:
+    - path: "/api/auth/login"
+      weight: 10
+      method: "POST"
+      body:
+        username: "test-user-{user_id}@example.com"
+        password: "testpass123"
+    - path: "/api/interviews"
+      weight: 25
+      method: "GET"
+      requires_auth: true
+    - path: "/api/interviews"
+      weight: 20
+      method: "POST"
+      requires_auth: true
+      body:
+        positionType: "Senior Developer"
+        programmingLanguages: ["Java", "Spring Boot", "React"]
+        language: "English"
+        interviewType: "general"
+    - path: "/api/interviews/{interview_id}"
+      weight: 20
+      method: "GET"
+      requires_auth: true
+    - path: "/api/interviews/{interview_id}/report"
+      weight: 10
+      method: "GET"
+      requires_auth: true
+    - path: "/api/user/resume"
+      weight: 5
+      method: "GET"
+      requires_auth: true
+    - path: "/api/ai/generate"
+      weight: 10
+      method: "POST"
+      requires_auth: true
+      body:
+        prompt: "Create a coding challenge for senior developers"
+        role: "backend_java"
+  success_criteria:
+    p95_latency: 5000  # ms
+    p99_latency: 8000  # ms
+    error_rate: 0.01   # 1%
+    throughput_min: 80 # requests per second
+
+# Scenario 3: Stress Test
+stress:
+  name: "Stress Test - Ramp to Breaking Point"
+  description: "Gradually increase load until system degrades"
+  users_start: 1
+  users_max: 100
+  users_step: 5       # Add 5 users every step
+  step_duration: 60   # Each step lasts 60 seconds
+  think_time:
+    min: 0.5
+    max: 2
+  endpoints:
+    - path: "/api/auth/login"
+      weight: 10
+      method: "POST"
+      body:
+        username: "test-user-{user_id}@example.com"
+        password: "testpass123"
+    - path: "/api/interviews"
+      weight: 30
+      method: "GET"
+      requires_auth: true
+    - path: "/api/interviews"
+      weight: 25
+      method: "POST"
+      requires_auth: true
+      body:
+        positionType: "Full Stack Developer"
+        programmingLanguages: ["Java", "JavaScript", "Python"]
+        language: "English"
+        interviewType: "general"
+    - path: "/api/interviews/{interview_id}"
+      weight: 25
+      method: "GET"
+      requires_auth: true
+    - path: "/api/ai/generate"
+      weight: 10
+      method: "POST"
+      requires_auth: true
+      body:
+        prompt: "Generate technical interview questions"
+        role: "full_stack"
+  breaking_criteria:
+    error_rate: 0.05    # Stop if error rate > 5%
+    p95_latency: 10000  # Stop if p95 latency > 10s
+    timeout_rate: 0.1   # Stop if 10% of requests timeout
+
+# Scenario 4: Spike Test
+spike:
+  name: "Spike Test - Sudden Traffic Surge"
+  description: "Simulates sudden traffic spike (e.g., marketing campaign)"
+  phases:
+    - name: "Baseline"
+      users: 5
+      duration: 300  # 5 minutes
+    - name: "Spike"
+      users: 50
+      duration: 300  # 5 minutes
+      ramp_up: 10    # Spike to 50 users in 10 seconds
+    - name: "Recovery"
+      users: 5
+      duration: 300  # 5 minutes
+      ramp_down: 30  # Drop back to 5 users in 30 seconds
+  think_time:
+    min: 1
+    max: 3
+  endpoints:
+    - path: "/api/auth/login"
+      weight: 15
+      method: "POST"
+      body:
+        username: "test-user-{user_id}@example.com"
+        password: "testpass123"
+    - path: "/api/interviews"
+      weight: 35
+      method: "GET"
+      requires_auth: true
+    - path: "/api/interviews"
+      weight: 25
+      method: "POST"
+      requires_auth: true
+      body:
+        positionType: "Software Engineer"
+        programmingLanguages: ["Java", "Python"]
+        language: "English"
+        interviewType: "general"
+    - path: "/api/interviews/{interview_id}"
+      weight: 25
+      method: "GET"
+      requires_auth: true
+  success_criteria:
+    spike_p95_latency: 8000   # During spike, p95 < 8s is acceptable
+    recovery_p95_latency: 3000 # After spike, should recover to < 3s
+    error_rate_spike: 0.02    # Max 2% errors during spike
+    error_rate_recovery: 0.0  # Should return to 0% after recovery
+
+# Monitoring Configuration
+monitoring:
+  metrics:
+    - name: "Request Latency"
+      type: "histogram"
+      percentiles: [50, 75, 90, 95, 99]
+    - name: "Throughput"
+      type: "counter"
+      unit: "requests/second"
+    - name: "Error Rate"
+      type: "gauge"
+      unit: "percentage"
+    - name: "Active Users"
+      type: "gauge"
+      unit: "count"
+    - name: "DB Connection Pool"
+      type: "gauge"
+      source: "jdbc:pool:active"
+      thresholds:
+        warning: 80  # % of pool
+        critical: 95
+    - name: "CPU Usage"
+      type: "gauge"
+      source: "system:cpu:usage"
+      unit: "percentage"
+      thresholds:
+        warning: 70
+        critical: 90
+    - name: "Memory Usage"
+      type: "gauge"
+      source: "jvm:memory:used"
+      unit: "MB"
+      thresholds:
+        warning: 2048
+        critical: 3072
+    - name: "OpenAI API Calls"
+      type: "counter"
+      source: "custom:openai:requests"
+    - name: "OpenAI Rate Limit"
+      type: "gauge"
+      source: "custom:openai:remaining"
+      thresholds:
+        warning: 1000
+        critical: 100
+
+# Database Monitoring
+database:
+  queries_to_monitor:
+    - name: "Interview Creation"
+      query: "INSERT INTO interviews"
+      threshold_ms: 100
+    - name: "Report Generation"
+      query: "SELECT .* FROM interviews .* JOIN"
+      threshold_ms: 500
+    - name: "Resume Analysis"
+      query: "UPDATE user_resumes SET analyzed"
+      threshold_ms: 200
+  connection_pool:
+    max_connections: 100
+    monitor_interval: 5  # seconds
+    alert_threshold: 80  # % utilization
+
+# OpenAI API Configuration
+openai:
+  rate_limits:
+    requests_per_minute: 3500
+    tokens_per_minute: 90000
+  monitor:
+    check_interval: 10  # seconds
+    headroom_threshold: 0.2  # Alert if < 20% headroom remaining
+  fallback:
+    enabled: true
+    local_model: "llama-3-8b"
+    trigger_threshold: 0.1  # Switch to local if < 10% headroom
+
+# Test Data Configuration
+test_data:
+  users:
+    count: 100
+    username_pattern: "test-user-{id}@example.com"
+    password: "testpass123"
+  candidates:
+    count: 50
+    name_pattern: "Test Candidate {id}"
+  resumes:
+    count: 30
+    sample_file: "eval/sample_resume.pdf"
+  interviews:
+    pre_created: 20  # Pre-create some interviews for GET tests
+
+# Reporting Configuration
+reporting:
+  formats:
+    - "markdown"
+    - "html"
+    - "json"
+  output_dir: "eval/results"
+  charts:
+    - type: "line"
+      title: "Response Time Over Time"
+      metrics: ["p50_latency", "p95_latency", "p99_latency"]
+    - type: "line"
+      title: "Throughput Over Time"
+      metrics: ["requests_per_second"]
+    - type: "line"
+      title: "Error Rate Over Time"
+      metrics: ["error_rate"]
+    - type: "line"
+      title: "Active Users"
+      metrics: ["active_users"]
+    - type: "line"
+      title: "Resource Utilization"
+      metrics: ["cpu_usage", "memory_usage", "db_pool_usage"]
+  summary_stats:
+    - "total_requests"
+    - "total_errors"
+    - "avg_latency"
+    - "p95_latency"
+    - "p99_latency"
+    - "max_latency"
+    - "throughput"
+    - "error_rate"
+    - "success_rate"

@@ -1,0 +1,14 @@
+{
+  "questionId": "java_l4_051",
+  "difficulty": "L4 - Senior",
+  "domain": "Java",
+  "techStack": ["Java", "并发", "性能"],
+  "question": "设计一个高性能的本地缓存，要求支持过期时间、LRU淘汰策略和并发访问。请说明设计思路和关键技术点。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["并发安全", "LRU算法", "过期策略", "性能优化", "实际实现"],
+    "sampleGoodAnswer": "核心设计：ConcurrentHashMap + 双向链表 + 定时清理。关键点：1) 数据结构：分段锁降低竞争，LinkedHashMap实现LRU(accessOrder=true)；2) 过期策略：惰性删除（访问时检查）+ 定时清理（ScheduledExecutorService）；3) 并发优化：读写锁（ReentrantReadWriteLock）或无锁（CAS）；4) 内存控制：最大容量限制，达到后触发LRU淘汰。代码框架：class LocalCache<K,V> { ConcurrentHashMap<K, CacheNode> cache; LinkedList<CacheNode> lruList; ReadWriteLock lock; }。进阶：参考Guava Cache（软引用、LoadingCache、统计信息）、Caffeine（异步加载、刷新机制）。性能：读QPS>100万/s，写QPS>10万/s。",
+    "evaluationCriteria": {"excellent": "完整设计、并发处理、性能优化、参考实现", "good": "核心思路清晰", "average": "基本设计但细节不足", "poor": "缺少并发考虑"}
+  },
+  "qualityMetrics": {"relevance": 0.98, "difficulty": 0.88, "discriminability": 0.93}
+}

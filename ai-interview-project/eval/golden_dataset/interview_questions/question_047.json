@@ -1,0 +1,14 @@
+{
+  "questionId": "database_l3_047",
+  "difficulty": "L3 - Mid",
+  "domain": "Database",
+  "techStack": ["MySQL", "主从复制"],
+  "question": "请解释MySQL主从复制的原理，以及如何解决主从延迟问题？",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["binlog日志", "异步复制", "半同步复制", "主从延迟原因", "解决方案"],
+    "sampleGoodAnswer": "MySQL主从复制基于binlog。流程：1) 主库写入binlog；2) 从库IO线程读取binlog到relay log；3) 从库SQL线程执行relay log。默认异步复制，主库不等从库确认。主从延迟原因：1) 从库执行慢（大事务、慢SQL）；2) 主库写入QPS高；3) 网络延迟；4) 单线程回放。解决方案：1) 半同步复制（至少一个从库确认）；2) 并行复制（MySQL 5.7+）；3) 读写分离时读主库（强一致性需求）；4) 缓存热点数据；5) 监控延迟告警（SHOW SLAVE STATUS的Seconds_Behind_Master）。",
+    "evaluationCriteria": {"excellent": "完整解释原理、延迟原因、多种解决方案", "good": "准确描述核心流程", "average": "知道主从复制但延迟处理不清", "poor": "理解有误"}
+  },
+  "qualityMetrics": {"relevance": 0.97, "difficulty": 0.80, "discriminability": 0.88}
+}

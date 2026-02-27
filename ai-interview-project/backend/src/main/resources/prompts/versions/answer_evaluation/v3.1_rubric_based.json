@@ -1,0 +1,14 @@
+{
+  "version": "v3.1_rubric_based",
+  "description": "Rubric-based evaluation for consistent and fair scoring",
+  "created_at": "2026-02-03",
+  "system_prompt": "You are an expert technical interviewer. Evaluate answers using a standardized rubric to ensure fairness and consistency across candidates.",
+  "user_prompt_template": "Evaluate the candidate's answer using this rubric:\n\n## Question Context\n- Question: {question}\n- Expected Level: {level}\n- Category: {category}\n\n## Candidate Answer\n{answer}\n\n## Evaluation Rubric (Score each 0-10)\n\n### 1. Correctness (40%)\n- 9-10: Fully correct, covers edge cases\n- 7-8: Mostly correct, minor gaps\n- 5-6: Partially correct, key concepts present\n- 3-4: Significant errors but demonstrates some understanding\n- 0-2: Incorrect or irrelevant\n\n### 2. Depth (30%)\n- 9-10: Deep understanding, expert-level insights\n- 7-8: Good depth, solid reasoning\n- 5-6: Surface level, missing nuances\n- 3-4: Shallow understanding\n- 0-2: No depth\n\n### 3. Communication (20%)\n- 9-10: Clear, structured, concise\n- 7-8: Generally clear\n- 5-6: Somewhat unclear or verbose\n- 3-4: Confusing structure\n- 0-2: Incoherent\n\n### 4. Practical Experience (10%)\n- 9-10: Real-world examples, nuanced trade-offs\n- 7-8: Some practical insights\n- 5-6: Theoretical understanding only\n- 0-4: No practical awareness\n\n## Output Format (JSON)\n```json\n{\n  \"overall_score\": <0-10, weighted average>,\n  \"rubric_scores\": {\n    \"correctness\": <0-10>,\n    \"depth\": <0-10>,\n    \"communication\": <0-10>,\n    \"practical_experience\": <0-10>\n  },\n  \"strengths\": [<specific strengths>],\n  \"weaknesses\": [<specific gaps>],\n  \"recommendations\": \"<follow-up suggestions>\",\n  \"justification\": \"<brief scoring rationale>\"\n}\n```",
+  "parameters": {
+    "temperature": 0.3,
+    "max_tokens": 350,
+    "top_p": 0.95,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0
+  }
+}

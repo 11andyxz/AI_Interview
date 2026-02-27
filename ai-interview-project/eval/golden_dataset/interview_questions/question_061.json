@@ -1,0 +1,36 @@
+{
+  "questionId": "Q061",
+  "domain": "Algorithms & Data Structures",
+  "difficulty": "JUNIOR",
+  "techStack": ["Java", "Python", "Algorithms"],
+  "question": "Explain the difference between bubble sort and quick sort. When would you use each one?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Bubble sort has O(n²) time complexity, simple but inefficient for large datasets",
+      "Quick sort has O(n log n) average time complexity, uses divide-and-conquer",
+      "Bubble sort is stable, quick sort is typically unstable",
+      "Quick sort is preferred for most real-world scenarios due to better performance"
+    ],
+    "codeExample": "// Quick Sort example\npublic void quickSort(int[] arr, int low, int high) {\n    if (low < high) {\n        int pi = partition(arr, low, high);\n        quickSort(arr, low, pi - 1);\n        quickSort(arr, pi + 1, high);\n    }\n}",
+    "explanation": "Bubble sort repeatedly swaps adjacent elements if they're in wrong order, making multiple passes through the array. Quick sort selects a pivot element and partitions the array around it, recursively sorting sub-arrays. Quick sort is generally preferred for its superior average performance."
+  },
+  "followUps": [
+    "What is the worst-case time complexity of quick sort and when does it occur?",
+    "Can you explain what makes a sorting algorithm 'stable'?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.85,
+    "tokenEfficiency": 0.78,
+    "vocabularyDiversity": 0.80,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.90,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

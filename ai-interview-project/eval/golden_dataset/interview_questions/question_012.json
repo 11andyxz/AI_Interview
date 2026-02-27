@@ -1,0 +1,39 @@
+{
+  "questionId": "python_l2_012",
+  "difficulty": "L2 - Junior",
+  "domain": "Python",
+  "techStack": ["Python"],
+  "question": "Python中的装饰器（Decorator）是什么？如何使用它？请举例说明。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "装饰器是函数的包装器",
+      "使用@语法糖",
+      "闭包和高阶函数",
+      "常见应用场景（日志、计时、权限检查）",
+      "代码示例"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述装饰器的本质和用法",
+      "completeness": "涵盖语法、原理、示例",
+      "clarity": "解释清晰，有可运行的代码",
+      "depth": "理解函数作为一等公民和闭包概念"
+    },
+    "sampleGoodAnswer": "装饰器是Python中用来修改函数行为的语法糖，本质是一个接受函数作为参数并返回新函数的高阶函数。使用@decorator_name放在函数定义前。例如：\n\ndef timer(func):\n    def wrapper(*args, **kwargs):\n        start = time.time()\n        result = func(*args, **kwargs)\n        print(f'{func.__name__} took {time.time()-start}s')\n        return result\n    return wrapper\n\n@timer\ndef compute():\n    time.sleep(1)\n\n这等价于compute = timer(compute)。装饰器常用于日志记录、性能监控、权限校验、缓存等场景。",
+    "evaluationCriteria": {
+      "excellent": "完整解释原理、提供代码示例、说明应用场景",
+      "good": "准确描述用法和基本原理",
+      "average": "知道装饰器但不理解原理",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.94,
+    "difficulty": 0.65,
+    "discriminability": 0.82
+  }
+}

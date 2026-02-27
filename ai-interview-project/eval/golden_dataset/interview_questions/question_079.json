@@ -1,0 +1,38 @@
+{
+  "questionId": "Q079",
+  "domain": "Testing",
+  "difficulty": "SENIOR",
+  "techStack": ["Testing", "Mocking", "Mockito", "Test Design"],
+  "question": "Discuss different types of test doubles (mock, stub, spy, fake). When should you avoid mocking, and what are the signs of over-mocking?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Stub: provides canned responses to calls, no behavior verification",
+      "Mock: verifies interactions (method calls, parameters), behavior-based testing",
+      "Spy: partial mock wrapping real object, can verify and use real methods",
+      "Fake: working implementation but simplified (in-memory database)",
+      "Over-mocking signs: tests become brittle, test implementation not behavior, changes break many tests",
+      "Avoid mocking value objects, entities, and internal implementation details"
+    ],
+    "codeExample": "// Different test doubles\n@Test\npublic void testOrderProcessing() {\n    // Stub: just returns data\n    PaymentGateway stubGateway = Mockito.mock(PaymentGateway.class);\n    when(stubGateway.charge(any())).thenReturn(new PaymentResult(true));\n    \n    // Mock: verify interaction\n    EmailService mockEmail = Mockito.mock(EmailService.class);\n    OrderService service = new OrderService(stubGateway, mockEmail);\n    \n    service.processOrder(order);\n    \n    verify(mockEmail).sendConfirmation(eq(order.getId()), any());\n}\n\n// Spy: real object with selective stubbing\n@Test\npublic void testWithSpy() {\n    OrderService spy = Mockito.spy(new OrderService());\n    doReturn(true).when(spy).validateInventory(any());\n    // Other methods use real implementation\n}",
+    "explanation": "Choose test doubles based on testing goals. Use stubs for dependencies that provide data (repositories returning test data). Use mocks when verifying interactions is important (checking email was sent). Spies useful for testing legacy code. Fakes for complex dependencies (in-memory H2 instead of PostgreSQL). Over-mocking occurs when tests know too much about implementation: testing private methods, mocking everything including value objects, verifying every method call. Signs: tests break with refactoring that doesn't change behavior. Better: test public API, mock only at boundaries (external services), prefer real objects when practical."
+  },
+  "followUps": [
+    "How do you test code that has no return value but produces side effects?",
+    "What's the difference between state-based and interaction-based testing?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.88,
+    "tokenEfficiency": 0.81,
+    "vocabularyDiversity": 0.85,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.91,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

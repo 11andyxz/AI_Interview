@@ -1,0 +1,38 @@
+{
+  "questionId": "Q083",
+  "domain": "Performance Optimization",
+  "difficulty": "MID",
+  "techStack": ["Performance", "Caching", "Redis", "Architecture"],
+  "question": "Design a multi-level caching strategy for a news website. Discuss cache invalidation and consistency challenges.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Level 1: Browser cache (Cache-Control headers) for static assets",
+      "Level 2: CDN (CloudFront, Akamai) for static content and popular articles",
+      "Level 3: Application cache (Redis) for API responses, user sessions",
+      "Level 4: Database query cache for frequently executed queries",
+      "Cache invalidation: TTL-based for static content, event-based for dynamic content",
+      "Consistency challenge: stale data vs performance, eventual consistency acceptable for most news"
+    ],
+    "codeExample": "@Configuration\npublic class CacheConfig {\n    @Bean\n    public CacheManager cacheManager(RedisConnectionFactory factory) {\n        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()\n            .entryTtl(Duration.ofMinutes(10))\n            .disableCachingNullValues();\n        \n        Map<String, RedisCacheConfiguration> caches = new HashMap<>();\n        caches.put(\"articles\", config.entryTtl(Duration.ofMinutes(5)));\n        caches.put(\"trending\", config.entryTtl(Duration.ofMinutes(1)));\n        \n        return RedisCacheManager.builder(factory)\n            .cacheDefaults(config)\n            .withInitialCacheConfigurations(caches)\n            .build();\n    }\n}\n\n@Service\npublic class ArticleService {\n    @Cacheable(\"articles\")\n    public Article getArticle(Long id) {\n        return articleRepository.findById(id);\n    }\n    \n    @CacheEvict(value = \"articles\", key = \"#article.id\")\n    public void updateArticle(Article article) {\n        articleRepository.save(article);\n    }\n}",
+    "explanation": "News website caching strategy: Static assets (CSS, JS, images) cached at browser and CDN with long TTL (24 hours). Article content at CDN with 5-minute TTL (breaking news needs freshness). Redis caches rendered article HTML and trending lists (1-5 min TTL). Invalidation approaches: (1) TTL-based for most content (acceptable staleness). (2) Active invalidation when article updated (publish event → clear cache). (3) Cache warming for major stories. Challenges: cache stampede on popular breaking news (use cache locking), ensuring CDN invalidation propagates globally. Monitor cache hit ratio per layer to tune TTLs."
+  },
+  "followUps": [
+    "How would you handle cache stampede when a popular cache entry expires?",
+    "What's the difference between write-through and write-behind caching?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.86,
+    "tokenEfficiency": 0.79,
+    "vocabularyDiversity": 0.83,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.90,
+    "clarityScore": 0.85
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

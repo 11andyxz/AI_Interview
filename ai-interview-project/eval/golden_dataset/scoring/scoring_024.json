@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_024",
+  "questionId": "algorithm_complexity_001",
+  "question": "如何分析算法的时间复杂度和空间复杂度？",
+  "candidateAnswer": "时间复杂度看代码执行次数，常见有O(1)、O(log n)、O(n)、O(n log n)、O(n²)。空间复杂度看额外内存使用。分析方法：看循环嵌套层数，一层O(n)，两层O(n²)，递归看递归深度和每层空间。",
+  "evaluation": {
+    "score": 4.0,
+    "level": "Poor",
+    "strengths": ["常见复杂度列举了", "基本方法提到了"],
+    "weaknesses": ["解释过于简单", "没有具体例子", "主定理未提及", "分析不系统"],
+    "technicalAccuracy": 0.65,
+    "completeness": 0.40,
+    "clarity": 0.50,
+    "depth": 0.30,
+    "feedback": "回答太简略。需要：1) 具体代码示例分析（如二分查找O(log n)原理）；2) 递归算法主定理（Master Theorem）；3) 最好、平均、最坏情况分析；4) 均摊分析（Amortized Analysis）；5) 多个算法对比（快排vs归并）。"
+  },
+  "qualityMetrics": {"answerLength": 120, "technicalTerms": 6, "hasExample": false, "hasExplanation": false, "hasCodeExamples": false}
+}

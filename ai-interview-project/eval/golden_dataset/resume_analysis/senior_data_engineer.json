@@ -1,0 +1,56 @@
+{
+  "candidateId": "golden_004",
+  "name": "陈静",
+  "position": "Senior Data Engineer",
+  "yearsOfExperience": 6,
+  "resume": "陈静，6年大数据开发经验，专注数据仓库与实时计算。\n\n工作经历：\n2022-2024 腾讯 - 高级数据工程师\n- 负责微信支付数据仓库建设，日处理数据量50TB+\n- 使用Flink构建实时风控系统，延迟<100ms\n- 优化Spark任务性能，整体耗时减少60%\n- 带领3人团队完成数据中台建设\n\n2018-2022 滴滴出行 - 数据开发工程师\n- 负责订单数据ETL流程开发\n- 构建实时数据看板，支持业务决策\n\n技术栈：\n- 大数据：Hadoop, Spark, Flink, Kafka\n- 数据库：Hive, HBase, ClickHouse, MySQL\n- 编程：Scala, Python, SQL\n- 调度：Airflow, DolphinScheduler\n- 云平台：AWS EMR, 腾讯云\n\n教育背景：\n浙江大学 数据科学与大数据技术 硕士 2016-2018\n\n认证：\nAWS Certified Big Data - Specialty",
+  "techStack": ["Spark", "Flink", "Kafka", "Python"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "陈静",
+      "yearsOfExperience": 6,
+      "currentPosition": "高级数据工程师",
+      "companies": ["腾讯", "滴滴出行"]
+    },
+    "skills": {
+      "bigData": ["Hadoop", "Spark", "Flink", "Kafka"],
+      "databases": ["Hive", "HBase", "ClickHouse", "MySQL"],
+      "programming": ["Scala", "Python", "SQL"],
+      "scheduling": ["Airflow", "DolphinScheduler"],
+      "cloud": ["AWS EMR", "腾讯云"]
+    },
+    "experience": {
+      "totalYears": 6,
+      "highlights": [
+        "微信支付数据仓库，日处理50TB+",
+        "实时风控系统，延迟<100ms",
+        "Spark性能优化，耗时减少60%",
+        "团队管理经验（3人团队）"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "丰富的大数据处理经验",
+        "实时计算系统开发能力",
+        "性能优化专长",
+        "团队管理经验",
+        "名企背景（腾讯、滴滴）"
+      ],
+      "matchLevel": "高度匹配",
+      "recommendedLevel": "Senior"
+    },
+    "interviewQuestions": [
+      "请详细描述你的实时风控系统架构，如何做到100ms以内的延迟？",
+      "Spark任务性能优化有哪些常见手段？你是如何将耗时减少60%的？",
+      "Flink和Spark Streaming的区别是什么？在什么场景下选择Flink？",
+      "你在数据中台建设中遇到过哪些挑战？如何解决的？",
+      "如何保证50TB+日数据处理的稳定性和准确性？"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.96,
+    "relevance": 0.98,
+    "completeness": 1.0
+  }
+}

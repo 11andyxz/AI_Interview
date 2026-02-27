@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_018",
+  "questionId": "database_transaction_001",
+  "question": "什么是数据库的ACID特性？",
+  "candidateAnswer": "ACID是数据库事务的四个特性：Atomicity原子性、Consistency一致性、Isolation隔离性、Durability持久性。",
+  "evaluation": {
+    "score": 2.5,
+    "level": "Poor",
+    "strengths": ["四个特性全部提到", "中英文对照"],
+    "weaknesses": ["只有定义没有解释", "没有实例", "没有说明为什么重要", "过于简单"],
+    "technicalAccuracy": 0.70,
+    "completeness": 0.25,
+    "clarity": 0.50,
+    "depth": 0.15,
+    "feedback": "回答太简单，仅列出名词。需要：1) 详细解释每个特性的含义；2) 举例说明（如转账场景）；3) 实现机制（如隔离级别、WAL）；4) 实际应用；5) CAP理论对比。这是基础概念题，应该深入理解并能举例说明。"
+  },
+  "qualityMetrics": {"answerLength": 65, "technicalTerms": 5, "hasExample": false, "hasExplanation": false, "hasCodeExamples": false}
+}

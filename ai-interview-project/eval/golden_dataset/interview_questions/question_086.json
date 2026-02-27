@@ -1,0 +1,38 @@
+{
+  "questionId": "Q086",
+  "domain": "Cloud & Infrastructure",
+  "difficulty": "SENIOR",
+  "techStack": ["CI/CD", "Jenkins", "GitLab", "Kubernetes", "DevOps"],
+  "question": "Design a complete CI/CD pipeline for a microservices application deployed on Kubernetes. Include build, test, security scanning, and deployment stages.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Source control integration: Git webhooks trigger pipeline on push/PR",
+      "Build stage: compile code, run unit tests, build Docker images with semantic versioning",
+      "Security stage: vulnerability scanning (Trivy, Snyk), static analysis (SonarQube), dependency checks",
+      "Test stage: integration tests, contract tests between services",
+      "Deployment: staging environment first, automated tests, then production with canary/blue-green",
+      "Rollback strategy: preserve previous version, automated rollback on failure metrics"
+    ],
+    "codeExample": "# GitLab CI/CD pipeline\nstages:\n  - build\n  - test\n  - security\n  - deploy-staging\n  - deploy-production\n\nbuild:\n  stage: build\n  script:\n    - mvn clean package\n    - docker build -t myapp:${CI_COMMIT_SHA} .\n    - docker push myapp:${CI_COMMIT_SHA}\n\nunit-tests:\n  stage: test\n  script:\n    - mvn test\n    - mvn jacoco:report\n  coverage: '/Total.*?([0-9]{1,3})%/'\n\nsecurity-scan:\n  stage: security\n  script:\n    - trivy image myapp:${CI_COMMIT_SHA}\n    - sonar-scanner\n\ndeploy-staging:\n  stage: deploy-staging\n  script:\n    - kubectl set image deployment/myapp myapp=myapp:${CI_COMMIT_SHA} -n staging\n    - kubectl rollout status deployment/myapp -n staging\n\ndeploy-production:\n  stage: deploy-production\n  when: manual\n  script:\n    - kubectl apply -f k8s/canary-deployment.yaml\n    - ./scripts/canary-analysis.sh\n    - kubectl apply -f k8s/production-deployment.yaml",
+    "explanation": "Modern CI/CD pipeline automates from commit to production: (1) Build stage compiles code, runs fast unit tests, builds Docker images tagged with commit SHA. (2) Security stage scans for vulnerabilities in dependencies and container images, runs SAST tools. (3) Test stage runs integration and contract tests, potentially in separate test environment. (4) Deploy to staging automatically, run smoke tests and performance tests. (5) Production deployment uses canary strategy: deploy to 10% of pods, monitor error rates and latency, gradually increase if healthy. For Kubernetes: use Helm for templating, ArgoCD for GitOps, or custom kubectl scripts. Include environment-specific configs via ConfigMaps. Monitor deployments with Prometheus/Grafana, rollback automatically if error rate spikes."
+  },
+  "followUps": [
+    "What's the difference between canary deployment and blue-green deployment?",
+    "How do you handle database migrations in a CI/CD pipeline?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.90,
+    "tokenEfficiency": 0.82,
+    "vocabularyDiversity": 0.87,
+    "repetitionScore": 0.90,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.88
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "candidateId": "golden_010",
+  "name": "李娜",
+  "position": "ML Engineer",
+  "yearsOfExperience": 4,
+  "resume": "李娜，4年机器学习工程师经验。专注于NLP和推荐系统。\n\n工作经历：\n2021-2024 腾讯 - 机器学习工程师\n- 负责微信推荐算法的研发和优化\n- 使用PyTorch开发深度学习模型，提升点击率15%\n- 部署模型服务，处理日均10亿次推荐请求\n- 优化模型推理性能，降低延迟60%\n\n2020-2021 美团 - 算法工程师\n- 开发外卖配送时间预测模型\n- 使用XGBoost和LightGBM进行特征工程\n\n技术栈：\n- 语言：Python, SQL, Java\n- 框架：PyTorch, TensorFlow, Scikit-learn\n- 工具：Docker, Kubernetes, MLflow\n- 数据库：MySQL, Redis, Elasticsearch\n\n教育背景：\n清华大学 计算机科学与技术 硕士 2018-2020\n北京大学 数学与应用数学 本科 2014-2018\n\n论文发表：\n- AAAI 2023: 《Efficient Recommendation with Graph Neural Networks》",
+  "techStack": ["Python", "PyTorch", "机器学习", "推荐系统", "NLP"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "李娜",
+      "yearsOfExperience": 4,
+      "currentPosition": "机器学习工程师",
+      "companies": ["腾讯", "美团"]
+    },
+    "skills": {
+      "programming": ["Python", "SQL", "Java"],
+      "frameworks": ["PyTorch", "TensorFlow", "Scikit-learn"],
+      "tools": ["Docker", "Kubernetes", "MLflow"],
+      "algorithms": ["深度学习", "推荐系统", "NLP", "XGBoost", "LightGBM"]
+    },
+    "experience": {
+      "totalYears": 4,
+      "highlights": [
+        "推荐算法研发和优化（提升点击率15%）",
+        "大规模模型部署（日均10亿次请求）",
+        "模型性能优化（降低延迟60%）",
+        "顶会论文发表（AAAI 2023）"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "顶尖大厂经验（腾讯、美团）",
+        "名校背景（清华硕士、北大本科）",
+        "有学术研究能力（AAAI论文）",
+        "大规模系统实战经验",
+        "模型优化能力突出"
+      ],
+      "matchLevel": "高度匹配",
+      "recommendedLevel": "Senior ML Engineer"
+    },
+    "interviewQuestions": [
+      "请详细介绍你在腾讯开发的推荐系统架构，如何处理10亿级别的推荐请求？",
+      "你如何将模型推理延迟降低60%？请分享具体的优化方法。",
+      "请介绍你发表的AAAI论文的核心创新点和实验结果。",
+      "在推荐系统中，如何平衡模型效果和推理性能？",
+      "请描述你的特征工程经验，如何选择和构建有效特征？"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.96,
+    "relevance": 0.98,
+    "completeness": 1.0
+  }
+}

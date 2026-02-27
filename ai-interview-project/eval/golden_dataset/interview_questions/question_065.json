@@ -1,0 +1,36 @@
+{
+  "questionId": "Q065",
+  "domain": "Algorithms & Data Structures",
+  "difficulty": "SENIOR",
+  "techStack": ["Algorithms", "Greedy", "Optimization"],
+  "question": "Explain the activity selection problem and prove why the greedy algorithm works for it. Compare with problems where greedy fails.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Activity selection: select maximum number of non-overlapping activities",
+      "Greedy approach: always pick activity that finishes earliest among remaining",
+      "Proof: greedy choice property + optimal substructure guarantee correctness",
+      "Counterexample where greedy fails: coin change with arbitrary denominations"
+    ],
+    "codeExample": "public int activitySelection(int[] start, int[] finish) {\n    // Sort by finish time\n    Activity[] activities = new Activity[start.length];\n    for (int i = 0; i < start.length; i++) {\n        activities[i] = new Activity(start[i], finish[i]);\n    }\n    Arrays.sort(activities, (a, b) -> a.finish - b.finish);\n    \n    int count = 1;\n    int lastFinish = activities[0].finish;\n    \n    for (int i = 1; i < activities.length; i++) {\n        if (activities[i].start >= lastFinish) {\n            count++;\n            lastFinish = activities[i].finish;\n        }\n    }\n    return count;\n}",
+    "explanation": "The activity selection problem exhibits the greedy choice property: choosing the activity that finishes earliest leaves maximum room for subsequent activities. This local optimum leads to global optimum. However, greedy algorithms don't work for all problems - for example, with coin denominations [1, 3, 4] and target 6, greedy gives [4, 1, 1] but optimal is [3, 3]."
+  },
+  "followUps": [
+    "How would you prove the greedy choice property formally for activity selection?",
+    "Can you think of other optimization problems where greedy approach guarantees optimal solution?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.89,
+    "tokenEfficiency": 0.83,
+    "vocabularyDiversity": 0.87,
+    "repetitionScore": 0.90,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

@@ -46,9 +46,16 @@ class ResumeBasedInterviewIntegrationTest extends BaseIntegrationTest {
         String username = "resumeuser_" + System.currentTimeMillis();
         User user = userService.createUser(username, "password123");
 
-        // Upload resume via API
+        // Upload resume via API (with .txt extension for valid file type)
+        org.springframework.mock.web.MockMultipartFile mockFile = 
+            new org.springframework.mock.web.MockMultipartFile(
+                "file", 
+                "resume.txt",  // filename with extension
+                "text/plain", 
+                "sample resume content".getBytes());
+                
         mockMvc.perform(multipart("/api/user/resume")
-                .file("file", "sample resume content".getBytes())
+                .file(mockFile)
                 .param("autoAnalyze", "true")
                 .requestAttr("userId", user.getId()))
                 .andExpect(status().isOk())
@@ -70,8 +77,15 @@ class ResumeBasedInterviewIntegrationTest extends BaseIntegrationTest {
         User user = userService.createUser(username, "password123");
 
         // Upload and analyze resume
+        org.springframework.mock.web.MockMultipartFile mockFile = 
+            new org.springframework.mock.web.MockMultipartFile(
+                "file", 
+                "resume.txt",
+                "text/plain", 
+                "Java developer with 5 years experience".getBytes());
+                
         mockMvc.perform(multipart("/api/user/resume")
-                .file("file", "Java developer with 5 years experience".getBytes())
+                .file(mockFile)
                 .param("autoAnalyze", "true")
                 .requestAttr("userId", user.getId()))
                 .andExpect(status().isOk());
@@ -93,8 +107,15 @@ class ResumeBasedInterviewIntegrationTest extends BaseIntegrationTest {
         User user = userService.createUser(username, "password123");
 
         // Upload analyzed resume
+        org.springframework.mock.web.MockMultipartFile mockFile = 
+            new org.springframework.mock.web.MockMultipartFile(
+                "file", 
+                "resume.txt",
+                "text/plain", 
+                "Senior Java Developer with Spring Boot experience".getBytes());
+                
         var uploadResult = mockMvc.perform(multipart("/api/user/resume")
-                .file("file", "Senior Java Developer with Spring Boot experience".getBytes())
+                .file(mockFile)
                 .param("autoAnalyze", "true")
                 .requestAttr("userId", user.getId()))
                 .andExpect(status().isOk())
@@ -102,7 +123,8 @@ class ResumeBasedInterviewIntegrationTest extends BaseIntegrationTest {
 
         // Create resume-based interview (simplified to just test the interview creation)
         CreateInterviewRequest request = new CreateInterviewRequest();
-        request.setInterviewType("technical");
+        request.setInterviewType("general");  // Changed from "technical" to "general"
+        request.setCandidateId(1);  // Add candidateId for general interview
         request.setPositionType("Senior Java Developer");
         request.setProgrammingLanguages(List.of("Java", "Spring Boot"));
         request.setLanguage("English");
@@ -128,8 +150,15 @@ class ResumeBasedInterviewIntegrationTest extends BaseIntegrationTest {
         User user = userService.createUser(username, "password123");
 
         // Upload resume first to get a valid ID
+        org.springframework.mock.web.MockMultipartFile mockFile = 
+            new org.springframework.mock.web.MockMultipartFile(
+                "file", 
+                "resume.txt",
+                "text/plain", 
+                "Java developer resume content".getBytes());
+                
         var uploadResult = mockMvc.perform(multipart("/api/user/resume")
-                .file("file", "Java developer resume content".getBytes())
+                .file(mockFile)
                 .requestAttr("userId", user.getId()))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -150,8 +179,15 @@ class ResumeBasedInterviewIntegrationTest extends BaseIntegrationTest {
         User user = userService.createUser(username, "password123");
 
         // Upload resume
+        org.springframework.mock.web.MockMultipartFile mockFile = 
+            new org.springframework.mock.web.MockMultipartFile(
+                "file", 
+                "resume.txt",
+                "text/plain", 
+                "test resume content".getBytes());
+                
         var uploadResult = mockMvc.perform(multipart("/api/user/resume")
-                .file("file", "test resume content".getBytes())
+                .file(mockFile)
                 .requestAttr("userId", user.getId()))
                 .andExpect(status().isOk())
                 .andReturn();

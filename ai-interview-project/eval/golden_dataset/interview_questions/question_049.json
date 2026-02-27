@@ -1,0 +1,14 @@
+{
+  "questionId": "devops_l3_049",
+  "difficulty": "L3 - Mid",
+  "domain": "DevOps",
+  "techStack": ["监控", "Prometheus"],
+  "question": "如何使用Prometheus和Grafana搭建应用监控系统？请说明监控指标和告警策略。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["Prometheus架构", "指标类型", "Grafana可视化", "告警规则", "实践经验"],
+    "sampleGoodAnswer": "Prometheus是时序数据库，pull模式采集指标。架构：应用暴露/metrics接口 → Prometheus定时抓取 → Grafana查询展示 → Alertmanager告警。指标类型：Counter（累加）、Gauge（当前值）、Histogram（分布）、Summary（分位数）。关键指标：1) RED（Rate请求率、Errors错误率、Duration延迟）；2) USE（Utilization使用率、Saturation饱和度、Errors错误）；3) 业务指标（订单量、支付成功率）。告警规则：- alert: HighErrorRate expr: rate(http_requests_total{status=~\"5..\"}[5m]) > 0.05 for: 5m。实践：1) 多级告警（warning/critical）；2) 合理阈值避免告警疲劳；3) runbook链接；4) 分组聚合减少噪音。",
+    "evaluationCriteria": {"excellent": "完整架构、指标体系、告警策略、最佳实践", "good": "准确描述核心组件和指标", "average": "知道工具但实践不足", "poor": "缺少经验"}
+  },
+  "qualityMetrics": {"relevance": 0.96, "difficulty": 0.79, "discriminability": 0.87}
+}

@@ -1,0 +1,196 @@
+{
+  "total_tests": 8,
+  "triggered_alerts": [
+    "Token Inefficiency",
+    "Low Diversity",
+    "High Repetition",
+    "Low Technical Accuracy",
+    "Decreased Question Quality",
+    "High Hallucination Rate",
+    "Low Technical Accuracy",
+    "Decreased Question Quality",
+    "Low Relevance Score",
+    "Scoring Drift Detected",
+    "Low Completeness",
+    "Low Technical Accuracy",
+    "Decreased Question Quality",
+    "Token Inefficiency",
+    "Low Diversity",
+    "High Repetition",
+    "Low Technical Accuracy",
+    "Decreased Question Quality",
+    "Token Inefficiency",
+    "Low Diversity",
+    "High Repetition",
+    "Low Technical Accuracy",
+    "Decreased Question Quality",
+    "Low Diversity",
+    "High Repetition",
+    "Low Technical Accuracy"
+  ],
+  "test_details": [
+    {
+      "test": "高幻觉率测试",
+      "test_id": "high_hallucination",
+      "expected_alerts": [
+        "High Hallucination Rate"
+      ],
+      "triggered_alerts": [
+        "Token Inefficiency",
+        "Low Diversity",
+        "High Repetition",
+        "Low Technical Accuracy",
+        "Decreased Question Quality",
+        "High Hallucination Rate"
+      ],
+      "status": "PASS",
+      "metrics": {
+        "completeness": 0.95,
+        "tokenEfficiency": 0.4,
+        "vocabularyDiversity": 0.3,
+        "repetitionScore": 0.6,
+        "technicalAccuracy": 0.5,
+        "clarityScore": 0.65
+      }
+    },
+    {
+      "test": "低相关性测试",
+      "test_id": "low_relevance",
+      "expected_alerts": [
+        "Low Relevance Score"
+      ],
+      "triggered_alerts": [
+        "Low Technical Accuracy",
+        "Decreased Question Quality",
+        "Low Relevance Score"
+      ],
+      "status": "PASS",
+      "metrics": {
+        "completeness": 0.9,
+        "tokenEfficiency": 0.7,
+        "vocabularyDiversity": 0.65,
+        "repetitionScore": 0.85,
+        "technicalAccuracy": 0.5,
+        "clarityScore": 0.8
+      }
+    },
+    {
+      "test": "评分漂移测试",
+      "test_id": "scoring_drift",
+      "expected_alerts": [
+        "Scoring Drift Detected"
+      ],
+      "triggered_alerts": [
+        "Scoring Drift Detected"
+      ],
+      "status": "PASS",
+      "metrics": {}
+    },
+    {
+      "test": "低完整性测试",
+      "test_id": "low_completeness",
+      "expected_alerts": [
+        "Low Completeness"
+      ],
+      "triggered_alerts": [
+        "Low Completeness",
+        "Low Technical Accuracy",
+        "Decreased Question Quality"
+      ],
+      "status": "PASS",
+      "metrics": {
+        "completeness": 0.4,
+        "tokenEfficiency": 0.75,
+        "vocabularyDiversity": 0.7,
+        "repetitionScore": 0.85,
+        "technicalAccuracy": 0.8,
+        "clarityScore": 0.75
+      }
+    },
+    {
+      "test": "质量下降测试",
+      "test_id": "decreased_quality",
+      "expected_alerts": [
+        "Decreased Question Quality"
+      ],
+      "triggered_alerts": [
+        "Token Inefficiency",
+        "Low Diversity",
+        "High Repetition",
+        "Low Technical Accuracy",
+        "Decreased Question Quality"
+      ],
+      "status": "PASS",
+      "metrics": {
+        "completeness": 0.85,
+        "tokenEfficiency": 0.55,
+        "vocabularyDiversity": 0.35,
+        "repetitionScore": 0.4,
+        "technicalAccuracy": 0.7,
+        "clarityScore": 6.8
+      }
+    },
+    {
+      "test": "Token低效测试",
+      "test_id": "token_inefficiency",
+      "expected_alerts": [
+        "Token Inefficiency"
+      ],
+      "triggered_alerts": [
+        "Token Inefficiency",
+        "Low Diversity",
+        "High Repetition",
+        "Low Technical Accuracy",
+        "Decreased Question Quality"
+      ],
+      "status": "PASS",
+      "metrics": {
+        "completeness": 0.9,
+        "tokenEfficiency": 0.5,
+        "vocabularyDiversity": 0.25,
+        "repetitionScore": 0.3,
+        "technicalAccuracy": 0.65,
+        "clarityScore": 7.0
+      }
+    },
+    {
+      "test": "高重复测试",
+      "test_id": "high_repetition",
+      "expected_alerts": [
+        "High Repetition"
+      ],
+      "triggered_alerts": [
+        "Low Diversity",
+        "High Repetition"
+      ],
+      "status": "PASS",
+      "metrics": {
+        "completeness": 0.95,
+        "tokenEfficiency": 0.7,
+        "vocabularyDiversity": 0.35,
+        "repetitionScore": 0.55,
+        "technicalAccuracy": 0.85,
+        "clarityScore": 8.0
+      }
+    },
+    {
+      "test": "低技术准确性测试",
+      "test_id": "low_technical_accuracy",
+      "expected_alerts": [
+        "Low Technical Accuracy"
+      ],
+      "triggered_alerts": [
+        "Low Technical Accuracy"
+      ],
+      "status": "PASS",
+      "metrics": {
+        "completeness": 0.9,
+        "tokenEfficiency": 0.75,
+        "vocabularyDiversity": 0.7,
+        "repetitionScore": 0.85,
+        "technicalAccuracy": 0.7,
+        "clarityScore": 8.0
+      }
+    }
+  ]
+}

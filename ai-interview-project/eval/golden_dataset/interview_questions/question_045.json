@@ -1,0 +1,14 @@
+{
+  "questionId": "python_l3_045",
+  "difficulty": "L3 - Mid",
+  "domain": "Python",
+  "techStack": ["Python", "元编程"],
+  "question": "Python中的元类（Metaclass）是什么？请举例说明其应用场景。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["元类定义", "类的类", "type()函数", "应用场景", "代码示例"],
+    "sampleGoodAnswer": "元类是创建类的类，类是元类的实例。Python中所有类默认的元类是type。应用场景：ORM框架（Django Model）、单例模式、API自动注册、属性验证。示例：class Singleton(type): _instances = {}; def __call__(cls, *args): if cls not in cls._instances: cls._instances[cls] = super().__call__(*args); return cls._instances[cls]。使用：class MyClass(metaclass=Singleton)。注意：元类是高级特性，大多数情况用装饰器或类装饰器更简单。",
+    "evaluationCriteria": {"excellent": "完整解释概念、实际应用、代码示例", "good": "准确描述核心概念", "average": "知道元类但不会用", "poor": "理解有误"}
+  },
+  "qualityMetrics": {"relevance": 0.94, "difficulty": 0.85, "discriminability": 0.90}
+}

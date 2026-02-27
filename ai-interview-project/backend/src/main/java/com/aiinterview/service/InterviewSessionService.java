@@ -9,11 +9,16 @@ import com.aiinterview.model.Candidate;
 import com.aiinterview.model.Interview;
 import com.aiinterview.model.InterviewMessage;
 import com.aiinterview.model.openai.OpenAiMessage;
+import com.aiinterview.ml.rag.RagQuestionGenerator;
+import com.aiinterview.ml.rag.GeneratedQuestion;
 import com.aiinterview.repository.CandidateRepository;
 import com.aiinterview.repository.InterviewMessageRepository;
 import com.aiinterview.repository.InterviewRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -26,6 +31,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class InterviewSessionService {
+    
+    private static final Logger log = LoggerFactory.getLogger(InterviewSessionService.class);
 
     @Autowired
     private InterviewRepository interviewRepository;
@@ -41,9 +48,15 @@ public class InterviewSessionService {
 
     @Autowired
     private KnowledgeBaseService knowledgeBaseService;
+    
+    @Autowired(required = false)
+    private RagQuestionGenerator ragQuestionGenerator;
 
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
+    
+    @Value("${ml.rag.enabled:false}")
+    private boolean ragEnabled;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -305,8 +318,20 @@ public class InterviewSessionService {
 
     /**
      * 从知识库选择下一个问题（合并自SessionService）
+     * Now uses RAG if enabled, otherwise falls back to random selection
      */
     public Optional<QuestionItem> pickNextQuestion(String interviewId, String roleId) {
+        // If RAG is enabled, use RAG question generator
+        if (ragEnabled && ragQuestionGenerator != null) {
+            try {
+                return pickNextQuestionWithRAG(interviewId, roleId);
+            } catch (Exception e) {
+                log.error("RAG question generation failed, falling back to random selection: {}", e.getMessage());
+                // Fall through to random selection
+            }
+        }
+        
+        // Fallback: random selection from knowledge base
         Set<String> asked = askedQuestions.computeIfAbsent(interviewId, k -> new HashSet<>());
         List<QuestionItem> questions = knowledgeBaseService.getQuestions(roleId);
         List<QuestionItem> remaining = questions.stream()
@@ -318,6 +343,63 @@ public class InterviewSessionService {
         QuestionItem selected = remaining.get(random.nextInt(remaining.size()));
         asked.add(selected.getId());
         return Optional.of(selected);
+    }
+    
+    /**
+     * Pick next question using RAG (context-aware generation)
+     */
+    private Optional<QuestionItem> pickNextQuestionWithRAG(String interviewId, String roleId) {
+        // Get interview history
+        List<com.aiinterview.dto.QAHistory> dtoHistory = getChatHistory(interviewId);
+        
+        // Convert DTO history to RAG history
+        List<com.aiinterview.ml.rag.QAHistory> history = dtoHistory.stream()
+            .map(dto -> com.aiinterview.ml.rag.QAHistory.builder()
+                .question(dto.getQuestionText())
+                .answer(dto.getAnswerText())
+                .difficulty(dto.getRubricLevel())
+                .score(dto.getScore())
+                .build())
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Get interview details
+        Interview interview = interviewRepository.findById(interviewId).orElse(null);
+        String resumeContext = "";
+        String level = "mid"; // default
+        
+        if (interview != null && interview.getCandidateId() != null) {
+            Candidate candidate = candidateRepository.findById(interview.getCandidateId()).orElse(null);
+            if (candidate != null && candidate.getResume() != null) {
+                resumeContext = candidate.getResume().substring(0, Math.min(500, candidate.getResume().length()));
+            }
+            // TODO: Extract level from interview or candidate profile
+        }
+        
+        // Generate question using RAG
+        GeneratedQuestion ragQuestion = ragQuestionGenerator.generateNextQuestion(
+            interviewId, roleId, level, history, resumeContext
+        ).block(); // Block for simplicity, or use reactive chain
+        
+        if (ragQuestion != null) {
+            // Convert GeneratedQuestion to QuestionItem
+            QuestionItem questionItem = new QuestionItem();
+            questionItem.setId(UUID.randomUUID().toString());
+            questionItem.setText(ragQuestion.getQuestion());
+            questionItem.setTopic(ragQuestion.getType());
+            questionItem.setDifficulty(ragQuestion.getDifficulty());
+            questionItem.setExpectedAnswer(ragQuestion.getExpectedAnswer());
+            
+            // Mark as asked
+            Set<String> asked = askedQuestions.computeIfAbsent(interviewId, k -> new HashSet<>());
+            asked.add(questionItem.getId());
+            
+            log.info("Generated RAG question for interview: {}, confidence: {}", 
+                interviewId, ragQuestion.getConfidence());
+            
+            return Optional.of(questionItem);
+        }
+        
+        return Optional.empty();
     }
     
     /**

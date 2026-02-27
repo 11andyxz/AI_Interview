@@ -1,0 +1,36 @@
+{
+  "questionId": "Q062",
+  "domain": "Algorithms & Data Structures",
+  "difficulty": "MID",
+  "techStack": ["Java", "Data Structures", "Trees"],
+  "question": "Implement a method to validate if a binary tree is a valid binary search tree (BST).",
+  "expectedAnswer": {
+    "keyPoints": [
+      "A valid BST has all left descendants < node < all right descendants",
+      "Must check against min/max bounds, not just immediate parent",
+      "In-order traversal should produce sorted sequence",
+      "Can use recursive or iterative approach with bounds tracking"
+    ],
+    "codeExample": "public boolean isValidBST(TreeNode root) {\n    return validate(root, null, null);\n}\n\nprivate boolean validate(TreeNode node, Integer min, Integer max) {\n    if (node == null) return true;\n    if ((min != null && node.val <= min) || (max != null && node.val >= max)) {\n        return false;\n    }\n    return validate(node.left, min, node.val) && validate(node.right, node.val, max);\n}",
+    "explanation": "The key insight is that each node must satisfy constraints from all ancestors, not just its parent. We recursively validate each subtree while maintaining min/max bounds that tighten as we descend the tree. Left subtree gets updated max bound, right subtree gets updated min bound."
+  },
+  "followUps": [
+    "What's the time and space complexity of your solution?",
+    "How would you modify this to handle duplicate values in the BST?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.88,
+    "tokenEfficiency": 0.82,
+    "vocabularyDiversity": 0.84,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "questionId": "python_l2_024",
+  "difficulty": "L2 - Junior",
+  "domain": "Python",
+  "techStack": ["Python", "异步编程"],
+  "question": "Python中的async/await是什么？它与多线程有什么区别？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "协程（Coroutine）",
+      "异步I/O",
+      "事件循环",
+      "与多线程的区别",
+      "适用场景"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述async/await和异步编程",
+      "completeness": "涵盖概念、与多线程对比、代码示例",
+      "clarity": "解释清晰，有示例代码",
+      "depth": "理解协程和并发模型"
+    },
+    "sampleGoodAnswer": "async/await是Python 3.5+引入的异步编程语法，用于编写协程（Coroutine）。\n\n核心概念：\n1. async def定义协程函数\n2. await暂停协程，等待异步操作完成\n3. asyncio事件循环调度协程\n\n示例代码：\nimport asyncio\n\nasync def fetch_data(url):\n    await asyncio.sleep(1)  # 模拟I/O操作\n    return f'Data from {url}'\n\nasync def main():\n    tasks = [fetch_data(f'url{i}') for i in range(3)]\n    results = await asyncio.gather(*tasks)  # 并发执行\n    print(results)\n\nasyncio.run(main())\n\n与多线程区别：\n1. 并发模型：async是单线程协作式，线程是抢占式\n2. 切换开销：协程切换轻量（用户态），线程切换重（内核态）\n3. GIL影响：协程不受GIL限制，线程受GIL限制（CPU密集型）\n4. 资源占用：协程占用小，可创建大量；线程占用大\n5. 使用场景：async适合I/O密集型（网络请求、文件读写），线程适合CPU密集型（需配合多进程）\n\n总结：async适合高并发I/O场景，性能优于多线程。",
+    "evaluationCriteria": {
+      "excellent": "完整解释协程、对比多线程、提供代码示例、说明场景",
+      "good": "准确描述核心概念和主要区别",
+      "average": "知道async/await但原理不清",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.95,
+    "difficulty": 0.73,
+    "discriminability": 0.84
+  }
+}

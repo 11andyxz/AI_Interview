@@ -1,0 +1,40 @@
+{
+  "questionId": "frontend_l4_001",
+  "difficulty": "L4 - Senior",
+  "domain": "Frontend Development",
+  "techStack": ["React", "Performance"],
+  "question": "在React应用中，有一个包含10000行数据的列表需要渲染，如何优化性能？请提供至少3种方案并分析各自的优缺点。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasMultipleSolutions": true,
+      "hasTradeoffAnalysis": true,
+      "hasTechnicalDepth": true,
+      "hasCodeExamples": true
+    },
+    "keyPoints": [
+      "虚拟滚动（Virtual Scrolling）",
+      "分页加载（Pagination）",
+      "懒加载/无限滚动（Lazy Loading）",
+      "列表项优化（React.memo, key）",
+      "数据结构优化"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "方案可行且符合React最佳实践",
+      "completeness": "提供3种以上方案并分析优缺点",
+      "depth": "理解底层渲染机制和性能瓶颈",
+      "practicality": "考虑实际应用场景和用户体验"
+    },
+    "sampleGoodAnswer": "方案1：虚拟滚动 - 使用react-window或react-virtualized，只渲染可见区域的DOM节点。优点是性能最佳，可以流畅展示大数据集；缺点是需要固定行高或动态计算。方案2：分页加载 - 每页展示50-100条数据。优点是实现简单，用户体验清晰；缺点是需要多次点击翻页。方案3：无限滚动 - 滚动到底部时加载更多。优点是用户体验流畅；缺点是难以跳转到特定位置。另外还需注意：使用React.memo避免不必要的重渲染，确保key值稳定唯一，避免在渲染函数中创建新对象。",
+    "evaluationCriteria": {
+      "excellent": "提供3+方案、深入分析优缺点、考虑实际场景、有代码示例",
+      "good": "提供2-3方案、分析基本优缺点",
+      "average": "只提供1-2方案，分析不够深入",
+      "poor": "方案不可行或理解有误"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.98,
+    "difficulty": 0.75,
+    "discriminability": 0.90
+  }
+}

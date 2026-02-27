@@ -1,0 +1,39 @@
+{
+  "questionId": "cloud_l2_018",
+  "difficulty": "L2 - Junior",
+  "domain": "Cloud",
+  "techStack": ["AWS", "云计算"],
+  "question": "请解释云计算中的IaaS、PaaS和SaaS的区别，并各举一个例子。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "IaaS：基础设施即服务",
+      "PaaS：平台即服务",
+      "SaaS：软件即服务",
+      "管理责任的差异",
+      "具体产品示例"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述三种服务模型的差异",
+      "completeness": "涵盖定义、差异、实例",
+      "clarity": "解释清晰，有具体例子",
+      "depth": "理解云服务的抽象层级"
+    },
+    "sampleGoodAnswer": "云计算的三种服务模型按照抽象程度从低到高：\n\nIaaS（Infrastructure as a Service）：提供虚拟化的计算资源（服务器、存储、网络）。用户管理操作系统、中间件、应用。例如：AWS EC2、阿里云ECS。适合需要完全控制环境的场景。\n\nPaaS（Platform as a Service）：提供应用运行平台，包括操作系统、数据库、中间件。用户只需部署应用代码。例如：Heroku、Google App Engine、阿里云SAE。适合快速开发和部署。\n\nSaaS（Software as a Service）：提供完整的应用软件，用户直接使用。例如：Gmail、Salesforce、钉钉。适合终端用户。\n\n管理责任递减：IaaS用户管理最多，SaaS云厂商管理最多。选择取决于技术能力和业务需求。",
+    "evaluationCriteria": {
+      "excellent": "完整解释三种模型、管理责任、举例说明",
+      "good": "准确描述核心差异和基本概念",
+      "average": "知道三个概念但区别不清晰",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.90,
+    "difficulty": 0.58,
+    "discriminability": 0.76
+  }
+}

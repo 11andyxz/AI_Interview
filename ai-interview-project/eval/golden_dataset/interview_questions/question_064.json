@@ -1,0 +1,36 @@
+{
+  "questionId": "Q064",
+  "domain": "Algorithms & Data Structures",
+  "difficulty": "SENIOR",
+  "techStack": ["Algorithms", "Dynamic Programming", "Optimization"],
+  "question": "Solve the 0/1 knapsack problem using dynamic programming. Explain your approach and optimize for space complexity.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Classic DP problem with 2D table dp[i][w] representing max value using first i items with capacity w",
+      "Recurrence: dp[i][w] = max(dp[i-1][w], dp[i-1][w-weight[i]] + value[i])",
+      "Can optimize space from O(n*W) to O(W) by using single array and iterating backwards",
+      "Time complexity O(n*W), pseudo-polynomial due to capacity W"
+    ],
+    "codeExample": "public int knapsack(int[] weights, int[] values, int capacity) {\n    int n = weights.length;\n    int[] dp = new int[capacity + 1];\n    \n    for (int i = 0; i < n; i++) {\n        // Iterate backwards to avoid using same item twice\n        for (int w = capacity; w >= weights[i]; w--) {\n            dp[w] = Math.max(dp[w], dp[w - weights[i]] + values[i]);\n        }\n    }\n    return dp[capacity];\n}",
+    "explanation": "The 0/1 knapsack problem demonstrates optimal substructure - the solution to a larger problem depends on solutions to smaller subproblems. For each item, we decide whether to include it or not. The space-optimized version uses a single array by processing in reverse order, preventing an item from being used multiple times in the same iteration."
+  },
+  "followUps": [
+    "How would you modify this to return the actual items selected, not just the maximum value?",
+    "What's the difference between 0/1 knapsack and unbounded knapsack in terms of implementation?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.90,
+    "tokenEfficiency": 0.84,
+    "vocabularyDiversity": 0.86,
+    "repetitionScore": 0.91,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.88
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

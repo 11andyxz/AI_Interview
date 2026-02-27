@@ -1,0 +1,37 @@
+{
+  "questionId": "Q091",
+  "domain": "API Design",
+  "difficulty": "MID",
+  "techStack": ["API Design", "Documentation", "OpenAPI", "Swagger"],
+  "question": "How would you design and document a comprehensive API for third-party developers? Discuss documentation tools and best practices.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "OpenAPI/Swagger specification for machine-readable API definition",
+      "Documentation should include: endpoints, request/response schemas, authentication, rate limits, examples",
+      "Interactive documentation with try-it-out feature (Swagger UI, Redoc)",
+      "Provide SDKs in popular languages to reduce integration friction",
+      "Include getting started guide, tutorials, error handling guide, changelog"
+    ],
+    "codeExample": "// OpenAPI annotation in Spring Boot\n@RestController\n@RequestMapping(\"/api/v1/products\")\n@Tag(name = \"Products\", description = \"Product management APIs\")\npublic class ProductController {\n    \n    @Operation(\n        summary = \"Get product by ID\",\n        description = \"Retrieves detailed information about a specific product\"\n    )\n    @ApiResponses(value = {\n        @ApiResponse(responseCode = \"200\", description = \"Product found\",\n            content = @Content(schema = @Schema(implementation = ProductDto.class))),\n        @ApiResponse(responseCode = \"404\", description = \"Product not found\"),\n        @ApiResponse(responseCode = \"401\", description = \"Unauthorized\")\n    })\n    @GetMapping(\"/{id}\")\n    public ResponseEntity<ProductDto> getProduct(\n            @Parameter(description = \"Product ID\", example = \"12345\")\n            @PathVariable Long id) {\n        return ResponseEntity.ok(productService.findById(id));\n    }\n}\n\n// OpenAPI config\n@Configuration\npublic class OpenApiConfig {\n    @Bean\n    public OpenAPI customOpenAPI() {\n        return new OpenAPI()\n            .info(new Info()\n                .title(\"E-Commerce API\")\n                .version(\"v1.0\")\n                .description(\"Comprehensive API for product management\"))\n            .addSecurityItem(new SecurityRequirement().addList(\"Bearer Auth\"))\n            .components(new Components()\n                .addSecuritySchemes(\"Bearer Auth\", \n                    new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme(\"bearer\")));\n    }\n}",
+    "explanation": "Comprehensive API documentation requires multiple layers: (1) OpenAPI/Swagger spec provides formal definition of endpoints, schemas, authentication. Auto-generate from code annotations. (2) Interactive documentation (Swagger UI) lets developers test API directly in browser. (3) Getting started guide with authentication setup, first API call, common patterns. (4) Detailed guides for complex flows (pagination, webhooks, batch operations). (5) Code examples in multiple languages. (6) SDKs/client libraries reduce integration effort. (7) Changelog documenting all API changes. Best practices: keep docs synchronized with code, include realistic examples, document rate limits and errors, provide sandbox environment, show curl examples alongside SDKs."
+  },
+  "followUps": [
+    "How do you ensure API documentation stays synchronized with code?",
+    "What information should be included in API error responses?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.86,
+    "tokenEfficiency": 0.79,
+    "vocabularyDiversity": 0.84,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.90,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

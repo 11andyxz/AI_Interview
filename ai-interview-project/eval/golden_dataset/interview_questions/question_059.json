@@ -1,0 +1,14 @@
+{
+  "questionId": "cloud_l4_059",
+  "difficulty": "L4 - Senior",
+  "domain": "Cloud",
+  "techStack": ["云原生", "Kubernetes"],
+  "question": "设计一个云原生的微服务平台，包括服务mesh、可观测性、CI/CD和多云部署方案。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["Service Mesh", "Istio", "GitOps", "多云", "成本优化"],
+    "sampleGoodAnswer": "云原生微服务平台：\n\n1. 容器编排：Kubernetes\n- 多集群管理（K8s Federation）\n- 命名空间隔离（dev/test/prod）\n- 资源配额和LimitRange\n- HPA/VPA自动扩缩容\n\n2. Service Mesh：Istio\n- 流量管理：灰度发布、A/B测试、流量镜像\n- 安全：mTLS自动加密、授权策略\n- 可观测性：自动追踪、指标采集\n- 弹性：重试、超时、熔断\n\n3. API网关：Kong/APISIX\n- 统一入口\n- 认证授权\n- 限流熔断\n- 协议转换\n\n4. 可观测性：\n- Metrics：Prometheus + Grafana\n- Logs：Loki + Promtail\n- Traces：Jaeger\n- 统一Dashboard\n\n5. CI/CD：GitOps\n- Git作为单一事实来源\n- ArgoCD/Flux自动同步\n- 流程：Git push → ArgoCD检测 → 自动部署 → 健康检查\n- 回滚：Git revert\n\n6. 多云部署：\n策略：\n- 主云：AWS（核心业务）\n- 备云：阿里云（灾备）\n- 边缘：CDN加速\n\n工具：\n- Terraform多云IaC\n- Istio多集群服务发现\n- 全局负载均衡（DNS/GSLB）\n\n数据：\n- 数据库跨region复制\n- S3跨region同步\n- 一致性保证\n\n7. 成本优化：\n- Spot实例（非关键任务）\n- Reserved Instances（长期负载）\n- Auto Scaling避免过度配置\n- 容器密度优化（Bin Packing）\n- 开发环境定时关闭\n\n8. 安全：\n- RBAC权限控制\n- Pod Security Policy\n- 网络策略（NetworkPolicy）\n- Secret管理（Vault）\n- 镜像扫描（Trivy）\n\n架构图：\nUser → GSLB → CDN → API Gateway → Istio Ingress Gateway → Services（跨多云K8s集群） → Databases\n\n技术栈：\n- K8s、Istio、Prometheus、Grafana、ArgoCD、Terraform\n\n最佳实践：\n1. 无状态服务\n2. 声明式配置\n3. 不可变基础设施\n4. 12-Factor App\n5. 蓝绿部署/金丝雀发布",
+    "evaluationCriteria": {"excellent": "完整平台、多云方案、实践经验", "good": "核心组件清晰", "average": "基本概念", "poor": "缺少云原生经验"}
+  },
+  "qualityMetrics": {"relevance": 0.97, "difficulty": 0.89, "discriminability": 0.93}
+}

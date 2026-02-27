@@ -9,6 +9,8 @@ public class QuestionItem {
     private String difficulty;
     private List<String> skills;
     private List<String> followUps;
+    private String topic;  // Added for RAG integration
+    private String expectedAnswer;  // Added for RAG integration
 
     public String getId() {
         return id;
@@ -56,6 +58,22 @@ public class QuestionItem {
 
     public void setFollowUps(List<String> followUps) {
         this.followUps = followUps;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+
+    public String getExpectedAnswer() {
+        return expectedAnswer;
+    }
+
+    public void setExpectedAnswer(String expectedAnswer) {
+        this.expectedAnswer = expectedAnswer;
     }
 }
 

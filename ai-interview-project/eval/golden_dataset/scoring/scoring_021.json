@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_021",
+  "questionId": "api_design_001",
+  "question": "如何设计一个好的RESTful API？",
+  "candidateAnswer": "RESTful API设计原则：资源导向，使用HTTP方法（GET查询、POST创建、PUT更新、DELETE删除），URL用名词复数（/api/users），返回合适的状态码（200成功、404未找到），版本控制（/api/v1/），统一响应格式，支持过滤排序分页，使用HTTPS，文档完善（Swagger）。实际项目中严格遵循RESTful规范，API清晰易用。",
+  "evaluation": {
+    "score": 6.5,
+    "level": "Fair",
+    "strengths": ["核心原则都提到", "有实践经验"],
+    "weaknesses": ["每个点展开不够", "缺少具体示例", "没有错误处理说明"],
+    "technicalAccuracy": 0.85,
+    "completeness": 0.65,
+    "clarity": 0.70,
+    "depth": 0.55,
+    "feedback": "回答基本正确但不够深入。建议补充：1) URL设计具体示例；2) 状态码的详细使用场景（201、400、401、403、500等）；3) 错误响应格式；4) 幂等性设计；5) HATEOAS；6) 实际API示例展示。"
+  },
+  "qualityMetrics": {"answerLength": 180, "technicalTerms": 12, "hasExample": false, "hasExplanation": false, "hasCodeExamples": false}
+}

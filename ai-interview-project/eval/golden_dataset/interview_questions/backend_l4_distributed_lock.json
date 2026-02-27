@@ -1,0 +1,42 @@
+{
+  "questionId": "backend_l4_002",
+  "difficulty": "L4 - Senior",
+  "domain": "Backend Development",
+  "techStack": ["Distributed Systems", "Redis"],
+  "question": "在分布式系统中实现分布式锁，你会选择什么方案？请对比至少两种实现方式并说明各自的优缺点。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasMultipleSolutions": true,
+      "hasImplementationDetails": true,
+      "hasTradeoffAnalysis": true,
+      "hasEdgeCaseConsideration": true
+    },
+    "keyPoints": [
+      "Redis SETNX/SET NX EX方案",
+      "Redisson RedLock算法",
+      "Zookeeper临时顺序节点",
+      "数据库悲观锁/乐观锁",
+      "锁的可重入性",
+      "死锁预防（超时机制）",
+      "锁失效问题"
+    ],
+    "qualityIndicators": {
+      "technicalDepth": "深入理解各方案的实现原理和边界条件",
+      "comparison": "客观对比不同方案的优缺点",
+      "practicalExperience": "考虑实际生产环境中的问题",
+      "edgeCases": "处理锁超时、进程crash等异常场景"
+    },
+    "sampleGoodAnswer": "主要有三种方案：\n\n1. Redis方案：使用SET key value NX EX seconds命令。优点是性能高，实现简单。缺点是如果业务执行时间超过锁过期时间，锁会被释放导致并发问题；另外Redis主从切换可能导致锁丢失。改进方案可以用Redisson的RedLock算法，在多个Redis实例上加锁。\n\n2. Zookeeper方案：创建临时顺序节点，序号最小的获得锁。优点是可靠性高，支持watch机制，不会有锁丢失问题。缺点是性能较Redis差，依赖ZK集群。\n\n3. 数据库方案：使用SELECT FOR UPDATE或者乐观锁（version字段）。优点是简单，不依赖外部组件。缺点是性能最差，不适合高并发场景。\n\n实际选择：高并发且可容忍极低概率的锁丢失用Redis；强一致性要求用Zookeeper；简单业务用数据库。还需要注意设置合理的超时时间，使用UUID作为锁value防止误删除他人的锁。",
+    "evaluationCriteria": {
+      "excellent": "3种以上方案、详细实现细节、深入对比、考虑边界情况、有实际选型建议",
+      "good": "2-3种方案、基本实现思路、对比优缺点",
+      "average": "1-2种方案、实现思路不够清晰",
+      "poor": "理解有误或方案不可行"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.98,
+    "difficulty": 0.78,
+    "discriminability": 0.92
+  }
+}

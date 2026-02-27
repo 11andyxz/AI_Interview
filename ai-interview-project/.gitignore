@@ -3,6 +3,7 @@ eval/results/*.csv
 eval/results/*.json
 !eval/results/eval_report_20251222_202648.md
 !eval/results/eval_report_20251223_175342.md
+!eval/results/load_test_report_week9.md
 
 # Python
 __pycache__/

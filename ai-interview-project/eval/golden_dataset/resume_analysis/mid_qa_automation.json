@@ -1,0 +1,58 @@
+{
+  "candidateId": "golden_009",
+  "name": "钱芳",
+  "position": "Mid-level QA Engineer",
+  "yearsOfExperience": 3,
+  "resume": "钱芳，3年测试开发经验，专注自动化测试与质量保障。\n\n工作经历：\n2022-2024 网易 - 测试开发工程师\n- 负责网易云音乐App的自动化测试框架建设\n- 使用Python + Selenium开发Web自动化测试\n- 使用Appium开发移动端UI自动化\n- 搭建CI/CD测试流水线，集成到Jenkins\n- 自动化覆盖率从30%提升到80%\n\n2021-2022 去哪儿网 - 测试工程师\n- 负责机票预订系统功能测试\n- 编写测试用例，执行回归测试\n- 学习接口自动化测试（Postman + Python）\n\n技术栈：\n- 语言：Python, Java\n- 自动化：Selenium, Appium, Pytest, TestNG\n- 接口测试：Postman, JMeter, Requests\n- 性能测试：JMeter, Locust\n- CI/CD：Jenkins, GitLab CI\n- 测试管理：Jira, TestRail\n- 数据库：MySQL, Redis\n\n教育背景：\n湖南大学 软件工程 本科 2017-2021\n\n认证：\nISTQB Foundation Level",
+  "techStack": ["Python", "Selenium", "Automation Testing"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "钱芳",
+      "yearsOfExperience": 3,
+      "currentPosition": "测试开发工程师",
+      "companies": ["网易", "去哪儿网"]
+    },
+    "skills": {
+      "languages": ["Python", "Java"],
+      "automation": ["Selenium", "Appium", "Pytest", "TestNG"],
+      "apiTesting": ["Postman", "JMeter", "Requests"],
+      "performance": ["JMeter", "Locust"],
+      "cicd": ["Jenkins", "GitLab CI"],
+      "management": ["Jira", "TestRail"],
+      "database": ["MySQL", "Redis"]
+    },
+    "experience": {
+      "totalYears": 3,
+      "highlights": [
+        "网易云音乐自动化测试框架建设",
+        "自动化覆盖率提升：30% -> 80%",
+        "Web和移动端自动化测试",
+        "CI/CD测试流水线搭建"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "全面的自动化测试技能",
+        "实际框架建设经验",
+        "显著的效率提升成果",
+        "名企背景（网易）",
+        "测试金字塔理解完整（单元/接口/UI）"
+      ],
+      "matchLevel": "中度匹配",
+      "recommendedLevel": "Mid-level"
+    },
+    "interviewQuestions": [
+      "请描述你搭建的自动化测试框架的架构，是如何将覆盖率从30%提升到80%的？",
+      "Web自动化和移动端自动化有什么区别？各有哪些挑战？",
+      "如何设计一个稳定的自动化测试用例？如何处理元素定位不稳定的问题？",
+      "你们的CI/CD测试流水线是如何集成的？测试失败后的处理流程是怎样的？",
+      "接口测试和UI测试应该如何分配比例？为什么？"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.91,
+    "relevance": 0.96,
+    "completeness": 0.97
+  }
+}

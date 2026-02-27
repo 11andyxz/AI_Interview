@@ -1,0 +1,33 @@
+{
+  "scoringId": "scoring_002",
+  "questionId": "backend_l3_001",
+  "question": "请解释Spring Boot中的自动配置（Auto-Configuration）机制是如何工作的？",
+  "candidateAnswer": "Spring Boot的自动配置就是让你不用写配置文件，它会自动帮你配置好。主要是用了一些注解，然后根据你引入的jar包自动生效。比如你引入了mysql的jar包，它就会自动配置数据库连接。这样很方便，不用像以前用Spring那样写很多xml。",
+  "evaluation": {
+    "score": 5.0,
+    "level": "Average",
+    "strengths": [
+      "理解了自动配置的基本概念",
+      "知道与引入的依赖相关",
+      "提到了与传统Spring的对比"
+    ],
+    "improvements": [
+      "没有提到@EnableAutoConfiguration注解",
+      "没有解释spring.factories机制",
+      "没有提到条件注解（@ConditionalOnClass等）",
+      "例子不够准确（MySQL jar不会自动配置连接，需要配置URL等信息）",
+      "缺乏技术深度和实现细节"
+    ],
+    "technicalAccuracy": 0.60,
+    "completeness": 0.40,
+    "clarity": 0.70,
+    "depth": 0.30,
+    "feedback": "你理解了自动配置的基本概念，知道它能减少配置工作。但回答缺少关键的技术细节。建议深入了解：1) @EnableAutoConfiguration注解的作用；2) META-INF/spring.factories文件机制；3) 条件注解如@ConditionalOnClass的用法；4) 自动配置类的加载过程。另外，自动配置只能配置Bean，数据库URL这类信息还是需要在application.properties中手动配置的。"
+  },
+  "qualityMetrics": {
+    "answerLength": 118,
+    "technicalTerms": 2,
+    "hasExample": true,
+    "hasExplanation": false
+  }
+}

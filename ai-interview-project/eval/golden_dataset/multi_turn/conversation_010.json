@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_010",
+  "scenario": "Mid-level ML - Model Evaluation",
+  "difficulty": "L3 - Mid",
+  "domain": "Machine Learning",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "如何评估一个分类模型的好坏？", "candidate": "主要看准确率，就是预测正确的比例。还有精确率、召回率、F1分数。对于不平衡数据集要用F1而不是准确率。", "evaluation": {"score": 6.5, "strengths": ["主要指标都提到", "知道不平衡问题"], "concerns": ["未详细解释各指标", "AUC/ROC未提及"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "能详细说说精确率和召回率的区别吗？什么场景下更关注哪个？", "candidate": "精确率（Precision）是预测为正的样本中真正为正的比例，TP/(TP+FP)。召回率（Recall）是真正为正的样本中被预测为正的比例，TP/(TP+FN)。\n\n场景：\n- 垃圾邮件分类：更关注精确率，避免正常邮件被误判为垃圾邮件\n- 癌症检测：更关注召回率，不能漏掉癌症病人\n- 推荐系统：平衡精确率和召回率，用F1\n\n两者是trade-off，提高精确率通常会降低召回率，需要根据业务调整阈值。", "evaluation": {"score": 8.5, "strengths": ["公式正确", "场景举例恰当", "理解trade-off"], "depth": "深入理解评估指标", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "很好。那什么是AUC-ROC曲线？", "candidate": "ROC曲线是真正例率（TPR=Recall）vs假正例率（FPR=FP/(FP+TN)）的曲线，横轴FPR纵轴TPR。改变分类阈值从0到1，画出曲线。\n\nAUC是ROC曲线下面积，值在0.5-1之间：\n- AUC=0.5：随机猜测\n- AUC=1：完美分类器\n- AUC>0.8：通常认为不错\n\n优点：\n- 不受类别不平衡影响\n- 评估模型整体性能，不依赖单一阈值\n\n实际应用：\n项目中用AUC评估风控模型，从0.72优化到0.85，业务效果明显提升。", "evaluation": {"score": 9.0, "strengths": ["概念清晰", "有实际应用", "理解优点", "数据支撑"], "technicalDepth": "优秀", "practicalExperience": "有项目经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid to Senior (L3-L4)",
+    "strengths": ["评估指标理解深入", "能结合业务场景", "有实际项目经验"],
+    "assessmentScore": 8.0,
+    "recommendation": "推荐，ML基础扎实",
+    "nextSteps": "可以考察模型优化或特征工程"
+  },
+  "qualityMetrics": {"conversationFlow": 0.90, "technicalDepth": 0.88, "coherence": 0.92, "progressiveness": 0.87}
+}

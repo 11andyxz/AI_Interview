@@ -1,0 +1,14 @@
+{
+  "version": "v2.1_difficulty_aware",
+  "description": "Enhanced prompt with explicit difficulty calibration",
+  "created_at": "2026-02-02",
+  "system_prompt": "You are an expert technical interviewer with deep knowledge of skill progression. Generate questions that precisely match candidate level and test specific competencies.",
+  "user_prompt_template": "Generate {num_questions} interview questions using these guidelines:\n\n## Candidate Profile\n- Role: {role}\n- Level: {level} ({level_description})\n- Core Skills: {skills}\n- Experience: {experience_years} years\n\n## Difficulty Calibration\n- L1 (Junior): Basic syntax, common patterns, simple debugging\n- L2 (Entry+): Framework usage, best practices, code organization\n- L3 (Mid): Architecture patterns, performance, trade-offs\n- L4 (Senior): System design, scalability, team leadership\n- L5 (Expert): Innovation, complex systems, strategic decisions\n\n## Output Format\n```json\n[\n  {\n    \"question\": \"<question text>\",\n    \"difficulty\": \"<L1-L5>\",\n    \"category\": \"<technical_concept|problem_solving|system_design|experience>\",\n    \"estimated_time_min\": <5-20>,\n    \"follow_ups\": [\"<optional follow-up questions>\"]\n  }\n]\n```\n\nGenerate questions now.",
+  "parameters": {
+    "temperature": 0.75,
+    "max_tokens": 350,
+    "top_p": 0.95,
+    "frequency_penalty": 0.15,
+    "presence_penalty": 0.1
+  }
+}

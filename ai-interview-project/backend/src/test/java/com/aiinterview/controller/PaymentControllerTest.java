@@ -260,6 +260,8 @@ class PaymentControllerTest {
         testSubscription.setAlipaySubscriptionId("alipay_sub123");
         when(userSubscriptionRepository.findById(subscriptionId))
             .thenReturn(Optional.of(testSubscription));
+        when(alipayService.cancelSubscription("alipay_sub123"))
+            .thenReturn(true);
 
         mockMvc.perform(post("/api/payment/subscriptions/{subscriptionId}/cancel", subscriptionId))
             .andExpect(status().isOk())

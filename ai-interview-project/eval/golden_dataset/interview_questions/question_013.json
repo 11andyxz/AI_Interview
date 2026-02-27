@@ -1,0 +1,39 @@
+{
+  "questionId": "javascript_l2_013",
+  "difficulty": "L2 - Junior",
+  "domain": "JavaScript",
+  "techStack": ["JavaScript", "ES6"],
+  "question": "请解释JavaScript中的Promise及其解决的问题，并说明如何使用async/await。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "异步编程的解决方案",
+      "解决回调地狱问题",
+      "Promise的三种状态",
+      "then/catch链式调用",
+      "async/await语法糖"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述Promise和async/await",
+      "completeness": "涵盖问题背景、使用方法、代码示例",
+      "clarity": "解释清晰，有对比示例",
+      "depth": "理解异步编程模型"
+    },
+    "sampleGoodAnswer": "Promise是ES6引入的异步编程解决方案，用于替代回调函数，避免回调地狱。Promise有三种状态：pending、fulfilled、rejected。可以通过then和catch链式处理异步结果：\n\nfetch('/api/user')\n  .then(res => res.json())\n  .then(data => console.log(data))\n  .catch(err => console.error(err));\n\nasync/await是Promise的语法糖，让异步代码看起来像同步：\n\nasync function getUser() {\n  try {\n    const res = await fetch('/api/user');\n    const data = await res.json();\n    return data;\n  } catch (err) {\n    console.error(err);\n  }\n}\n\nawait只能在async函数内使用，遇到await会暂停执行，等Promise完成后继续。",
+    "evaluationCriteria": {
+      "excellent": "完整解释Promise和async/await，提供代码对比",
+      "good": "准确描述核心概念和用法",
+      "average": "知道基本用法但原理不清",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.96,
+    "difficulty": 0.68,
+    "discriminability": 0.85
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_023",
+  "questionId": "monitoring_001",
+  "question": "生产环境如何实现全链路监控？",
+  "candidateAnswer": "全链路监控包括：1) 日志监控（ELK），收集应用日志，结构化存储，Kibana可视化查询；2) 指标监控（Prometheus + Grafana），收集CPU、内存、QPS、延迟等指标，Grafana展示；3) 链路追踪（Jaeger/Zipkin），分布式trace追踪请求链路，定位慢服务；4) 告警（AlertManager），设置告警规则，钉钉/邮件通知；5) 业务监控，核心业务指标（订单量、支付成功率）。所有系统统一dashboard，快速定位问题。",
+  "evaluation": {
+    "score": 6.0,
+    "level": "Fair",
+    "strengths": ["监控维度全面", "工具选型合理"],
+    "weaknesses": ["缺少实施细节", "没有trace_id关联说明", "告警策略不详细"],
+    "technicalAccuracy": 0.80,
+    "completeness": 0.60,
+    "clarity": 0.70,
+    "depth": 0.50,
+    "feedback": "回答涵盖了主要监控维度。建议补充：1) 如何通过trace_id关联日志、指标、链路；2) 告警分级和处理流程；3) SLO/SLI定义；4) 实际故障排查案例；5) 监控成本优化。"
+  },
+  "qualityMetrics": {"answerLength": 260, "technicalTerms": 13, "hasExample": false, "hasExplanation": true, "hasCodeExamples": false}
+}

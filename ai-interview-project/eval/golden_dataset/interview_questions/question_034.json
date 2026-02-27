@@ -1,0 +1,39 @@
+{
+  "questionId": "system_design_l3_034",
+  "difficulty": "L3 - Mid",
+  "domain": "System Design",
+  "techStack": ["分布式系统", "一致性"],
+  "question": "请解释CAP定理，以及在实际系统设计中如何权衡？请举例说明。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "CAP三要素",
+      "为什么不能同时满足",
+      "CP vs AP选择",
+      "实际系统案例",
+      "BASE理论"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述CAP定理和权衡",
+      "completeness": "涵盖理论和实践应用",
+      "clarity": "解释清晰，有具体例子",
+      "depth": "理解分布式系统设计"
+    },
+    "sampleGoodAnswer": "CAP定理是分布式系统设计的基石，指导架构选择。\n\nCAP定理：\n分布式系统最多只能同时保证三个特性中的两个：\n\nC（Consistency，一致性）：\n所有节点同一时间看到相同的数据\n例如：读操作能读到最新写入的数据\n\nA（Availability，可用性）：\n每个请求都能得到响应（成功或失败）\n例如：系统7x24小时可访问，不会无响应\n\nP（Partition Tolerance，分区容错性）：\n网络分区时系统仍能继续运行\n例如：机房网络故障，系统不会完全不可用\n\n为什么不能同时满足：\n\n场景：两个数据中心DC1和DC2，网络分区\n\n如果要CP（牺牲可用性）：\n- DC1和DC2无法通信时，停止服务以保证一致性\n- 用户请求被拒绝，系统不可用\n\n如果要AP（牺牲一致性）：\n- DC1和DC2继续服务，但数据可能不一致\n- 用户可能读到旧数据\n\n如果要CA（牺牲分区容错）：\n- 不允许网络分区，实际不可能\n- 分布式系统必须处理网络问题\n\n因此：网络分区不可避免（P必选），只能在C和A之间权衡。\n\n实际系统选择：\n\n1. CP系统（一致性优先）：\n\n特点：保证强一致性，牺牲可用性\n场景：金融交易、订单支付、库存扣减\n\n案例1 - ZooKeeper：\n- Leader挂掉时，选举期间不可用（几秒到几分钟）\n- 保证所有节点数据一致\n- 适合配置中心、分布式锁\n\n案例2 - HBase：\n- Region Server宕机时，该Region不可用\n- 保证数据强一致性\n\n案例3 - 分布式事务（2PC）：\n- 协调者故障时阻塞\n- 保证事务ACID\n\n2. AP系统（可用性优先）：\n\n特点：保证高可用，允许最终一致性\n场景：社交网络、推荐系统、缓存\n\n案例1 - Cassandra：\n- 多活架构，任何节点都可读写\n- 最终一致性，可能读到旧数据\n- 适合时间线、日志存储\n\n案例2 - DynamoDB：\n- 高可用，读写延迟低\n- 最终一致性（可选强一致性读）\n\n案例3 - Redis Cluster：\n- 主从复制，异步同步\n- 主节点宕机可能丢失少量数据\n- 从节点继续提供读服务\n\n案例4 - DNS：\n- 全球分布式，高可用\n- 更新传播有延迟（TTL）\n\n实际权衡策略：\n\n1. 业务分类：\n核心业务（支付）：选择CP\n非核心业务（点赞数）：选择AP\n\n2. 多级架构：\n- 写入时强一致（CP）\n- 读取时最终一致（AP）\n- 例如：MySQL主从，主库CP，从库AP\n\n3. 可调一致性：\n- Cassandra的Quorum机制\n- 写入W个节点，读取R个节点\n- W + R > N 保证一致性\n- W=1, R=1：AP（性能高）\n- W=ALL, R=1：CP（一致性高）\n\n4. 补偿机制：\n- 采用AP架构\n- 通过业务补偿保证最终一致\n- 例如：订单系统用消息队列异步同步\n\nBASE理论（AP系统的实践）：\n\nBA（Basically Available，基本可用）：\n- 允许部分功能降级\n- 例如：双11流量高峰，非核心功能限流\n\nS（Soft state，软状态）：\n- 允许中间状态存在\n- 例如：订单从\"支付中\"到\"支付成功\"\n\nE（Eventually consistent，最终一致性）：\n- 经过一段时间后，数据最终一致\n- 例如：主从同步延迟，最终会同步\n\n实际案例 - 电商系统：\n\n订单服务：CP\n- 创建订单、扣库存需要强一致性\n- 使用分布式事务（Seata）\n- 牺牲少量可用性保证数据准确\n\n商品详情：AP\n- 允许读到稍旧的商品信息\n- 多级缓存，最终一致性\n- 保证高可用和低延迟\n\n总结：\n1. CAP不是绝对的，是程度问题\n2. 根据业务场景选择合适的权衡\n3. 可以在系统不同部分做不同选择\n4. 没有完美的架构，只有合适的架构",
+    "evaluationCriteria": {
+      "excellent": "深入理解CAP、详细的权衡策略、多个实际案例、BASE理论",
+      "good": "准确描述CAP和主要权衡方法",
+      "average": "知道CAP但实践应用不清",
+      "poor": "理解有误或过于理论化"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.97,
+    "difficulty": 0.85,
+    "discriminability": 0.91
+  }
+}

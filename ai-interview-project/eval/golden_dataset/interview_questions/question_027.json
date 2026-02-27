@@ -1,0 +1,39 @@
+{
+  "questionId": "frontend_l2_027",
+  "difficulty": "L2 - Junior",
+  "domain": "Frontend",
+  "techStack": ["JavaScript", "闭包"],
+  "question": "什么是JavaScript闭包（Closure）？请举例说明闭包的应用场景。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "函数和词法环境的组合",
+      "内部函数访问外部变量",
+      "变量私有化",
+      "应用场景（模块化、事件处理）",
+      "代码示例"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述闭包的本质",
+      "completeness": "涵盖定义、原理、示例、应用",
+      "clarity": "解释清晰，有可运行代码",
+      "depth": "理解作用域链和词法环境"
+    },
+    "sampleGoodAnswer": "闭包是函数和其词法环境的组合，内部函数可以访问外部函数的变量，即使外部函数已经执行完毕。\n\n基本示例：\nfunction outer() {\n  let count = 0;\n  return function inner() {\n    count++;\n    return count;\n  };\n}\n\nconst counter = outer();\nconsole.log(counter()); // 1\nconsole.log(counter()); // 2\n// inner函数持有count的引用，形成闭包\n\n原理：\n1. outer执行后返回inner函数\n2. inner保持对outer作用域的引用\n3. count变量不会被垃圾回收\n4. 每次调用counter都可以访问和修改count\n\n应用场景：\n\n1. 数据私有化：\nfunction createPerson(name) {\n  let age = 0;\n  return {\n    getName: () => name,\n    getAge: () => age,\n    growOlder: () => ++age\n  };\n}\n\n2. 函数柯里化：\nfunction multiply(a) {\n  return function(b) {\n    return a * b;\n  };\n}\nconst double = multiply(2);\ndouble(5); // 10\n\n3. 事件处理：\nfor (let i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 1000);\n  // 闭包捕获每次的i值\n}\n\n注意：闭包会导致内存占用，不再使用时应解除引用。",
+    "evaluationCriteria": {
+      "excellent": "完整解释原理、提供多个示例、说明应用场景",
+      "good": "准确描述核心概念和基本用法",
+      "average": "知道闭包但原理不清",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.95,
+    "difficulty": 0.70,
+    "discriminability": 0.84
+  }
+}

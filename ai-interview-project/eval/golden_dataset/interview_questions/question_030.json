@@ -1,0 +1,39 @@
+{
+  "questionId": "cloud_l2_030",
+  "difficulty": "L2 - Junior",
+  "domain": "Cloud",
+  "techStack": ["Kubernetes", "容器编排"],
+  "question": "什么是Kubernetes（K8s）？请说明其核心组件和主要功能。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "容器编排平台",
+      "核心组件（Master、Node、Pod）",
+      "主要功能（自动调度、自愈、扩缩容）",
+      "与Docker的关系",
+      "应用场景"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述K8s架构和功能",
+      "completeness": "涵盖组件、功能、应用场景",
+      "clarity": "解释清晰，有结构说明",
+      "depth": "理解容器编排概念"
+    },
+    "sampleGoodAnswer": "Kubernetes（K8s）是Google开源的容器编排平台，用于自动化部署、扩展和管理容器化应用。\n\n核心组件：\n\nMaster节点（控制平面）：\n1. API Server：集群的统一入口，处理RESTful请求\n2. Scheduler：负责Pod调度，选择合适的Node\n3. Controller Manager：管理控制器，维护集群状态\n4. etcd：分布式键值存储，保存集群配置和状态\n\nNode节点（工作节点）：\n1. Kubelet：管理Pod生命周期，与API Server通信\n2. Container Runtime：运行容器（Docker、containerd）\n3. Kube-proxy：网络代理，实现Service通信\n\n核心概念：\n1. Pod：最小部署单元，包含一个或多个容器\n2. Service：为Pod提供稳定的网络访问\n3. Deployment：管理Pod的部署和更新\n4. Namespace：资源隔离\n\n主要功能：\n1. 自动调度：根据资源和策略自动分配Pod到Node\n2. 自愈能力：容器失败自动重启，Node故障自动迁移Pod\n3. 弹性伸缩：根据负载自动扩缩容（HPA）\n4. 服务发现：自动DNS和负载均衡\n5. 滚动更新：零停机更新应用\n6. 配置管理：ConfigMap和Secret\n7. 存储编排：自动挂载存储\n\n与Docker关系：\nDocker负责运行单个容器，K8s负责管理大规模容器集群\n\n应用场景：\n微服务架构、CI/CD、多云部署、大规模应用管理",
+    "evaluationCriteria": {
+      "excellent": "完整解释架构、组件、功能、应用场景",
+      "good": "准确描述核心组件和主要功能",
+      "average": "知道K8s是容器编排但细节不清",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.95,
+    "difficulty": 0.72,
+    "discriminability": 0.85
+  }
+}

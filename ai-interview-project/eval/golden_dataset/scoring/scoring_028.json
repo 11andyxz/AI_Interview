@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_028",
+  "questionId": "agile_scrum_001",
+  "question": "请介绍Scrum敏捷开发流程和关键实践。",
+  "candidateAnswer": "Scrum有三个角色（Product Owner、Scrum Master、开发团队）、三个工件（Product Backlog、Sprint Backlog、Increment）、五个事件（Sprint、Sprint Planning、Daily Standup、Sprint Review、Sprint Retrospective）。Sprint通常2周，每天站会15分钟同步进度。PO负责需求优先级，SM移除障碍，团队自组织。关键是透明、检视、适应，持续改进。实践中严格遵循Scrum框架，团队协作效率明显提升。",
+  "evaluation": {
+    "score": 6.0,
+    "level": "Fair",
+    "strengths": ["Scrum框架完整", "角色职责清晰", "实践效果提及"],
+    "weaknesses": ["流程描述不够细致", "缺少具体实践经验", "问题应对未说明"],
+    "technicalAccuracy": 0.85,
+    "completeness": 0.60,
+    "clarity": 0.75,
+    "depth": 0.50,
+    "feedback": "回答涵盖了Scrum基本框架。建议补充：1) 每个会议的具体流程和产出；2) 如何评估Story Point；3) 燃尽图使用；4) 常见问题和解决（如需求频繁变更）；5) 与Kanban对比；6) 实际案例（如迭代速度提升数据）。"
+  },
+  "qualityMetrics": {"answerLength": 240, "technicalTerms": 12, "hasExample": false, "hasExplanation": true, "hasCodeExamples": false}
+}

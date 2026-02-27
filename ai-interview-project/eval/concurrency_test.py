@@ -15,14 +15,33 @@ import json
 def send_request(prompt: str, request_id: int, backend_url: str = "http://localhost:8080") -> Dict[str, Any]:
     """Send a single request to the backend and measure latency"""
     start_time = time.time()
+    # obtain auth token per-process (caller may cache) - simple login for testuser
+    headers = {'Content-Type': 'application/json'}
+    try:
+        login = requests.post(f"{backend_url}/api/auth/login", json={"username": "testuser", "password": "password"}, timeout=10)
+        if login.status_code == 200:
+            data = login.json()
+            token = data.get('accessToken') or data.get('token')
+            if token:
+                headers['Authorization'] = f'Bearer {token}'
+    except Exception:
+        pass
     
     try:
+        # Use the interview question-generate endpoint for compatibility with runner
+        payload = {
+            'sessionId': f'concurrency_{request_id}',
+            'roleId': 'backend_java',
+            'level': 'medium',
+            'candidateInfo': {
+                'context': '',
+                'prompt': prompt
+            }
+        }
         response = requests.post(
-            f"{backend_url}/api/ai/chat",
-            json={
-                "message": prompt,
-                "conversationHistory": []
-            },
+            f"{backend_url}/api/llm/question-generate",
+            json=payload,
+            headers=headers,
             timeout=60
         )
         
@@ -59,11 +78,11 @@ def send_request(prompt: str, request_id: int, backend_url: str = "http://localh
 def run_concurrency_test(num_requests: int = 20, num_workers: int = 5) -> Dict[str, Any]:
     """Run concurrent requests and collect metrics"""
     
-    # Simple test prompt
-    test_prompt = "请用一句话介绍人工智能。"
+    # Simple test prompt (English only)
+    test_prompt = "Describe artificial intelligence in one sentence."
     
-    print(f"Starting concurrency test8080 (Backend APIts} requests with {num_workers} workers")
-    print(f"Target: http://localhost:11434 (Ollama)")
+    print(f"Starting concurrency test: {num_requests} requests with {num_workers} workers")
+    print("Target backend: http://localhost:8080")
     print("-" * 60)
     
     results = []

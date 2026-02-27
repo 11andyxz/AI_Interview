@@ -1,0 +1,39 @@
+{
+  "questionId": "java_l3_031",
+  "difficulty": "L3 - Mid",
+  "domain": "Java",
+  "techStack": ["Java", "JVM", "性能优化"],
+  "question": "在生产环境中遇到Full GC频繁的问题，如何定位和解决？请说明排查思路和常用工具。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "Full GC的原因（内存泄漏、老年代不足、元空间不足）",
+      "排查工具（jstat、jmap、MAT）",
+      "GC日志分析",
+      "解决方案",
+      "实际案例"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述排查方法和解决方案",
+      "completeness": "涵盖定位、分析、解决全流程",
+      "clarity": "思路清晰，步骤具体",
+      "depth": "有生产环境实战经验"
+    },
+    "sampleGoodAnswer": "Full GC频繁是生产环境常见问题，系统排查思路：\n\n1. 监控和观察：\n- 使用jstat -gc pid 1000查看GC频率和耗时\n- 分析GC日志：-XX:+PrintGCDetails -XX:+PrintGCDateStamps\n- 观察老年代使用率、Full GC频率和STW时间\n\n2. 定位原因：\n常见原因：\na) 内存泄漏：对象无法回收，老年代持续增长\nb) 老年代空间不足：对象晋升过快\nc) 元空间不足：类加载过多\nd) System.gc()显式调用\ne) 大对象直接进入老年代\n\n3. 排查工具和步骤：\n\n步骤1：查看堆内存使用\njstat -gc pid 1000\n观察OU（老年代）是否接近容量上限\n\n步骤2：导出堆转储文件\njmap -dump:live,format=b,file=heap.hprof pid\n或配置自动dump：-XX:+HeapDumpOnOutOfMemoryError\n\n步骤3：分析heap dump\n使用MAT（Memory Analyzer Tool）或jvisualvm\n- 查看Histogram：找出占用内存最多的类\n- 分析Dominator Tree：找出最大的对象\n- 查看GC Roots：确认对象为何无法回收\n- Leak Suspects：自动分析可疑泄漏\n\n步骤4：代码审查\n- 检查是否有大集合未清理\n- static变量持有大对象\n- ThreadLocal未remove\n- 缓存无限增长\n\n4. 解决方案：\n\n针对内存泄漏：\n- 修复代码bug，及时释放资源\n- 定期清理缓存\n- ThreadLocal使用后remove\n\n针对老年代不足：\n- 调整堆大小：-Xms4g -Xmx4g\n- 调整新生代比例：-XX:NewRatio=2\n- 调整晋升阈值：-XX:MaxTenuringThreshold=15\n- 使用G1 GC：-XX:+UseG1GC\n\n针对大对象：\n- 优化代码，减少大对象创建\n- 使用对象池复用\n- 流式处理代替一次性加载\n\n实际案例：\n某系统每小时Full GC，通过MAT分析发现：\n- HashMap持有100万个Entry对象，占用2GB\n- 原因：本地缓存无过期机制\n- 解决：改用Guava Cache，设置最大容量和过期时间\n- 效果：Full GC频率降至每天1次\n\n预防措施：\n1. 压测时观察GC行为\n2. 配置GC日志和监控告警\n3. 定期分析heap dump\n4. Code Review关注资源管理",
+    "evaluationCriteria": {
+      "excellent": "系统的排查思路、详细的工具使用、实际案例、预防措施",
+      "good": "准确的定位方法和主要解决方案",
+      "average": "知道一些工具但流程不系统",
+      "poor": "缺少实战经验或方法不当"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.98,
+    "difficulty": 0.82,
+    "discriminability": 0.90
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "questionId": "Q063",
+  "domain": "Algorithms & Data Structures",
+  "difficulty": "MID",
+  "techStack": ["Algorithms", "Graphs", "DFS", "BFS"],
+  "question": "Explain the difference between depth-first search (DFS) and breadth-first search (BFS) for graph traversal. When would you choose one over the other?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "DFS explores as far as possible along each branch before backtracking, uses stack (recursive or explicit)",
+      "BFS explores all neighbors at current depth before moving deeper, uses queue",
+      "BFS finds shortest path in unweighted graphs, DFS uses less memory for deep graphs",
+      "DFS better for topological sorting, cycle detection; BFS better for shortest paths"
+    ],
+    "codeExample": "// BFS implementation\npublic void bfs(Node start) {\n    Queue<Node> queue = new LinkedList<>();\n    Set<Node> visited = new HashSet<>();\n    queue.offer(start);\n    visited.add(start);\n    \n    while (!queue.isEmpty()) {\n        Node current = queue.poll();\n        process(current);\n        for (Node neighbor : current.neighbors) {\n            if (!visited.contains(neighbor)) {\n                visited.add(neighbor);\n                queue.offer(neighbor);\n            }\n        }\n    }\n}",
+    "explanation": "DFS and BFS represent fundamentally different exploration strategies. DFS goes deep first, making it ideal for problems requiring complete path exploration like maze solving or topological sorting. BFS explores level by level, guaranteeing shortest paths in unweighted graphs, making it ideal for finding minimum distances or connection degrees."
+  },
+  "followUps": [
+    "How would you detect a cycle in a directed graph using DFS?",
+    "What's the time and space complexity of BFS for a graph with V vertices and E edges?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.87,
+    "tokenEfficiency": 0.80,
+    "vocabularyDiversity": 0.83,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.91,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

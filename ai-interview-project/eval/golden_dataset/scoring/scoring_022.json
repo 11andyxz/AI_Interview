@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_022",
+  "questionId": "git_workflow_001",
+  "question": "请说明Git Flow工作流程和最佳实践。",
+  "candidateAnswer": "Git Flow有5种分支：master（生产）、develop（开发）、feature（功能）、release（发布）、hotfix（热修复）。流程：从develop拉feature开发，完成后合并回develop；发布时从develop拉release分支测试，完成后合并到master和develop；紧急修复从master拉hotfix，修复后合并回master和develop。最佳实践：保护master分支、代码审查（Pull Request）、持续集成、语义化版本号、清晰的commit message。",
+  "evaluation": {
+    "score": 7.0,
+    "level": "Good",
+    "strengths": ["流程描述清晰", "分支类型完整", "最佳实践提及"],
+    "weaknesses": ["缺少图示说明", "没有命令示例", "未提及替代方案"],
+    "technicalAccuracy": 0.90,
+    "completeness": 0.75,
+    "clarity": 0.80,
+    "depth": 0.65,
+    "feedback": "回答不错，Git Flow流程描述清晰。建议补充：1) 分支图示更直观；2) 关键Git命令；3) 与GitHub Flow、GitLab Flow对比；4) 小团队是否适合简化流程；5) 实际案例（如版本发布流程）。"
+  },
+  "qualityMetrics": {"answerLength": 280, "technicalTerms": 10, "hasExample": false, "hasExplanation": true, "hasCodeExamples": false}
+}

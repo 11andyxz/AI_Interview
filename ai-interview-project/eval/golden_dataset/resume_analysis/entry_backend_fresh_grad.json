@@ -1,0 +1,64 @@
+{
+  "candidateId": "golden_008",
+  "name": "林晓峰",
+  "position": "Entry-level Backend Developer",
+  "yearsOfExperience": 0.5,
+  "resume": "林晓峰，应届毕业生，6个月实习经验，Java后端开发。\n\n工作经历：\n2024.3-2024.9 某互联网公司 - Java开发实习生\n- 参与公司内部OA系统开发\n- 负责用户管理模块的CRUD接口开发\n- 学习使用Spring Boot + MyBatis-Plus\n- 参与代码review，学习团队规范\n\n技术栈：\n- 后端：Java, Spring Boot, MyBatis-Plus\n- 数据库：MySQL\n- 工具：Git, Maven, IDEA\n- 前端：了解HTML/CSS/JavaScript基础\n\n教育背景：\n某二本院校 软件工程 本科 2020-2024\nGPA: 3.2/4.0\n\n项目经验：\n1. 实习项目：OA系统用户管理模块\n2. 毕设：在线图书管理系统（Spring Boot + Vue）\n3. 课程项目：学生成绩管理系统",
+  "techStack": ["Java", "Spring Boot", "MySQL"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "林晓峰",
+      "yearsOfExperience": 0.5,
+      "currentPosition": "Java开发实习生",
+      "companies": ["某互联网公司"]
+    },
+    "skills": {
+      "backend": ["Java", "Spring Boot", "MyBatis-Plus"],
+      "database": ["MySQL"],
+      "tools": ["Git", "Maven", "IDEA"],
+      "frontend": ["HTML", "CSS", "JavaScript"]
+    },
+    "experience": {
+      "totalYears": 0.5,
+      "highlights": [
+        "6个月实习经验",
+        "OA系统开发",
+        "CRUD接口实现",
+        "参与代码review"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "有实习经验",
+        "掌握基础技术栈",
+        "学习态度良好"
+      ],
+      "concerns": [
+        "经验较少",
+        "技术深度不足",
+        "项目复杂度较低",
+        "院校背景一般"
+      ],
+      "matchLevel": "初级匹配",
+      "recommendedLevel": "Entry-level",
+      "developmentSuggestions": [
+        "深入学习Spring核心原理",
+        "积累更多项目经验",
+        "学习多线程、JVM等进阶知识",
+        "提升算法和系统设计能力"
+      ]
+    },
+    "interviewQuestions": [
+      "请介绍一下你实习期间做的用户管理模块，有哪些功能？",
+      "Spring Boot和Spring有什么区别？你为什么选择Spring Boot？",
+      "你在实习中遇到过什么技术难题？是如何解决的？",
+      "MyBatis和MyBatis-Plus有什么区别？你更倾向用哪个？"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.75,
+    "relevance": 0.80,
+    "completeness": 0.85
+  }
+}

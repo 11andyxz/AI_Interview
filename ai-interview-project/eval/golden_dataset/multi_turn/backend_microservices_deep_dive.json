@@ -1,0 +1,71 @@
+{
+  "conversationId": "multi_turn_001",
+  "scenario": "Senior Backend Position - Technical Deep Dive",
+  "difficulty": "L4 - Senior",
+  "domain": "Backend Development",
+  "turns": [
+    {
+      "turnNumber": 1,
+      "interviewer": "你好，我看到你简历上有微服务架构的经验。能否介绍一下你们的微服务是如何划分的？",
+      "candidate": "你好。我们主要按业务领域划分微服务，遵循DDD的有界上下文原则。比如订单服务、用户服务、支付服务、库存服务等。每个服务有独立的数据库，通过API网关统一对外暴露接口。服务之间通过Kafka做异步通信，同步调用用OpenFeign。",
+      "evaluation": {
+        "score": 7.5,
+        "strengths": ["清晰的划分原则", "提到了DDD", "技术栈完整"],
+        "concerns": ["缺少具体的划分标准", "没有说明如何避免服务过细或过粗"],
+        "followUpNeeded": true
+      }
+    },
+    {
+      "turnNumber": 2,
+      "interviewer": "不错。那在服务划分时，你们是如何避免分布式事务的？遇到必须保证一致性的场景怎么处理？",
+      "candidate": "我们尽量在设计时避免分布式事务。主要有几种方式：\n\n1. 业务补偿：比如订单创建失败，通过消息队列通知库存服务回滚。\n\n2. 最终一致性：订单支付后，先更新订单状态，然后发送Kafka消息给积分服务。积分服务消费消息后增加积分，如果失败会重试。\n\n3. TCC模式：对于特别重要的场景，比如支付，我们用了Seata的TCC模式。分为Try、Confirm、Cancel三个阶段。\n\n4. Saga模式：对于长流程，用Saga编排，每个步骤都有对应的补偿操作。\n\n实际项目中，80%的场景用最终一致性就够了，真正需要强一致性的场景很少。",
+      "evaluation": {
+        "score": 9.0,
+        "strengths": [
+          "提供了4种具体方案",
+          "理解业务场景和技术选型的权衡",
+          "有实际落地经验（Seata、Kafka）"
+        ],
+        "depth": "深入理解分布式系统设计",
+        "followUpNeeded": true
+      }
+    },
+    {
+      "turnNumber": 3,
+      "interviewer": "很好。你提到最终一致性占80%，那如果消息消费失败，如何保证消息不丢失？如何处理重复消费？",
+      "candidate": "消息可靠性我们是这样保证的：\n\n1. 生产端：\n- Kafka配置acks=all，确保消息写入所有副本\n- 使用事务消息，先更新数据库，成功后再发送消息\n- 消息带唯一ID（业务ID+时间戳）\n\n2. 消费端：\n- 手动提交offset，处理完业务逻辑后再提交\n- 设置重试机制，最多重试3次\n- 失败的消息放入死信队列，人工介入\n\n3. 幂等性保证：\n- 每条消息都有唯一ID\n- 消费前先查Redis，看这个ID是否处理过\n- 如果处理过就直接返回成功，不重复执行\n- Redis设置过期时间（7天），避免无限膨胀\n\n4. 监控告警：\n- 监控消息积压量，超过1000就告警\n- 监控死信队列，有消息就告警\n- 每天定时检查未消费的消息\n\n我们还用了分布式锁（Redis）防止多个消费者同时处理同一条消息。",
+      "evaluation": {
+        "score": 9.5,
+        "strengths": [
+          "全面的消息可靠性保障方案",
+          "详细的生产端和消费端配置",
+          "实际的幂等性实现方案",
+          "完善的监控体系",
+          "考虑了边界情况（死信队列、分布式锁）"
+        ],
+        "technicalDepth": "优秀，展示了生产级系统设计能力",
+        "practicalExperience": "明显有丰富的实战经验",
+        "readyForNextTopic": true
+      }
+    }
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Senior (L4)",
+    "strengths": [
+      "深入理解微服务架构设计原则",
+      "熟悉分布式事务的多种解决方案",
+      "有完善的消息可靠性保障经验",
+      "考虑问题全面，从设计到监控",
+      "能够根据业务场景选择合适的技术方案"
+    ],
+    "assessmentScore": 8.7,
+    "recommendation": "强烈推荐，具备Senior级别技术能力",
+    "nextSteps": "可以进入系统设计环节，考察架构设计能力"
+  },
+  "qualityMetrics": {
+    "conversationFlow": 0.95,
+    "technicalDepth": 0.92,
+    "coherence": 0.98,
+    "progressiveness": 0.90
+  }
+}

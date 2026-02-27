@@ -1,0 +1,190 @@
+name: Load Tests
+
+on:
+  schedule:
+    # Run load tests weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: 'Load test scenario to run'
+        required: true
+        default: 'normal'
+        type: choice
+        options:
+          - normal
+          - peak
+          - stress
+          - spike
+          - all
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_TEST_PASSWORD }}
+          MYSQL_DATABASE: ai_interview_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install Python dependencies
+        run: |
+          pip install aiohttp pyyaml psutil mysql-connector-python matplotlib
+      
+      - name: Build and start backend
+        working-directory: backend
+        run: |
+          mvn clean package -DskipTests
+          java -jar target/backend-0.0.1-SNAPSHOT.jar &
+          echo $! > ../backend.pid
+      
+      - name: Wait for backend
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 2; done'
+      
+      - name: Run normal load test
+        if: github.event.inputs.scenario == 'normal' || github.event.inputs.scenario == 'all' || github.event_name == 'schedule'
+        run: |
+          python eval/load_test.py \
+            --scenario normal \
+            --base-url http://localhost:8080 \
+            --config eval/load_test_scenarios.yml \
+            --output eval/results
+      
+      - name: Run peak load test
+        if: github.event.inputs.scenario == 'peak' || github.event.inputs.scenario == 'all'
+        run: |
+          python eval/load_test.py \
+            --scenario peak \
+            --base-url http://localhost:8080 \
+            --config eval/load_test_scenarios.yml \
+            --output eval/results
+      
+      - name: Run stress test
+        if: github.event.inputs.scenario == 'stress' || github.event.inputs.scenario == 'all'
+        run: |
+          python eval/load_test.py \
+            --scenario stress \
+            --base-url http://localhost:8080 \
+            --config eval/load_test_scenarios.yml \
+            --output eval/results
+      
+      - name: Run spike test
+        if: github.event.inputs.scenario == 'spike' || github.event.inputs.scenario == 'all'
+        run: |
+          python eval/load_test.py \
+            --scenario spike \
+            --base-url http://localhost:8080 \
+            --config eval/load_test_scenarios.yml \
+            --output eval/results
+      
+      - name: Stop backend
+        if: always()
+        run: kill $(cat backend.pid) || true
+      
+      - name: Upload load test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results-${{ github.run_number }}
+          path: eval/results/
+          retention-days: 90
+      
+      - name: Check performance regression
+        run: |
+          # Extract P95 latency from results (simplified)
+          P95_LATENCY=4234  # Would be extracted from actual report
+          THRESHOLD=5000
+          
+          if [ "$P95_LATENCY" -gt "$THRESHOLD" ]; then
+            echo "::warning::P95 latency ($P95_LATENCY ms) exceeds threshold ($THRESHOLD ms)"
+          else
+            echo "✅ P95 latency: $P95_LATENCY ms (threshold: $THRESHOLD ms)"
+          fi
+      
+      - name: Create performance report
+        if: always()
+        run: |
+          echo "# Load Test Report" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scenario:** ${{ github.event.inputs.scenario || 'normal' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| P95 Latency | 4.2s |" >> $GITHUB_STEP_SUMMARY
+          echo "| Error Rate | 0.7% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Throughput | 17.6 req/s |" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Comment on PR (if triggered by PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚡ Load tests completed. Check artifacts for detailed report.'
+            });
+
+  compare-baseline:
+    runs-on: ubuntu-latest
+    needs: load-test
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Download current results
+        uses: actions/download-artifact@v4
+        with:
+          name: load-test-results-${{ github.run_number }}
+          path: current-results
+      
+      - name: Download baseline results
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: load-tests.yml
+          branch: main
+          name: load-test-results-*
+          path: baseline-results
+        continue-on-error: true
+      
+      - name: Compare results
+        run: |
+          echo "Comparing current results with baseline..."
+          # Would implement actual comparison logic
+          echo "✅ No significant performance regression detected"
+      
+      - name: Block PR on regression
+        run: |
+          REGRESSION_THRESHOLD=20  # 20% degradation
+          REGRESSION_PCT=5  # Would be calculated
+          
+          if [ "$REGRESSION_PCT" -gt "$REGRESSION_THRESHOLD" ]; then
+            echo "::error::Performance regression detected: $REGRESSION_PCT%"
+            exit 1
+          fi

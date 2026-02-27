@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_025",
+  "questionId": "message_queue_001",
+  "question": "消息队列如何保证消息不丢失？",
+  "candidateAnswer": "消息不丢失需要三个阶段保证：\n\n1. 生产者：\n- 同步发送等待确认\n- 设置acks=all（Kafka）确保所有副本写入\n- 失败重试机制\n- 事务消息（先更新DB再发消息）\n\n2. Broker：\n- 消息持久化到磁盘\n- 主从复制（至少2个副本）\n- 刷盘策略（同步刷盘更安全但慢）\n- 集群模式避免单点故障\n\n3. 消费者：\n- 手动提交offset（先处理后提交）\n- 失败重试（指数退避）\n- 幂等性处理（防止重复消费）\n- 死信队列处理最终失败消息\n\n实际案例：\n订单系统使用Kafka，配置：\n- acks=all，min.insync.replicas=2\n- 消费者处理完业务逻辑后手动commit\n- Redis去重防止重复处理\n- 监控消息积压和延迟\n\n结果：\n- 消息零丢失（生产运行2年）\n- 牺牲了一些性能（延迟增加20ms）\n- 但保证了数据一致性\n\n权衡：\n可靠性 vs 性能\n根据业务重要性选择配置",
+  "evaluation": {
+    "score": 9.0,
+    "level": "Excellent",
+    "strengths": ["三阶段分析完整", "配置参数详细", "有实际案例", "权衡分析到位"],
+    "weaknesses": ["可以补充RabbitMQ等其他MQ的方案"],
+    "technicalAccuracy": 0.95,
+    "completeness": 0.90,
+    "clarity": 0.95,
+    "depth": 0.90,
+    "feedback": "非常优秀的回答！三阶段分析系统，实际案例有说服力，权衡分析体现了架构思维。建议补充：1) RabbitMQ的持久化方案（持久化队列+消息+手动ack）；2) 不同业务场景的配置建议；3) 监控指标和告警。整体展现了深厚的消息队列实战经验。"
+  },
+  "qualityMetrics": {"answerLength": 580, "technicalTerms": 17, "hasExample": true, "hasExplanation": true, "hasCodeExamples": false}
+}

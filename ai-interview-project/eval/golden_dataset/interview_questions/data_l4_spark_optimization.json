@@ -1,0 +1,40 @@
+{
+  "questionId": "data_l4_001",
+  "difficulty": "L4 - Senior",
+  "domain": "Data Engineering",
+  "techStack": ["Spark", "Performance"],
+  "question": "Spark任务运行很慢，有大量的shuffle操作，如何定位和优化？请提供至少3种优化手段。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasProblemAnalysis": true,
+      "hasMultipleSolutions": true,
+      "hasMonitoringMethod": true
+    },
+    "keyPoints": [
+      "Spark UI分析shuffle read/write",
+      "数据倾斜处理",
+      "分区数调优",
+      "广播变量",
+      "reduceByKey替代groupByKey",
+      "map侧聚合",
+      "资源配置优化"
+    ],
+    "qualityIndicators": {
+      "diagnosticSkills": "能用Spark UI定位问题",
+      "solutionDiversity": "提供多种优化手段",
+      "practicalExperience": "有实际调优经验"
+    },
+    "sampleGoodAnswer": "Spark任务慢且shuffle多，优化思路：\n\n**1. 定位问题**\n- 打开Spark UI，查看Stages页面\n- 重点关注shuffle read/write的数据量\n- 查看Task的执行时间分布，是否有数据倾斜\n\n**2. 减少shuffle数据量**\n- 提前过滤：在shuffle前尽早过滤不需要的数据\n- map侧预聚合：使用combiner，如reduceByKey而非groupByKey\n- 广播小表：小于几百MB的表用broadcast join，避免shuffle\n\n**3. 处理数据倾斜**\n- 加盐打散：给倾斜的key加随机前缀，分散到多个partition\n- 两阶段聚合：先局部聚合，再全局聚合\n- 单独处理：把倾斜的key单独处理\n\n**4. 分区优化**\n- 调整分区数：spark.sql.shuffle.partitions（默认200），根据数据量调整\n- 经验值：分区数 = 数据量(GB) * 2-4\n- 单个分区数据量控制在128MB左右\n\n**5. 资源配置**\n- 增加executor内存和cores\n- 调整spark.sql.shuffle.partitions\n- 开启动态分区：spark.sql.adaptive.enabled=true（Spark 3.0+）\n\n我们项目中遇到过join倾斜，用加盐+两阶段聚合将任务时间从2小时降到20分钟。",
+    "evaluationCriteria": {
+      "excellent": "5种以上方案、有定位方法、实际案例、参数配置",
+      "good": "3-4种方案、基本可行、有一定深度",
+      "average": "2种方案但细节不足",
+      "poor": "方案不可行或理解有误"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.97,
+    "difficulty": 0.80,
+    "discriminability": 0.90
+  }
+}

@@ -344,6 +344,12 @@ public class InterviewController {
             return ownershipCheck;
         }
 
+        // Check if interview is completed
+        Optional<Interview> interviewOpt = interviewRepository.findById(id);
+        if (interviewOpt.isPresent() && !"Completed".equals(interviewOpt.get().getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Interview must be completed to generate report"));
+        }
+
         try {
             Map<String, Object> report = reportService.generateReport(id);
             return ResponseEntity.ok(report);
@@ -402,6 +408,65 @@ public class InterviewController {
     }
     
     /**
+     * Download interview report in specific format (catch-all for invalid formats)
+     */
+    @GetMapping("/{id}/report/{format}")
+    public ResponseEntity<?> downloadInterviewReportWithFormat(
+            @PathVariable String id, 
+            @PathVariable String format,
+            HttpServletRequest request) {
+        // Only "pdf", "json", and "download" are valid
+        if (!"pdf".equals(format) && !"json".equals(format) && !"download".equals(format)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid format. Supported formats: pdf, json"));
+        }
+        
+        // This should not be reached if routes are configured correctly
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid format"));
+    }
+    
+    /**
+     * Update interview status specifically
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateInterviewStatus(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> request,
+            HttpServletRequest httpRequest) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        // Check if interview exists first
+        Optional<Interview> interviewOpt = interviewRepository.findById(id);
+        if (interviewOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        ResponseEntity<?> ownershipCheck = checkInterviewOwnership(id, userId);
+        if (ownershipCheck != null) {
+            return ownershipCheck;
+        }
+        
+        String status = (String) request.get("status");
+        if (status == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Status is required"));
+        }
+        
+        // Validate status
+        List<String> validStatuses = List.of("Pending", "In Progress", "Completed", "Cancelled");
+        if (!validStatuses.contains(status)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status. Must be one of: " + String.join(", ", validStatuses)));
+        }
+        
+        Interview interview = interviewOpt.get();
+        interview.setStatus(status);
+        Interview updated = interviewRepository.save(interview);
+        
+        return ResponseEntity.ok(Map.of("success", true, "interview", updated));
+    }
+    
+    /**
      * Update interview information
      */
     @PutMapping("/{id}")
@@ -430,7 +495,13 @@ public class InterviewController {
             interview.setTitle((String) updates.get("title"));
         }
         if (updates.containsKey("status")) {
-            interview.setStatus((String) updates.get("status"));
+            String status = (String) updates.get("status");
+            // Validate status
+            List<String> validStatuses = List.of("Pending", "In Progress", "Completed", "Cancelled");
+            if (!validStatuses.contains(status)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid status. Must be one of: " + String.join(", ", validStatuses)));
+            }
+            interview.setStatus(status);
         }
         if (updates.containsKey("language")) {
             interview.setLanguage((String) updates.get("language"));
@@ -456,14 +527,16 @@ public class InterviewController {
             return ResponseEntity.status(401).build();
         }
 
-        ResponseEntity<?> ownershipCheck = checkInterviewOwnership(id, userId);
-        if (ownershipCheck != null) {
-            return ownershipCheck;
-        }
-
+        // Check if interview exists first
         Optional<Interview> interviewOpt = interviewRepository.findById(id);
         if (interviewOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
+        }
+
+        // Then check ownership
+        ResponseEntity<?> ownershipCheck = checkInterviewOwnership(id, userId);
+        if (ownershipCheck != null) {
+            return ownershipCheck;
         }
         
         interviewRepository.delete(interviewOpt.get());

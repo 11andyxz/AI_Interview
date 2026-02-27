@@ -1,0 +1,39 @@
+{
+  "questionId": "database_l2_014",
+  "difficulty": "L2 - Junior",
+  "domain": "Database",
+  "techStack": ["SQL", "MySQL"],
+  "question": "什么是数据库索引？为什么索引可以加速查询？请说明索引的优缺点。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "索引是数据结构（B+树）",
+      "加速查询的原理",
+      "索引的类型（主键索引、唯一索引、普通索引）",
+      "优点：加快查询",
+      "缺点：占用空间、降低写入性能"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述索引的概念和作用",
+      "completeness": "涵盖原理、优缺点、适用场景",
+      "clarity": "解释清晰易懂",
+      "depth": "理解B+树结构和查询复杂度"
+    },
+    "sampleGoodAnswer": "索引是数据库中的数据结构，类似书的目录，用于快速定位数据。MySQL的InnoDB引擎使用B+树实现索引，叶子节点存储数据或主键。加速原理：没有索引时需要全表扫描O(n)，有索引后通过B+树查找O(log n)。\n\n优点：大幅提升查询速度，特别是WHERE、ORDER BY、JOIN操作。\n\n缺点：1) 占用额外存储空间；2) 插入、更新、删除时需要维护索引，降低写入性能；3) 索引过多会增加查询优化器的选择成本。\n\n适用场景：频繁查询的字段、WHERE条件字段、JOIN字段。不适合：经常变化的字段、区分度低的字段（如性别）。",
+    "evaluationCriteria": {
+      "excellent": "完整解释原理、优缺点、适用场景",
+      "good": "准确描述核心概念和作用",
+      "average": "知道索引能加速查询但不清楚原理",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.93,
+    "difficulty": 0.62,
+    "discriminability": 0.78
+  }
+}

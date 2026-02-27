@@ -1,0 +1,62 @@
+{
+  "candidateId": "golden_007",
+  "name": "赵建国",
+  "position": "Senior Architect",
+  "yearsOfExperience": 10,
+  "resume": "赵建国，10年软件开发及架构经验，专注分布式系统与微服务架构。\n\n工作经历：\n2021-2024 蚂蚁集团 - 高级技术专家（P8）\n- 负责支付宝核心支付系统架构设计，日交易量10亿+\n- 主导微服务架构升级，服务数量从200+扩展至500+\n- 设计分布式事务框架，支撑99.999%可用性\n- 带领30人技术团队，管理5个产品线\n- 建设技术中台，复用率提升60%\n\n2018-2021 美团 - 高级架构师\n- 负责美团外卖订单系统架构演进\n- 实施服务网格（Service Mesh）改造\n- 性能优化，P99延迟从500ms降至50ms\n\n2014-2018 百度 - 高级研发工程师\n- 搜索广告系统开发\n- 分布式缓存系统设计\n\n技术栈：\n- 架构：微服务、DDD、事件驱动、CQRS\n- 后端：Java, Spring Cloud, Dubbo, gRPC\n- 中间件：Kafka, RocketMQ, Redis, ES\n- 数据库：MySQL（分库分表）, TiDB, MongoDB\n- 云原生：Kubernetes, Docker, Istio\n- 监控：Prometheus, Grafana, SkyWalking\n- 大数据：Flink, Spark\n\n教育背景：\n清华大学 计算机科学与技术 硕士 2012-2014\n北京大学 软件工程 本科 2008-2012\n\n专利与论文：\n- 发明专利3项（分布式事务相关）\n- InfoQ签约作者，发表技术文章20+篇\n- QCon、ArchSummit演讲嘉宾\n\n开源贡献：\n- Apache Dubbo Committer\n- Spring Cloud Alibaba Contributor",
+  "techStack": ["Java", "Microservices", "Architecture", "Distributed Systems"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "赵建国",
+      "yearsOfExperience": 10,
+      "currentPosition": "高级技术专家（P8）",
+      "companies": ["蚂蚁集团", "美团", "百度"]
+    },
+    "skills": {
+      "architecture": ["微服务", "DDD", "事件驱动", "CQRS", "Service Mesh"],
+      "backend": ["Java", "Spring Cloud", "Dubbo", "gRPC"],
+      "middleware": ["Kafka", "RocketMQ", "Redis", "Elasticsearch"],
+      "database": ["MySQL", "TiDB", "MongoDB"],
+      "cloudNative": ["Kubernetes", "Docker", "Istio"],
+      "monitoring": ["Prometheus", "Grafana", "SkyWalking"],
+      "bigData": ["Flink", "Spark"]
+    },
+    "experience": {
+      "totalYears": 10,
+      "highlights": [
+        "支付宝核心支付系统架构（日交易10亿+）",
+        "微服务架构升级（200+ -> 500+服务）",
+        "分布式事务框架设计（99.999%可用性）",
+        "团队管理（30人团队，5条产品线）",
+        "技术中台建设（复用率60%）",
+        "性能优化（P99延迟500ms -> 50ms）"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "顶级大厂背景（蚂蚁P8、美团、百度）",
+        "超大规模系统架构经验（日交易10亿+）",
+        "深厚的分布式系统专业知识",
+        "丰富的团队管理经验（30人）",
+        "技术影响力（专利、开源、演讲）",
+        "名校背景（清华硕士、北大本科）",
+        "开源贡献（Apache Dubbo Committer）"
+      ],
+      "matchLevel": "顶级匹配",
+      "recommendedLevel": "Staff/Principal/Director"
+    },
+    "interviewQuestions": [
+      "请详细描述支付宝核心支付系统的架构设计，如何保证日交易10亿+的高可用和一致性？",
+      "你设计的分布式事务框架是基于什么理论？如何做到99.999%的可用性？",
+      "微服务从200+扩展到500+，如何保证架构的可维护性和不过度拆分？",
+      "技术中台建设的核心理念是什么？如何衡量复用率提升60%？",
+      "作为高级技术专家，你如何平衡技术深度和团队管理？如何做技术决策？"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.99,
+    "relevance": 1.0,
+    "completeness": 1.0
+  }
+}

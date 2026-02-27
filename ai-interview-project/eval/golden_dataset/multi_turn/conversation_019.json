@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_019",
+  "scenario": "Mid-level React - Component Design",
+  "difficulty": "L3 - Mid",
+  "domain": "Frontend",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "React的useState和useEffect有什么区别？", "candidate": "useState用来管理组件状态，返回状态值和更新函数。useEffect用来处理副作用，比如数据获取、订阅、DOM操作。useEffect在组件渲染后执行。", "evaluation": {"score": 6.5, "strengths": ["基本概念正确"], "concerns": ["不够深入", "依赖数组未提及"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "useEffect的依赖数组有什么作用？", "candidate": "依赖数组决定useEffect何时执行：\n\n1. 没有依赖数组：\n```jsx\nuseEffect(() => { console.log('每次渲染都执行'); });\n```\n每次渲染后都执行，性能差。\n\n2. 空数组[]：\n```jsx\nuseEffect(() => { console.log('只执行一次'); }, []);\n```\n只在组件挂载时执行一次，相当于componentDidMount。\n\n3. 有依赖：\n```jsx\nuseEffect(() => { \n  fetchData(userId); \n}, [userId]);\n```\n当userId变化时才执行。\n\n常见错误：\n- 忘记添加依赖，导致闭包陷阱，拿到旧的state\n- 依赖频繁变化，导致死循环\n\n解决：\n- 用ESLint插件eslint-plugin-react-hooks检查依赖\n- 用useCallback、useMemo优化依赖", "evaluation": {"score": 8.5, "strengths": ["三种情况清晰", "常见错误", "解决方案"], "depth": "深入理解Hooks", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "能写一个自定义Hook来封装数据获取逻辑吗？", "candidate": "```jsx\nimport { useState, useEffect } from 'react';\n\nfunction useFetch(url) {\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState(null);\n\n  useEffect(() => {\n    let cancelled = false;  // 防止内存泄漏\n    \n    const fetchData = async () => {\n      try {\n        setLoading(true);\n        const response = await fetch(url);\n        if (!response.ok) throw new Error('请求失败');\n        const result = await response.json();\n        \n        if (!cancelled) {  // 组件未卸载才更新\n          setData(result);\n          setError(null);\n        }\n      } catch (err) {\n        if (!cancelled) {\n          setError(err.message);\n          setData(null);\n        }\n      } finally {\n        if (!cancelled) {\n          setLoading(false);\n        }\n      }\n    };\n\n    fetchData();\n    \n    return () => {\n      cancelled = true;  // 清理函数\n    };\n  }, [url]);  // url变化时重新请求\n\n  return { data, loading, error };\n}\n\n// 使用：\nfunction UserProfile({ userId }) {\n  const { data: user, loading, error } = useFetch(`/api/users/${userId}`);\n  \n  if (loading) return <div>加载中...</div>;\n  if (error) return <div>错误: {error}</div>;\n  return <div>{user.name}</div>;\n}\n```\n\n关键点：\n1. cancelled标志防止组件卸载后setState导致内存泄漏\n2. 清理函数在组件卸载或url变化时调用\n3. loading、error、data三状态管理\n4. 依赖数组[url]，url变化重新请求\n5. 解构重命名：data: user\n\n进一步优化：\n- 添加缓存，相同url不重复请求\n- 支持POST等其他方法\n- 添加重试机制\n- 使用SWR或React Query库", "evaluation": {"score": 9.5, "strengths": ["代码完整正确", "内存泄漏处理", "错误处理完善", "优化建议"], "technicalDepth": "优秀", "practicalExperience": "有React开发经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid to Senior (L3-L4)",
+    "strengths": ["深入理解React Hooks", "代码质量高", "边界情况考虑周到", "工程实践好"],
+    "assessmentScore": 8.2,
+    "recommendation": "推荐，React能力强，适合前端核心开发",
+    "nextSteps": "可以考察性能优化或状态管理"
+  },
+  "qualityMetrics": {"conversationFlow": 0.92, "technicalDepth": 0.90, "coherence": 0.93, "progressiveness": 0.88}
+}

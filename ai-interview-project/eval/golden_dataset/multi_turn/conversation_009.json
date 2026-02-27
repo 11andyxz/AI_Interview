@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_009",
+  "scenario": "Junior Java - Growth Potential",
+  "difficulty": "L2 - Junior",
+  "domain": "Java",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "Java中接口和抽象类有什么区别？", "candidate": "接口用interface，只能有抽象方法，类可以实现多个接口。抽象类用abstract，可以有抽象方法和普通方法，只能继承一个抽象类。", "evaluation": {"score": 5.0, "strengths": ["基本区别正确"], "concerns": ["Java 8+接口可以有默认方法未提及", "使用场景不清楚"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "那什么时候用接口，什么时候用抽象类呢？", "candidate": "嗯...如果多个类有共同行为但实现不同，用接口定义规范。如果有共同代码可以复用，用抽象类。比如动物类是抽象类，有共同的eat方法实现；飞行接口是interface，鸟和飞机都能飞但实现不同。", "evaluation": {"score": 7.0, "strengths": ["举例说明", "理解多态概念"], "depth": "有一定理解", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "很好的例子。那Java 8之后接口有什么新特性吗？", "candidate": "我知道！接口可以有default方法和static方法了。default方法有默认实现，实现类可以不重写。这样可以给接口添加新方法，不会影响已有实现类。比如List接口的forEach方法就是default方法。", "evaluation": {"score": 8.0, "strengths": ["了解新特性", "理解向后兼容问题", "举例恰当"], "technicalDepth": "不错，主动学习", "practicalExperience": "有一定了解", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Junior (L2)",
+    "strengths": ["基础扎实", "主动学习新特性", "能举例说明", "理解面向对象概念"],
+    "assessmentScore": 6.7,
+    "recommendation": "推荐，有潜力，持续学习",
+    "nextSteps": "可以考察集合框架或多线程基础"
+  },
+  "qualityMetrics": {"conversationFlow": 0.85, "technicalDepth": 0.72, "coherence": 0.88, "progressiveness": 0.82}
+}

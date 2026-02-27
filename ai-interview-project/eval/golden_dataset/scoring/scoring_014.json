@@ -1,0 +1,24 @@
+{
+  "scoringId": "scoring_014",
+  "questionId": "kubernetes_deploy_001",
+  "question": "如何在Kubernetes上实现应用的滚动更新和回滚？",
+  "candidateAnswer": "Kubernetes的Deployment支持滚动更新：\n\n更新策略：\nstrategy:\n  type: RollingUpdate\n  rollingUpdate:\n    maxSurge: 1       # 最多超出期望副本数\n    maxUnavailable: 0 # 最多不可用副本数\n\n执行更新：\nkubectl set image deployment/myapp myapp=myapp:v2\n或修改yaml后：kubectl apply -f deployment.yaml\n\n过程：\n1. 创建新版本Pod\n2. 等待新Pod就绪（readinessProbe）\n3. 逐步终止旧Pod\n4. 重复直到所有Pod更新完成\n\n回滚操作：\n# 查看历史\nkubectl rollout history deployment/myapp\n\n# 回滚到上一版本\nkubectl rollout undo deployment/myapp\n\n# 回滚到指定版本\nkubectl rollout undo deployment/myapp --to-revision=2\n\n# 暂停/恢复更新\nkubectl rollout pause deployment/myapp\nkubectl rollout resume deployment/myapp\n\n最佳实践：\n1. 设置资源限制避免OOM\n2. 配置健康检查（livenessProbe + readinessProbe）\n3. 设置合理的terminationGracePeriodSeconds\n4. 使用HPA自动扩缩容\n5. 保留历史版本（revisionHistoryLimit: 10）\n\n监控：\nkubectl rollout status deployment/myapp  # 实时状态\nkubectl get pods -w  # 观察Pod变化",
+  "evaluation": {
+    "score": 8.0,
+    "level": "Good",
+    "strengths": ["配置示例完整", "命令详细", "最佳实践总结", "监控方法提供"],
+    "weaknesses": ["缺少灰度发布说明", "未提及蓝绿部署", "故障场景处理不足"],
+    "technicalAccuracy": 0.90,
+    "completeness": 0.80,
+    "clarity": 0.90,
+    "depth": 0.75,
+    "feedback": "回答很好！滚动更新和回滚操作说明详细，命令和配置都很实用。建议补充：1) 灰度发布策略（Canary）；2) 蓝绿部署对比；3) 更新失败的自动回滚（ProgressDeadlineSeconds）；4) 使用Helm管理版本；5) 实际案例（如生产环境更新流程）。"
+  },
+  "qualityMetrics": {
+    "answerLength": 580,
+    "technicalTerms": 15,
+    "hasExample": true,
+    "hasExplanation": true,
+    "hasCodeExamples": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_004",
+  "scenario": "Mid-level Backend - Technical Deep Dive",
+  "difficulty": "L3 - Mid",
+  "domain": "Backend Development",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "你有使用过Redis吗？能介绍一下Redis的数据结构吗？", "candidate": "用过。Redis有String、Hash、List、Set、Sorted Set五种基本数据结构。String存简单值，Hash存对象，List做队列，Set做去重，Sorted Set做排行榜。", "evaluation": {"score": 5.5, "strengths": ["五种结构都提到"], "concerns": ["过于简单", "没有使用场景细节"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "不错。那你在项目中具体怎么用Redis的？能说说遇到的问题吗？", "candidate": "主要用来做缓存，减轻数据库压力。把热点数据放Redis，设置过期时间。遇到过缓存穿透问题，查询不存在的数据导致请求打到数据库。我用布隆过滤器解决，先判断数据是否存在，不存在直接返回。还用Redis做分布式锁，保证订单不重复扣库存。", "evaluation": {"score": 7.5, "strengths": ["有实际应用", "遇到问题并解决", "两个场景都合理"], "depth": "有一定深度，理解缓存问题", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "分布式锁这块能详细说说吗？如何保证锁的可靠性？", "candidate": "用SETNX命令加锁，SET key value EX 10 NX，设置过期时间防止死锁。释放锁时要判断是否是自己的锁，避免误删。用Lua脚本保证原子性。但单节点Redis主从切换时可能丢锁，可以用Redlock算法，在多个独立Redis实例上加锁，超过半数成功才算加锁成功。但Redlock有争议，实际项目中用Redisson库，它实现了Redlock和看门狗机制自动续期。", "evaluation": {"score": 8.5, "strengths": ["方案完整", "知道Redlock", "了解实际库", "提到原子性"], "technicalDepth": "优秀，理解分布式锁细节", "practicalExperience": "有实际使用经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Mid (L3)",
+    "strengths": ["Redis实际应用经验", "遇到问题能解决", "了解分布式锁细节", "知道业界方案"],
+    "assessmentScore": 7.5,
+    "recommendation": "推荐，具备Mid级别技能",
+    "nextSteps": "可以继续考察系统设计能力"
+  },
+  "qualityMetrics": {"conversationFlow": 0.88, "technicalDepth": 0.85, "coherence": 0.90, "progressiveness": 0.85}
+}

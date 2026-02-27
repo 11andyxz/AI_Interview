@@ -1,0 +1,14 @@
+{
+  "questionId": "database_l4_054",
+  "difficulty": "L4 - Senior",
+  "domain": "Database",
+  "techStack": ["数据库", "分库分表"],
+  "question": "在亿级数据量的场景下，如何进行数据库分库分表？请说明分片策略、跨分片查询和数据迁移方案。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["分片策略", "路由算法", "跨分片join", "分布式事务", "数据迁移"],
+    "sampleGoodAnswer": "分库分表方案：\n\n1. 分片策略：\n- 垂直分库：按业务模块（订单库、用户库）\n- 水平分库：同一表按规则分散到多个库\n- 分表：库内分表降低单表数据量\n\n2. 路由算法：\n- Hash取模：user_id % 8 → 分到8个库\n- Range分片：按时间范围（2024年数据到DB1）\n- 地理位置：按地区分片\n- 一致性哈希：便于扩容\n\n选择：\n- Hash取模：数据均匀但扩容难\n- Range：扩容简单但可能热点\n- 推荐：Hash取模 + 虚拟节点\n\n3. 分片键选择：\n原则：高频查询字段、数据均匀、业务相关性\n反例：时间戳（新数据热点）、状态（数据倾斜）\n推荐：user_id、order_id等\n\n4. 跨分片问题：\n\na) 跨分片查询：\n- 分片键查询：直接路由\n- 非分片键：广播到所有分片，应用层聚合\n- 优化：冗余常用字段、ES搜索、CQRS\n\nb) 跨分片JOIN：\n- 避免：业务层关联\n- 数据冗余：宽表设计\n- 分两次查询：先查主表，再查关联表\n\nc) 跨分片事务：\n- 避免设计需要跨分片事务的场景\n- 最终一致性：消息队列 + 补偿\n- 分布式事务：Seata（性能差）\n\nd) 全局ID：\n- Snowflake算法\n- 数据库号段\n- Redis INCR\n\n5. 数据迁移：\n\n扩容方案（8库 → 16库）：\n- 双写方案：\n  1) 新旧库同时写\n  2) 迁移历史数据（停机或在线）\n  3) 切换读流量到新库\n  4) 下线旧库\n\n- 一致性哈希：\n  增加节点时只需迁移部分数据\n\n在线迁移：\n1. 双写新旧库\n2. 后台任务迁移历史数据\n3. 数据校验（对比新旧库）\n4. 灰度切换读流量\n5. 全量切换\n\n6. 中间件选型：\n- Sharding-JDBC：客户端分片，轻量\n- MyCat：代理分片，对应用透明\n- TDDL（阿里）：成熟方案\n\n实践经验：\n- 先优化再分库分表\n- 分片数建议2的幂次（便于扩容）\n- 预留扩展空间（64库实际用32）\n- 监控各分片数据分布\n- 定期rebalance热点数据\n\n典型场景（电商订单）：\n- 分片键：user_id（用户查询自己订单）\n- 8个库，每库32表，共256分片\n- 支持10亿订单\n- 扩容：增加库数，数据迁移\n- 非用户维度查询：ES + MySQL",
+    "evaluationCriteria": {"excellent": "系统方案、多种策略、实践经验、迁移方案", "good": "核心思路清晰", "average": "基本概念但不深入", "poor": "设计有明显问题"}
+  },
+  "qualityMetrics": {"relevance": 0.98, "difficulty": 0.91, "discriminability": 0.95}
+}

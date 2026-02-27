@@ -1,0 +1,24 @@
+{
+  "scoringId": "scoring_011",
+  "questionId": "database_index_001",
+  "question": "什么情况下MySQL索引会失效？",
+  "candidateAnswer": "索引失效的情况包括：\n1. 使用函数或表达式：WHERE YEAR(date) = 2024会导致索引失效，应该改为范围查询\n2. 类型转换：字符串字段传入数字会隐式转换\n3. 模糊查询以%开头：LIKE '%keyword'无法使用索引\n4. OR条件中有未建索引的列\n5. 违反最左前缀原则：联合索引(a,b,c)查询b或c\n6. 使用NOT、!=、<>\n7. IS NULL在某些情况下\n8. 查询结果集过大时优化器可能选择全表扫描\n\n解决方案：\n- 避免在索引列上使用函数\n- 确保类型匹配\n- 模糊查询改为keyword%\n- OR改为UNION或都建索引\n- 遵循最左前缀原则\n- 使用EXPLAIN分析执行计划",
+  "evaluation": {
+    "score": 7.5,
+    "level": "Good",
+    "strengths": ["列举全面", "每种情况都有说明", "提供了解决方案", "结构清晰"],
+    "weaknesses": ["缺少具体SQL示例", "没有深入解释原理", "EXPLAIN分析未详细说明"],
+    "technicalAccuracy": 0.90,
+    "completeness": 0.80,
+    "clarity": 0.85,
+    "depth": 0.70,
+    "feedback": "回答很不错！索引失效场景列举全面，解决方案实用。建议补充：1) 每种情况的具体SQL示例；2) 解释为什么会失效（如函数导致无法使用B+树）；3) EXPLAIN输出各字段含义（type、key、rows）；4) 实际优化案例（优化前后对比）。"
+  },
+  "qualityMetrics": {
+    "answerLength": 320,
+    "technicalTerms": 12,
+    "hasExample": false,
+    "hasExplanation": true,
+    "hasCodeExamples": false
+  }
+}

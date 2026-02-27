@@ -1,0 +1,39 @@
+{
+  "questionId": "devops_l2_015",
+  "difficulty": "L2 - Junior",
+  "domain": "DevOps",
+  "techStack": ["Docker", "容器化"],
+  "question": "请解释Docker容器和虚拟机的区别，以及Docker的主要优势是什么？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "容器vs虚拟机架构差异",
+      "容器共享宿主机内核",
+      "启动速度、资源占用对比",
+      "Docker的优势（轻量、快速、一致性）",
+      "应用场景"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述容器和虚拟机的差异",
+      "completeness": "涵盖架构、性能、优势",
+      "clarity": "解释清晰，有对比说明",
+      "depth": "理解底层技术差异"
+    },
+    "sampleGoodAnswer": "Docker容器和虚拟机的核心区别在于虚拟化层级：\n\n虚拟机：在硬件层虚拟化，每个VM运行完整的操作系统，通过Hypervisor管理。启动慢（分钟级）、资源占用大（GB级内存）。\n\nDocker容器：在操作系统层虚拟化，共享宿主机内核，只包含应用和依赖。启动快（秒级）、资源占用小（MB级）。\n\nDocker优势：\n1. 轻量高效：一台机器可运行上百个容器\n2. 快速部署：秒级启动，适合微服务\n3. 环境一致：开发、测试、生产环境完全相同，避免'在我机器上能跑'\n4. 易于扩展：配合K8s可实现自动伸缩\n5. 资源隔离：使用Namespace和Cgroups\n\n应用场景：微服务架构、CI/CD、开发环境标准化。",
+    "evaluationCriteria": {
+      "excellent": "完整对比差异、解释优势、说明应用场景",
+      "good": "准确描述主要区别和优势",
+      "average": "知道容器更轻量但不清楚原理",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.95,
+    "difficulty": 0.64,
+    "discriminability": 0.81
+  }
+}

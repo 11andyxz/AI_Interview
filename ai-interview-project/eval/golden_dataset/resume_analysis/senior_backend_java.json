@@ -1,0 +1,54 @@
+{
+  "candidateId": "golden_001",
+  "name": "张伟",
+  "position": "Senior Backend Engineer",
+  "yearsOfExperience": 5,
+  "resume": "张伟，5年Java后端开发经验。精通Spring Boot、微服务架构。\n\n工作经历：\n2019-2024 阿里巴巴 - 高级Java工程师\n- 负责电商平台订单系统的微服务架构设计与实现\n- 使用Spring Cloud构建分布式系统，处理日均500万订单\n- 优化系统性能，将响应时间从2s降低到200ms\n- 带领5人团队完成核心模块开发\n\n2017-2019 字节跳动 - Java开发工程师\n- 开发推荐系统后端服务\n- 使用Redis、Kafka处理高并发场景\n\n技术栈：\n- 语言：Java, Python, SQL\n- 框架：Spring Boot, Spring Cloud, MyBatis\n- 数据库：MySQL, Redis, MongoDB\n- 消息队列：Kafka, RabbitMQ\n- 工具：Docker, Kubernetes, Jenkins\n\n教育背景：\n浙江大学 计算机科学与技术 本科 2013-2017",
+  "techStack": ["Java", "Spring Boot", "微服务", "MySQL", "Redis", "Kafka"],
+  "expectedOutput": {
+    "candidateInfo": {
+      "name": "张伟",
+      "yearsOfExperience": 5,
+      "currentPosition": "高级Java工程师",
+      "companies": ["阿里巴巴", "字节跳动"]
+    },
+    "skills": {
+      "programming": ["Java", "Python", "SQL"],
+      "frameworks": ["Spring Boot", "Spring Cloud", "MyBatis"],
+      "databases": ["MySQL", "Redis", "MongoDB"],
+      "tools": ["Docker", "Kubernetes", "Jenkins", "Kafka", "RabbitMQ"]
+    },
+    "experience": {
+      "totalYears": 5,
+      "highlights": [
+        "微服务架构设计与实现",
+        "日均500万订单的高并发系统",
+        "性能优化：响应时间从2s降至200ms",
+        "团队管理：带领5人团队"
+      ]
+    },
+    "assessment": {
+      "strengths": [
+        "丰富的大厂经验（阿里、字节）",
+        "扎实的微服务架构能力",
+        "性能优化经验丰富",
+        "有团队管理经验"
+      ],
+      "matchLevel": "高度匹配",
+      "recommendedLevel": "Senior"
+    },
+    "interviewQuestions": [
+      "请描述你在阿里巴巴设计的订单系统微服务架构，如何处理服务间通信和数据一致性？",
+      "你如何将系统响应时间从2秒优化到200毫秒？请详细说明优化思路和具体措施。",
+      "在日均500万订单的高并发场景下，你是如何设计和优化数据库架构的？",
+      "请分享你使用Kafka处理消息队列的经验，如何保证消息的可靠性？",
+      "作为团队负责人，你如何进行技术决策和团队协作？"
+    ]
+  },
+  "qualityMetrics": {
+    "structureValidity": 1.0,
+    "contentQuality": 0.95,
+    "relevance": 0.98,
+    "completeness": 1.0
+  }
+}

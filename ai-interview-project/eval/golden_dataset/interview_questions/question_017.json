@@ -1,0 +1,39 @@
+{
+  "questionId": "algorithm_l2_017",
+  "difficulty": "L2 - Junior",
+  "domain": "Algorithms",
+  "techStack": ["算法", "数据结构"],
+  "question": "请解释快速排序（QuickSort）的原理，并分析其时间复杂度。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "分治算法",
+      "选择pivot（枢轴）",
+      "partition过程",
+      "递归排序",
+      "时间复杂度分析（平均O(nlogn)，最坏O(n²)）"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述快排原理和复杂度",
+      "completeness": "涵盖核心步骤和复杂度分析",
+      "clarity": "解释清晰，逻辑连贯",
+      "depth": "理解分治思想和复杂度推导"
+    },
+    "sampleGoodAnswer": "快速排序是分治算法，通过递归将数组排序：\n\n1. 选择pivot（通常是第一个或最后一个元素）\n2. Partition：将小于pivot的元素放左边，大于pivot的放右边\n3. 递归对左右两部分排序\n\n过程示例：[3,6,1,8,2,4] pivot=3\n→ [1,2] 3 [6,8,4]\n→ 递归排序左右部分\n\n时间复杂度：\n- 平均情况：O(n log n)，每次partition O(n)，递归深度log n\n- 最坏情况：O(n²)，当数组已排序且pivot选择不当，退化为冒泡排序\n- 空间复杂度：O(log n)递归栈\n\n优化：随机选择pivot或三数取中法，避免最坏情况。快排是原地排序，不需要额外数组，但不稳定（相同元素可能改变相对位置）。",
+    "evaluationCriteria": {
+      "excellent": "完整解释原理、复杂度分析、优化方法",
+      "good": "准确描述核心步骤和时间复杂度",
+      "average": "知道基本流程但复杂度分析不清",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.91,
+    "difficulty": 0.66,
+    "discriminability": 0.79
+  }
+}

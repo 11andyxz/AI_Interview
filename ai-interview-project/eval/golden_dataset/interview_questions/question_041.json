@@ -1,0 +1,14 @@
+{
+  "questionId": "security_l3_041",
+  "difficulty": "L3 - Mid",
+  "domain": "Security",
+  "techStack": ["JWT", "认证授权"],
+  "question": "请解释JWT（JSON Web Token）的工作原理，以及如何保证其安全性？",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["JWT结构", "签名验证", "优缺点", "安全措施", "vs Session"],
+    "sampleGoodAnswer": "JWT是无状态的身份认证方案。\n\n结构（header.payload.signature）：\n1. Header：算法和类型 {\"alg\":\"HS256\",\"typ\":\"JWT\"}\n2. Payload：声明信息 {\"sub\":\"1234\",\"name\":\"John\",\"exp\":1625097600}\n3. Signature：HMACSHA256(base64(header)+\".\"+base64(payload), secret)\n\n工作流程：\n1. 用户登录，服务器验证后生成JWT\n2. 客户端存储JWT（localStorage或Cookie）\n3. 后续请求携带JWT（Authorization: Bearer <token>）\n4. 服务器验证签名和过期时间\n\n优点：\n- 无状态，可扩展（不需要服务器存储session）\n- 跨域友好\n- 适合分布式系统\n\n缺点：\n- 无法撤销（只能等过期）\n- Token体积大\n- 信息泄露风险（payload可解码）\n\n安全措施：\n1. 使用HTTPS传输\n2. 设置合理的过期时间（exp）\n3. 敏感信息不放payload\n4. 使用强签名算法（RS256而非HS256）\n5. Refresh Token机制\n6. 黑名单应对撤销需求\n\nvs Session：\nJWT：无状态，适合微服务\nSession：有状态，易撤销，适合单体应用",
+    "evaluationCriteria": {"excellent": "完整解释结构、流程、安全措施、对比", "good": "准确描述核心概念和用法", "average": "知道JWT但安全性不清", "poor": "理解有误"}
+  },
+  "qualityMetrics": {"relevance": 0.96, "difficulty": 0.78, "discriminability": 0.86}
+}

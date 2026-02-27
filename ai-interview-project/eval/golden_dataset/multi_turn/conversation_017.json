@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_017",
+  "scenario": "Junior Python - Concept Clarification",
+  "difficulty": "L2 - Junior",
+  "domain": "Python",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "Python的列表和元组有什么区别？", "candidate": "列表（list）用方括号[]，可以修改。元组（tuple）用圆括号()，不可以修改。", "evaluation": {"score": 5.0, "strengths": ["基本区别正确"], "concerns": ["太简单，没有深入"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "为什么要用元组呢？既然不能修改，为什么不都用列表？", "candidate": "嗯...元组不能修改是它的优点，保证数据不被意外改变，更安全。还有元组比列表占用内存少，速度快一点。可以作为字典的key，列表不行。", "evaluation": {"score": 7.5, "strengths": ["理解不可变的优势", "性能考虑", "字典key"], "depth": "有一定理解", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "能举个例子说明什么时候用元组吗？", "candidate": "比如函数返回多个值，用元组比较好：\n```python\ndef get_user_info():\n    return (\"Alice\", 25, \"alice@example.com\")  # 返回元组\n\nname, age, email = get_user_info()  # 解包\n```\n这样返回的数据不会被修改。\n\n还有坐标点：\n```python\npoint = (3, 5)  # 坐标不应该改变\nlocations = {point: \"home\"}  # 可以作为字典key\n```\n\n如果用列表就会报错：\n```python\npoint = [3, 5]\nlocations = {point: \"home\"}  # TypeError: unhashable type: 'list'\n```", "evaluation": {"score": 8.5, "strengths": ["举例恰当", "代码清晰", "理解应用场景", "知道hashable概念"], "technicalDepth": "不错", "practicalExperience": "有编程经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Junior (L2)",
+    "strengths": ["基础扎实", "能举例说明", "理解不可变数据类型", "代码清晰"],
+    "assessmentScore": 7.0,
+    "recommendation": "推荐，Python基础好，继续加强",
+    "nextSteps": "可以考察装饰器或生成器"
+  },
+  "qualityMetrics": {"conversationFlow": 0.85, "technicalDepth": 0.75, "coherence": 0.88, "progressiveness": 0.82}
+}

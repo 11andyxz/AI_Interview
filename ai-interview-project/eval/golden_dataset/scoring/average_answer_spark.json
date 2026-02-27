@@ -1,0 +1,35 @@
+{
+  "scoringId": "scoring_006",
+  "questionId": "data_l4_001",
+  "question": "Spark任务运行很慢，有大量的shuffle操作，如何定位和优化？",
+  "candidateAnswer": "Spark慢的话，主要是调整参数。\n\n首先增加executor的数量和内存，比如把executor-memory从2G调到8G，executor-cores从2调到4。然后增加分区数，默认的200太少了，可以调到1000或2000。\n\n另外可以开启一些优化参数，比如压缩、序列化等。还可以考虑升级Spark版本，新版本性能更好。\n\n如果还是慢，可能是集群资源不够，需要申请更多机器。",
+  "evaluation": {
+    "score": 4.5,
+    "level": "Average",
+    "strengths": [
+      "提到了增加资源",
+      "知道调整分区数",
+      "提到了一些优化方向"
+    ],
+    "improvements": [
+      "没有提到如何定位问题（Spark UI）",
+      "缺少针对shuffle的具体优化手段",
+      "没有提到数据倾斜处理",
+      "缺少reduceByKey、broadcast join等具体方法",
+      "调参建议不够合理（盲目增加可能适得其反）",
+      "没有实际案例或数据支撑",
+      "不符合Senior级别的技术深度"
+    ],
+    "technicalAccuracy": 0.50,
+    "completeness": 0.40,
+    "clarity": 0.65,
+    "depth": 0.30,
+    "feedback": "你的回答方向基本正确，但缺少关键的技术深度。对于Senior级别的数据工程师，需要：\n\n**定位能力：**\n- 使用Spark UI分析瓶颈（查看shuffle read/write、task时间分布）\n- 识别数据倾斜（某些task耗时远超其他）\n\n**针对性优化：**\n- Shuffle优化：使用reduceByKey替代groupByKey（map侧预聚合）\n- 小表broadcast：避免大表join产生的shuffle\n- 数据倾斜：加盐、两阶段聚合\n\n**合理调参：**\n- 分区数根据数据量计算，不是越大越好\n- 单分区128MB左右较合适\n- 考虑Spark 3.0的自适应执行（AQE）\n\n建议深入学习Spark调优原理，理解shuffle、分区、序列化等底层机制，并在实际项目中积累经验。单纯调参往往效果有限。"
+  },
+  "qualityMetrics": {
+    "answerLength": 156,
+    "technicalTerms": 5,
+    "hasExample": false,
+    "hasExplanation": false
+  }
+}

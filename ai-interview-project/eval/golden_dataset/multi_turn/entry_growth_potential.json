@@ -1,0 +1,82 @@
+{
+  "conversationId": "multi_turn_003",
+  "scenario": "Entry-level Position - Growth Potential Assessment",
+  "difficulty": "L2 - Entry-level",
+  "domain": "Backend Development",
+  "turns": [
+    {
+      "turnNumber": 1,
+      "interviewer": "你好，看到你是应届毕业生，有6个月实习经验。能介绍一下你实习期间主要做了什么工作吗？",
+      "candidate": "你好。我在实习期间主要负责公司OA系统的用户管理模块开发。具体工作包括：\n1. 用户的增删改查接口开发\n2. 角色权限管理功能\n3. 用户登录、注册接口\n4. 数据库表设计参与\n\n技术栈主要是Spring Boot + MyBatis-Plus + MySQL。我独立完成了用户CRUD的所有接口，从需求分析到编码到测试。虽然功能不复杂，但学到了完整的开发流程。",
+      "evaluation": {
+        "score": 7.0,
+        "strengths": ["表达清晰", "工作内容具体", "提到了完整流程"],
+        "concerns": ["项目复杂度较低", "缺少亮点"],
+        "followUpNeeded": true
+      }
+    },
+    {
+      "turnNumber": 2,
+      "interviewer": "不错。在开发过程中，你遇到过什么技术难题吗？是如何解决的？",
+      "candidate": "遇到过几个问题：\n\n1. **密码加密存储**：最开始我直接明文存储密码，被导师指出安全问题。后来学习了BCrypt加密，使用Spring Security的BCryptPasswordEncoder对密码进行加密存储。\n\n2. **SQL注入风险**：有次代码review时，导师说我的某个查询可能有SQL注入风险。因为我用了字符串拼接SQL。后来改用MyBatis的参数化查询（#{} 而不是 ${}），就解决了。\n\n3. **分页查询**：开始不知道怎么做分页，查了很多资料，最后用了MyBatis-Plus的分页插件，配置PaginationInterceptor就搞定了。\n\n这些问题让我意识到，写代码不只是功能实现，还要考虑安全性、性能等方面。现在我写代码会更注意这些。",
+      "evaluation": {
+        "score": 8.0,
+        "strengths": [
+          "主动发现和解决问题",
+          "提到了3个具体案例",
+          "有安全意识（密码加密、SQL注入）",
+          "能够总结经验教训",
+          "学习能力强"
+        ],
+        "growth": "从错误中学习，进步明显",
+        "followUpNeeded": true
+      }
+    },
+    {
+      "turnNumber": 3,
+      "interviewer": "很好，你的学习能力不错。那你未来1-2年的职业规划是什么？想往哪个方向发展？",
+      "candidate": "我的规划是这样的：\n\n**短期（6-12个月）：**\n1. 打好基础：深入学习Java核心知识，包括多线程、JVM、集合框架等\n2. 掌握常用框架：Spring全家桶、MyBatis深入理解原理\n3. 学习数据库优化：索引、SQL调优\n4. 提升编码规范和代码质量\n\n**中期（1-2年）：**\n1. 学习分布式系统：Redis、消息队列、分库分表\n2. 掌握微服务架构：Spring Cloud\n3. 提升系统设计能力\n4. 参与更复杂的项目，承担核心模块开发\n\n**方向选择：**\n我想往后端架构方向发展。因为我对系统设计、性能优化比较感兴趣，实习时看到架构师设计系统很厉害，我也想成为那样的人。\n\n**行动计划：**\n- 每天看技术书籍/文章\n- 写技术博客总结\n- 参与开源项目\n- 多向有经验的同事请教\n\n我知道自己现在基础还不够扎实，但我愿意努力学习，快速成长。",
+      "evaluation": {
+        "score": 8.5,
+        "strengths": [
+          "规划清晰且务实",
+          "分阶段目标明确",
+          "技术路线合理（基础 -> 进阶 -> 架构）",
+          "有具体的行动计划",
+          "目标积极正向",
+          "自我认知清晰（承认基础不足）",
+          "学习态度谦虚主动"
+        ],
+        "assessment": "虽然经验不足，但成长潜力大",
+        "readyForNextTopic": true
+      }
+    }
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Entry-level (L2)",
+    "strengths": [
+      "学习能力强，能从错误中成长",
+      "有安全意识和代码质量意识",
+      "职业规划清晰，目标明确",
+      "自我驱动，学习态度好",
+      "表达能力强，思路清晰",
+      "虽然经验少但基础扎实"
+    ],
+    "concerns": [
+      "项目经验较简单",
+      "技术深度不足",
+      "缺少复杂问题解决经验"
+    ],
+    "assessmentScore": 7.8,
+    "recommendation": "推荐录用，适合Entry-level岗位，成长潜力大",
+    "hiringRationale": "虽然技术经验不足，但学习能力强、态度积极、有清晰的职业规划。这类应届生在良好的导师指导下，通常能快速成长。建议安排有经验的mentor进行培养。",
+    "nextSteps": "可以出基础算法题或简单系统设计题，考察学习能力和思维方式"
+  },
+  "qualityMetrics": {
+    "conversationFlow": 0.90,
+    "technicalDepth": 0.65,
+    "coherence": 0.95,
+    "progressiveness": 0.85,
+    "growthPotential": 0.92
+  }
+}

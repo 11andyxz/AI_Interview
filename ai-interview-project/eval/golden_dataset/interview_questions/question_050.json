@@ -1,0 +1,14 @@
+{
+  "questionId": "ml_l3_050",
+  "difficulty": "L3 - Mid",
+  "domain": "Machine Learning",
+  "techStack": ["ML", "特征工程"],
+  "question": "在机器学习项目中，如何进行特征工程？请说明常用的特征处理方法。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["特征选择", "特征转换", "特征构造", "数值特征处理", "类别特征编码"],
+    "sampleGoodAnswer": "特征工程决定模型上限。方法：\n\n1. 数值特征：\n- 标准化（Z-score）：mean=0, std=1\n- 归一化（Min-Max）：缩放到[0,1]\n- 对数变换：处理长尾分布\n- 分箱（Binning）：连续变离散\n\n2. 类别特征：\n- One-Hot编码：类别少时使用\n- Label Encoding：有序类别\n- Target Encoding：用目标值编码\n- Embedding：高维稀疏类别\n\n3. 时间特征：\n- 提取年月日时分秒\n- 计算时间差\n- 周期性特征（sin/cos）\n\n4. 特征构造：\n- 交叉特征：A*B, A/B\n- 统计特征：均值、方差、分位数\n- 聚合特征：groupby统计\n\n5. 特征选择：\n- 过滤法：相关系数、卡方检验\n- 包装法：RFE递归消除\n- 嵌入法：L1正则、树模型特征重要性\n\n工具：Pandas、sklearn.preprocessing、FeatureTools。实践：80%时间在特征工程，反复迭代。",
+    "evaluationCriteria": {"excellent": "系统的方法论、多种技术、工具和实践", "good": "准确描述主要方法", "average": "知道一些方法但不系统", "poor": "缺少实践"}
+  },
+  "qualityMetrics": {"relevance": 0.97, "difficulty": 0.78, "discriminability": 0.86}
+}

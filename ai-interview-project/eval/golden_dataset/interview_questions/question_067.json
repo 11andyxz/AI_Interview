@@ -1,0 +1,36 @@
+{
+  "questionId": "Q067",
+  "domain": "System Design",
+  "difficulty": "MID",
+  "techStack": ["System Design", "Caching", "Redis", "Architecture"],
+  "question": "Design a caching strategy for an e-commerce product catalog. What caching layers would you use and what are the key considerations?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Multi-layer caching: browser cache, CDN, application cache (Redis/Memcached), database query cache",
+      "Cache invalidation strategies: TTL, write-through, write-behind, cache-aside",
+      "Consider cache hit ratio, eviction policies (LRU, LFU), and consistency requirements",
+      "Hot products need different TTL than rarely accessed items"
+    ],
+    "codeExample": "@Service\npublic class ProductService {\n    @Cacheable(value = \"products\", key = \"#productId\")\n    public Product getProduct(Long productId) {\n        return productRepository.findById(productId)\n            .orElseThrow(() -> new ProductNotFoundException(productId));\n    }\n    \n    @CacheEvict(value = \"products\", key = \"#product.id\")\n    public Product updateProduct(Product product) {\n        return productRepository.save(product);\n    }\n}",
+    "explanation": "A robust e-commerce caching strategy involves multiple layers. CDN caches static product images and assets. Application-level cache (Redis) stores frequently accessed product data with appropriate TTL. For product catalog, cache-aside pattern works well: check cache first, load from DB on miss, then populate cache. Critical considerations include: cache warming for popular items, handling inventory updates (immediate invalidation), and monitoring cache hit ratios to tune strategy."
+  },
+  "followUps": [
+    "How would you handle cache invalidation when product inventory changes?",
+    "What metrics would you monitor to evaluate caching effectiveness?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.87,
+    "tokenEfficiency": 0.79,
+    "vocabularyDiversity": 0.85,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.90,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "questionId": "system_design_l2_022",
+  "difficulty": "L2 - Junior",
+  "domain": "System Design",
+  "techStack": ["缓存", "Redis"],
+  "question": "什么是缓存穿透、缓存击穿和缓存雪崩？如何解决这些问题？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "缓存穿透：查询不存在的数据",
+      "缓存击穿：热点数据过期",
+      "缓存雪崩：大量缓存同时失效",
+      "解决方案：布隆过滤器、互斥锁、过期时间随机化"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述三种缓存问题",
+      "completeness": "涵盖定义、影响、解决方案",
+      "clarity": "解释清晰，有具体场景",
+      "depth": "理解缓存设计的常见陷阱"
+    },
+    "sampleGoodAnswer": "三种缓存问题及解决方案：\n\n1. 缓存穿透（Cache Penetration）：\n问题：查询不存在的数据（如id=-1），缓存和数据库都没有，每次都打到数据库\n影响：数据库压力大，可能被恶意攻击\n解决：\n- 布隆过滤器：快速判断数据是否存在\n- 缓存空值：将null也缓存，设置短过期时间（如5分钟）\n- 参数校验：过滤不合法请求\n\n2. 缓存击穿（Cache Breakdown）：\n问题：热点数据过期瞬间，大量请求同时打到数据库\n影响：数据库瞬时压力激增\n解决：\n- 互斥锁：只允许一个线程查数据库，其他线程等待\n- 热点数据永不过期：后台异步更新\n- 提前续期：监控热点数据，快过期时提前刷新\n\n3. 缓存雪崩（Cache Avalanche）：\n问题：大量缓存同时失效（如统一设置1小时过期）\n影响：数据库瞬间压力巨大，可能宕机\n解决：\n- 过期时间随机化：基础时间+随机值（如1小时±5分钟）\n- 多级缓存：本地缓存+Redis\n- 限流降级：保护数据库\n- 服务熔断：快速失败，避免雪崩",
+    "evaluationCriteria": {
+      "excellent": "完整解释三种问题、影响、多种解决方案",
+      "good": "准确描述核心概念和主要方法",
+      "average": "知道概念但解决方案不清",
+      "poor": "理解有误或混淆概念"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.97,
+    "difficulty": 0.72,
+    "discriminability": 0.86
+  }
+}

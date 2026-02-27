@@ -1,0 +1,38 @@
+{
+  "questionId": "ml_l2_021",
+  "difficulty": "L2 - Junior",
+  "domain": "Machine Learning",
+  "techStack": ["ML", "监督学习"],
+  "question": "请解释过拟合（Overfitting）和欠拟合（Underfitting）的概念，以及如何避免它们？",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "过拟合：训练集表现好但测试集差",
+      "欠拟合：训练集和测试集都表现差",
+      "偏差-方差权衡",
+      "避免方法：正则化、交叉验证、更多数据、Dropout"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述过拟合和欠拟合",
+      "completeness": "涵盖定义、原因、解决方法",
+      "clarity": "解释清晰，有具体方法",
+      "depth": "理解模型复杂度和泛化能力"
+    },
+    "sampleGoodAnswer": "过拟合和欠拟合是机器学习中的两个极端：\n\n过拟合（Overfitting）：\n- 模型在训练集上表现很好（准确率99%），但在测试集上表现差（准确率60%）\n- 原因：模型过于复杂，记住了训练数据的噪声和细节\n- 表现：高方差，对新数据泛化能力差\n\n欠拟合（Underfitting）：\n- 模型在训练集和测试集上都表现差\n- 原因：模型过于简单，无法捕捉数据特征\n- 表现：高偏差，连训练数据都学不好\n\n避免方法：\n过拟合：\n1. 正则化（L1/L2）限制模型复杂度\n2. Dropout随机丢弃神经元\n3. Early Stopping提前停止训练\n4. 数据增强增加训练样本\n5. 交叉验证选择合适的模型复杂度\n\n欠拟合：\n1. 增加模型复杂度（更多层、更多参数）\n2. 增加训练时间\n3. 添加更多特征\n4. 减少正则化强度",
+    "evaluationCriteria": {
+      "excellent": "完整解释两个概念、原因、多种解决方法",
+      "good": "准确描述核心概念和主要方法",
+      "average": "知道概念但解决方法不清",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.95,
+    "difficulty": 0.66,
+    "discriminability": 0.82
+  }
+}

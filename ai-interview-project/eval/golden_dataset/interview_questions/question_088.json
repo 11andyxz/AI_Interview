@@ -1,0 +1,37 @@
+{
+  "questionId": "Q088",
+  "domain": "API Design",
+  "difficulty": "JUNIOR",
+  "techStack": ["REST", "API Design", "HTTP", "Spring Boot"],
+  "question": "Explain REST principles and best practices for designing RESTful APIs. What are the main HTTP methods and their purposes?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "REST principles: stateless, client-server, uniform interface, resource-based URIs",
+      "HTTP methods: GET (retrieve), POST (create), PUT (update/replace), PATCH (partial update), DELETE (remove)",
+      "Use proper HTTP status codes: 200 OK, 201 Created, 400 Bad Request, 404 Not Found, 500 Server Error",
+      "Resource naming: plural nouns (/users, /orders), hierarchical relationships (/users/123/orders)",
+      "Stateless: each request contains all information needed, no server-side session"
+    ],
+    "codeExample": "@RestController\n@RequestMapping(\"/api/v1/users\")\npublic class UserController {\n    \n    @GetMapping\n    public ResponseEntity<List<UserDto>> getUsers() {\n        return ResponseEntity.ok(userService.findAll());\n    }\n    \n    @GetMapping(\"/{id}\")\n    public ResponseEntity<UserDto> getUser(@PathVariable Long id) {\n        return userService.findById(id)\n            .map(ResponseEntity::ok)\n            .orElse(ResponseEntity.notFound().build());\n    }\n    \n    @PostMapping\n    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto dto) {\n        UserDto created = userService.create(dto);\n        return ResponseEntity.created(URI.create(\"/api/v1/users/\" + created.getId()))\n            .body(created);\n    }\n    \n    @PutMapping(\"/{id}\")\n    public ResponseEntity<UserDto> updateUser(\n            @PathVariable Long id, \n            @Valid @RequestBody UserDto dto) {\n        return ResponseEntity.ok(userService.update(id, dto));\n    }\n    \n    @DeleteMapping(\"/{id}\")\n    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {\n        userService.delete(id);\n        return ResponseEntity.noContent().build();\n    }\n}",
+    "explanation": "REST (Representational State Transfer) uses HTTP protocol for CRUD operations on resources. Resources identified by URIs (e.g., /users/123), manipulated using HTTP methods. GET is idempotent and safe (no side effects). POST creates new resources, returns 201 with Location header. PUT replaces entire resource (idempotent), PATCH updates parts. DELETE removes resource. Use appropriate status codes: 2xx for success, 4xx for client errors, 5xx for server errors. APIs should be stateless - no session state on server, use tokens for authentication. Resource naming: plural nouns, hierarchical for relationships (/users/123/orders for user's orders)."
+  },
+  "followUps": [
+    "What's the difference between PUT and PATCH?",
+    "How would you implement pagination for a GET endpoint returning large collections?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.85,
+    "tokenEfficiency": 0.77,
+    "vocabularyDiversity": 0.82,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.90,
+    "clarityScore": 0.86
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

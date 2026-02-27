@@ -1,0 +1,37 @@
+{
+  "questionId": "Q071",
+  "domain": "System Design",
+  "difficulty": "JUNIOR",
+  "techStack": ["System Design", "Load Balancing", "Networking"],
+  "question": "Explain what a load balancer is and describe different load balancing algorithms. When would you use each?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Load balancer distributes incoming requests across multiple servers to improve availability and performance",
+      "Round-robin: cycles through servers equally, simple but doesn't consider server load",
+      "Least connections: routes to server with fewest active connections, good for long-lived connections",
+      "Weighted algorithms consider server capacity; IP hash ensures same client goes to same server",
+      "Health checks ensure traffic only goes to healthy servers"
+    ],
+    "codeExample": "// Simple round-robin load balancer\npublic class LoadBalancer {\n    private List<Server> servers;\n    private AtomicInteger currentIndex = new AtomicInteger(0);\n    \n    public Server getNextServer() {\n        List<Server> healthy = servers.stream()\n            .filter(Server::isHealthy)\n            .collect(Collectors.toList());\n        \n        if (healthy.isEmpty()) {\n            throw new NoAvailableServersException();\n        }\n        \n        int index = currentIndex.getAndIncrement() % healthy.size();\n        return healthy.get(index);\n    }\n}",
+    "explanation": "Load balancers are critical for horizontal scaling and high availability. Round-robin works for stateless applications with similar request processing times. Least connections is better when requests have variable duration (e.g., file uploads). IP hash maintains session affinity without sticky sessions. Modern load balancers operate at Layer 4 (TCP/UDP) or Layer 7 (HTTP), with Layer 7 offering more intelligent routing based on request content."
+  },
+  "followUps": [
+    "What's the difference between Layer 4 and Layer 7 load balancing?",
+    "How do load balancers perform health checks on backend servers?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.84,
+    "tokenEfficiency": 0.77,
+    "vocabularyDiversity": 0.81,
+    "repetitionScore": 0.87,
+    "technicalAccuracy": 0.89,
+    "clarityScore": 0.85
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

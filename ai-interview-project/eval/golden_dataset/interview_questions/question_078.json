@@ -1,0 +1,37 @@
+{
+  "questionId": "Q078",
+  "domain": "Testing",
+  "difficulty": "MID",
+  "techStack": ["Testing", "TDD", "Test-Driven Development", "JUnit"],
+  "question": "Explain the Test-Driven Development (TDD) cycle. What are the benefits and challenges of practicing TDD?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "TDD cycle: Red (write failing test) → Green (write minimal code to pass) → Refactor (improve code)",
+      "Benefits: better design, higher confidence, executable documentation, fewer bugs",
+      "Challenges: initial slowdown, learning curve, requires discipline, can be difficult for exploratory work",
+      "TDD drives better architecture: forces thinking about interfaces, encourages loose coupling",
+      "Not appropriate for all scenarios: UI, prototypes, unclear requirements"
+    ],
+    "codeExample": "// TDD Example: Roman Numeral Converter\n\n// Step 1: RED - Write failing test\n@Test\npublic void testConvert_1_returnsI() {\n    assertEquals(\"I\", RomanConverter.convert(1));\n}\n\n// Step 2: GREEN - Minimal implementation\npublic class RomanConverter {\n    public static String convert(int num) {\n        return \"I\"; // Hardcode to pass\n    }\n}\n\n// Step 3: Add more tests, refactor\n@Test\npublic void testConvert_5_returnsV() {\n    assertEquals(\"V\", RomanConverter.convert(5));\n}\n\n// Refactor with actual logic\npublic static String convert(int num) {\n    if (num == 5) return \"V\";\n    return \"I\";\n}",
+    "explanation": "TDD inverts traditional development: write tests before implementation. Start with simplest test case, write just enough code to pass (even hardcoded), then refactor while keeping tests green. This drives emergent design - complex algorithms evolve from simple cases. Benefits: tests provide safety net for refactoring, force consideration of edge cases early, create living documentation. Challenges: feels slower initially, requires mindset shift, can be hard for UI or when exploring new technologies. Best for well-understood domains with clear requirements."
+  },
+  "followUps": [
+    "How does TDD influence software design and architecture?",
+    "When might you choose not to use TDD for a project?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.86,
+    "tokenEfficiency": 0.80,
+    "vocabularyDiversity": 0.83,
+    "repetitionScore": 0.88,
+    "technicalAccuracy": 0.90,
+    "clarityScore": 0.85
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

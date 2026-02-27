@@ -1,0 +1,38 @@
+{
+  "questionId": "Q082",
+  "domain": "Performance Optimization",
+  "difficulty": "SENIOR",
+  "techStack": ["Performance", "Database", "SQL", "Query Optimization"],
+  "question": "A complex SQL query is taking 30 seconds to execute on a table with 10 million rows. Walk through your optimization process and techniques.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Use EXPLAIN/EXPLAIN ANALYZE to understand query execution plan",
+      "Add appropriate indexes on WHERE, JOIN, ORDER BY columns - consider composite indexes",
+      "Check for full table scans, inefficient joins, missing statistics",
+      "Optimize query structure: avoid SELECT *, eliminate subqueries, use joins instead of IN",
+      "Consider partitioning large tables, materialized views for complex aggregations",
+      "Analyze index selectivity and cardinality to ensure indexes are effective"
+    ],
+    "codeExample": "-- Before: Slow query\nSELECT * FROM orders o\nWHERE o.customer_id IN (\n    SELECT customer_id FROM customers WHERE region = 'WEST'\n)\nAND o.order_date > '2024-01-01'\nORDER BY o.total_amount DESC;\n\n-- After: Optimized\n-- 1. Add indexes\nCREATE INDEX idx_orders_customer_date ON orders(customer_id, order_date);\nCREATE INDEX idx_customers_region ON customers(region);\n\n-- 2. Rewrite query\nSELECT o.order_id, o.customer_id, o.total_amount, o.order_date\nFROM orders o\nINNER JOIN customers c ON o.customer_id = c.customer_id\nWHERE c.region = 'WEST'\n  AND o.order_date > '2024-01-01'\nORDER BY o.total_amount DESC\nLIMIT 100;\n\n-- 3. Update statistics\nANALYZE orders;\nANALYZE customers;",
+    "explanation": "Optimization process: (1) Run EXPLAIN ANALYZE to see actual execution plan and identify bottlenecks (Seq Scan, nested loops on large tables). (2) Add covering indexes for WHERE/JOIN predicates - composite index (customer_id, order_date) better than separate indexes. (3) Rewrite query: replace IN subquery with JOIN (better optimizer opportunities), specify needed columns only (reduces data transfer), add LIMIT if appropriate. (4) Update table statistics (ANALYZE) so optimizer makes better decisions. (5) For very large tables, consider partitioning by date range. (6) Use materialized views for expensive aggregations run repeatedly. Monitor query performance continuously and adjust as data grows."
+  },
+  "followUps": [
+    "When might adding an index actually hurt performance?",
+    "Explain the difference between covering index and composite index."
+  ],
+  "qualityMetrics": {
+    "completeness": 0.89,
+    "tokenEfficiency": 0.82,
+    "vocabularyDiversity": 0.86,
+    "repetitionScore": 0.90,
+    "technicalAccuracy": 0.92,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

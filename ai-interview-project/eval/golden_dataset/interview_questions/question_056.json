@@ -1,0 +1,14 @@
+{
+  "questionId": "react_l4_056",
+  "difficulty": "L4 - Senior",
+  "domain": "Frontend",
+  "techStack": ["React", "架构设计"],
+  "question": "设计一个大型React应用的架构，包括状态管理、代码分割、性能优化和工程化方案。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["状态管理", "代码分割", "性能优化", "工程化", "微前端"],
+    "sampleGoodAnswer": "大型React应用架构：\n\n1. 目录结构：\n/src\n  /features  # 按功能模块组织\n    /user\n      components/\n      hooks/\n      services/\n      store/\n  /shared    # 共享组件和工具\n  /layouts   # 布局组件\n  /routes    # 路由配置\n\n2. 状态管理：\n- 全局状态：Redux Toolkit（简化boilerplate）\n- 服务端状态：React Query（缓存、重试、乐观更新）\n- 表单状态：React Hook Form\n- URL状态：React Router\n- 组件状态：useState/useReducer\n\n3. 代码分割：\n- 路由懒加载：React.lazy + Suspense\n- 组件懒加载：动态import\n- Webpack bundle分析：webpack-bundle-analyzer\n- 首屏关键资源优化\n\nconst UserPage = lazy(() => import('./features/user'));\n\n4. 性能优化：\n- React.memo防止不必要渲染\n- useMemo/useCallback缓存\n- 虚拟列表（react-window）\n- 图片懒加载（react-lazyload）\n- 预加载：<link rel=\"prefetch\">\n- Service Worker缓存\n\n5. 工程化：\n- TypeScript类型安全\n- ESLint + Prettier代码规范\n- Husky + lint-staged提交检查\n- Storybook组件文档\n- Jest + Testing Library单元测试\n- Cypress E2E测试\n- CI/CD自动化部署\n\n6. 构建优化：\n- Vite快速开发\n- Tree Shaking移除未使用代码\n- 代码压缩（Terser）\n- Gzip/Brotli压缩\n- CDN托管静态资源\n\n7. 监控：\n- Sentry错误追踪\n- Google Analytics用户行为\n- Web Vitals性能指标\n- 自定义埋点\n\n8. 微前端（大型团队）：\n- Module Federation\n- qiankun框架\n- 独立部署、技术栈隔离\n\n最佳实践：\n- 组件原子化设计\n- Hooks复用逻辑\n- 错误边界处理\n- Suspense+ErrorBoundary\n- 国际化（i18next）\n- 主题定制（CSS-in-JS）",
+    "evaluationCriteria": {"excellent": "完整架构、工程化实践、性能优化、微前端", "good": "核心模块清晰", "average": "基本架构但不深入", "poor": "缺少大型项目经验"}
+  },
+  "qualityMetrics": {"relevance": 0.97, "difficulty": 0.87, "discriminability": 0.91}
+}

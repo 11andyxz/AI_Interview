@@ -1,0 +1,14 @@
+{
+  "version": "v1.2_few_shot",
+  "description": "Enhanced prompt with few-shot examples for consistent output quality",
+  "created_at": "2026-02-05",
+  "system_prompt": "You are an experienced technical recruiter with 10+ years of experience. Analyze resumes objectively using the examples below as reference.",
+  "user_prompt_template": "Analyze the candidate resume using this format:\n\n## Example 1: Senior Backend Developer\nResume: \"5 years Java/Spring Boot, led team of 4, built microservices handling 10M req/day\"\nAnalysis:\n```json\n{\n  \"overall_rating\": 4,\n  \"experience_years\": 5,\n  \"expertise_level\": \"senior\",\n  \"key_strengths\": [\"Microservices architecture\", \"High-scale systems\", \"Team leadership\"],\n  \"improvement_areas\": [\"Cloud certifications\", \"System design documentation\"],\n  \"interview_focus\": [\"Distributed systems\", \"API design\", \"Database optimization\"],\n  \"recommended_level\": \"L4\",\n  \"reasoning\": \"Strong backend experience with proven scalability work, ready for senior-level challenges\"\n}\n```\n\n## Example 2: Mid-Level Frontend Developer\nResume: \"3 years React, Redux, TypeScript, built 5+ responsive web apps\"\nAnalysis:\n```json\n{\n  \"overall_rating\": 3,\n  \"experience_years\": 3,\n  \"expertise_level\": \"mid\",\n  \"key_strengths\": [\"Modern frontend stack\", \"Component architecture\", \"State management\"],\n  \"improvement_areas\": [\"Performance optimization\", \"Testing coverage\", \"Accessibility\"],\n  \"interview_focus\": [\"React hooks\", \"State management\", \"Browser APIs\"],\n  \"recommended_level\": \"L3\",\n  \"reasoning\": \"Solid mid-level skills with room to grow in advanced performance and architecture\"\n}\n```\n\n## Now analyze this resume:\n{resume_text}\n\nProvide analysis in the same JSON format.",
+  "parameters": {
+    "temperature": 0.5,
+    "max_tokens": 400,
+    "top_p": 0.95,
+    "frequency_penalty": 0.1,
+    "presence_penalty": 0.05
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "scoringId": "scoring_015",
+  "questionId": "microservices_001",
+  "question": "微服务架构中如何处理分布式事务？",
+  "candidateAnswer": "用Seata框架的TCC模式，分为Try、Confirm、Cancel三个阶段。Try阶段预留资源，Confirm阶段提交，失败则Cancel回滚。",
+  "evaluation": {
+    "score": 4.5,
+    "level": "Poor",
+    "strengths": ["提到了Seata和TCC", "三个阶段概念正确"],
+    "weaknesses": ["只提一种方案", "缺少其他模式（Saga、最终一致性）", "没有说明适用场景", "缺少实际例子"],
+    "technicalAccuracy": 0.70,
+    "completeness": 0.40,
+    "clarity": 0.60,
+    "depth": 0.35,
+    "feedback": "回答过于简单。需要补充：1) 其他方案（Saga、可靠消息、最终一致性）；2) 各方案的适用场景和权衡；3) 尽量避免分布式事务的设计思路；4) 实际案例；5) 性能影响分析。"
+  },
+  "qualityMetrics": {"answerLength": 80, "technicalTerms": 5, "hasExample": false, "hasExplanation": false, "hasCodeExamples": false}
+}

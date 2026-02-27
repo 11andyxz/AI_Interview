@@ -1,0 +1,19 @@
+{
+  "conversationId": "multi_turn_015",
+  "scenario": "Senior Algorithm - Complex Problem",
+  "difficulty": "L4 - Senior",
+  "domain": "Algorithm",
+  "turns": [
+    {"turnNumber": 1, "interviewer": "设计一个LRU缓存，支持get和put操作，时间复杂度O(1)。", "candidate": "LRU（Least Recently Used）需要O(1)的get和put，用HashMap+双向链表实现：\n- HashMap：key到节点的映射，O(1)查找\n- 双向链表：维护访问顺序，头部是最新访问，尾部是最久未访问\n- get：HashMap查找，移到链表头部\n- put：添加到头部，容量满时删除尾部节点\n\n结构：\n```java\nclass LRUCache {\n    class Node { int key, val; Node prev, next; }\n    HashMap<Integer, Node> map;\n    Node head, tail;\n    int capacity;\n}\n```", "evaluation": {"score": 8.0, "strengths": ["数据结构选择正确", "时间复杂度分析", "代码结构"], "concerns": ["实现细节可以更完整"], "followUpNeeded": true}},
+    {"turnNumber": 2, "interviewer": "能写一下完整的get和put实现吗？", "candidate": "```java\nclass LRUCache {\n    class Node {\n        int key, val;\n        Node prev, next;\n        Node(int k, int v) { key=k; val=v; }\n    }\n    \n    HashMap<Integer, Node> map = new HashMap<>();\n    Node head = new Node(0,0), tail = new Node(0,0);\n    int capacity;\n    \n    public LRUCache(int cap) {\n        capacity = cap;\n        head.next = tail;\n        tail.prev = head;\n    }\n    \n    public int get(int key) {\n        if (!map.containsKey(key)) return -1;\n        Node node = map.get(key);\n        remove(node);\n        insert(node);\n        return node.val;\n    }\n    \n    public void put(int key, int val) {\n        if (map.containsKey(key)) {\n            remove(map.get(key));\n        }\n        Node node = new Node(key, val);\n        map.put(key, node);\n        insert(node);\n        if (map.size() > capacity) {\n            Node lru = tail.prev;\n            remove(lru);\n            map.remove(lru.key);\n        }\n    }\n    \n    private void remove(Node node) {\n        node.prev.next = node.next;\n        node.next.prev = node.prev;\n    }\n    \n    private void insert(Node node) {\n        node.next = head.next;\n        node.prev = head;\n        head.next.prev = node;\n        head.next = node;\n    }\n}\n```\n\n关键点：\n1. 哨兵节点head/tail简化边界处理\n2. remove和insert抽取为方法复用\n3. put时先检查key是否存在，更新值需要移到头部\n4. 容量满时删除tail.prev（最久未使用）\n5. HashMap和链表同步操作", "evaluation": {"score": 9.5, "strengths": ["代码完整正确", "边界处理好", "注释清晰", "设计优雅"], "technicalDepth": "优秀", "followUpNeeded": true}},
+    {"turnNumber": 3, "interviewer": "如果要支持多线程并发访问，如何改进？", "candidate": "多线程LRU有几种方案：\n\n1. 全局锁（简单但性能差）：\n```java\npublic synchronized int get(int key) {...}\npublic synchronized void put(int key, int val) {...}\n```\n瓶颈：所有操作串行，并发度为1。\n\n2. 读写锁（提升读性能）：\n```java\nReentrantReadWriteLock lock = new ReentrantReadWriteLock();\npublic int get(int key) {\n    lock.readLock().lock();\n    try { ... } finally { lock.readLock().unlock(); }\n}\n```\n问题：get也要移动节点（写操作），读锁优势不明显。\n\n3. 分段锁（推荐）：\n- 按key hash分成N个segment，每个segment独立的LRU\n- 不同segment可并发访问\n- 类似ConcurrentHashMap的思想\n```java\nLRUCache[] segments = new LRUCache[16];\nint idx = key.hashCode() & 15;\nsegments[idx].get(key);\n```\n缺点：全局LRU变成局部LRU，淘汰不精确。\n\n4. 无锁LRU（高并发）：\n- ConcurrentHashMap + ConcurrentLinkedQueue\n- 访问记录放入队列，异步批量处理\n- 淘汰策略近似LRU（LRU-K）\n\n生产实践：\nRedis的LRU是近似算法，随机采样5个key淘汰最旧的，性能好。\n高并发场景用分段锁，牺牲一点准确性换取性能。", "evaluation": {"score": 10.0, "strengths": ["多种方案对比", "性能分析透彻", "生产经验", "权衡取舍清晰"], "technicalDepth": "深入理解并发和缓存", "practicalExperience": "丰富的高并发架构经验", "readyForNextTopic": true}}
+  ],
+  "overallAssessment": {
+    "technicalLevel": "Senior (L4)",
+    "strengths": ["算法功底扎实", "代码质量高", "并发设计能力强", "系统架构经验"],
+    "assessmentScore": 9.2,
+    "recommendation": "强烈推荐，Staff Engineer level",
+    "nextSteps": "可以讨论架构设计或团队技术决策"
+  },
+  "qualityMetrics": {"conversationFlow": 0.95, "technicalDepth": 0.98, "coherence": 0.95, "progressiveness": 0.93}
+}

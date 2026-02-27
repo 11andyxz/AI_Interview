@@ -1,0 +1,39 @@
+{
+  "questionId": "java_l2_011",
+  "difficulty": "L2 - Junior",
+  "domain": "Java",
+  "techStack": ["Java", "JVM"],
+  "question": "请解释Java中的垃圾回收（Garbage Collection）机制及其基本原理。",
+  "expectedOutput": {
+    "answerStructure": {
+      "hasExplanation": true,
+      "hasExamples": true,
+      "hasTechnicalDepth": true
+    },
+    "keyPoints": [
+      "自动内存管理",
+      "堆内存的分代模型",
+      "可达性分析算法",
+      "常见的GC算法（标记-清除、复制、标记-整理）",
+      "Minor GC和Full GC"
+    ],
+    "qualityIndicators": {
+      "technicalAccuracy": "准确描述GC的基本概念和原理",
+      "completeness": "涵盖分代、算法、触发时机",
+      "clarity": "解释清晰易懂",
+      "depth": "理解基本原理即可，不要求深入JVM实现"
+    },
+    "sampleGoodAnswer": "Java的垃圾回收是自动内存管理机制，负责回收不再使用的对象。堆内存分为年轻代和老年代，新创建的对象在年轻代，经过多次GC仍存活的对象晋升到老年代。GC通过可达性分析判断对象是否存活，从GC Roots出发，无法到达的对象被标记为垃圾。常见算法包括：标记-清除、复制算法（年轻代）、标记-整理（老年代）。Minor GC清理年轻代，频率高但快；Full GC清理整个堆，开销大会导致STW（Stop The World）。",
+    "evaluationCriteria": {
+      "excellent": "完整解释分代、算法、GC类型，理解原理",
+      "good": "准确描述核心概念和基本流程",
+      "average": "知道GC概念但细节不清晰",
+      "poor": "理解有误或无法解释"
+    }
+  },
+  "qualityMetrics": {
+    "relevance": 0.92,
+    "difficulty": 0.60,
+    "discriminability": 0.80
+  }
+}

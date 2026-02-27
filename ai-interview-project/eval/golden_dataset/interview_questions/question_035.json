@@ -1,0 +1,14 @@
+{
+  "questionId": "react_l3_035",
+  "difficulty": "L3 - Mid",
+  "domain": "Frontend",
+  "techStack": ["React", "Performance"],
+  "question": "React中如何优化组件性能？请说明React.memo、useMemo和useCallback的区别和使用场景。",
+  "expectedOutput": {
+    "answerStructure": {"hasExplanation": true, "hasExamples": true, "hasTechnicalDepth": true},
+    "keyPoints": ["React.memo阻止不必要渲染", "useMemo缓存计算结果", "useCallback缓存函数", "依赖数组的作用", "性能优化最佳实践"],
+    "sampleGoodAnswer": "React性能优化主要通过减少不必要的渲染和计算。\n\nReact.memo：\n- 高阶组件，浅比较props决定是否重新渲染\n- 适用：props不变时跳过渲染的组件\nconst Child = React.memo(({name}) => <div>{name}</div>);\n\nuseMemo：\n- 缓存计算结果，避免每次渲染都重新计算\n- 适用：昂贵的计算操作\nconst expensiveValue = useMemo(() => computeExpensive(a, b), [a, b]);\n\nuseCallback：\n- 缓存函数引用，避免子组件不必要渲染\n- 适用：传递给子组件的回调函数\nconst handleClick = useCallback(() => doSomething(a), [a]);\n\n区别：\n- React.memo：组件级别，控制渲染\n- useMemo：值级别，缓存计算结果\n- useCallback：函数级别，缓存函数引用（useMemo的特殊情况）\n\n最佳实践：\n1. 不要过早优化，先profile再优化\n2. React.memo用于昂贵的渲染\n3. useMemo用于昂贵的计算\n4. useCallback配合React.memo使用\n5. 注意依赖数组的正确性",
+    "evaluationCriteria": {"excellent": "完整解释三者区别、代码示例、使用场景、最佳实践", "good": "准确描述核心概念和主要用法", "average": "知道但区别不清晰", "poor": "理解有误"}
+  },
+  "qualityMetrics": {"relevance": 0.96, "difficulty": 0.78, "discriminability": 0.88}
+}

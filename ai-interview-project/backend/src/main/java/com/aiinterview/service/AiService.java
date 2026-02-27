@@ -1,5 +1,7 @@
 package com.aiinterview.service;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +25,8 @@ public class AiService {
      * Simulates generating interview questions based on the role.
      * In a real scenario, this would call an LLM API.
      */
+    @Timed(value = "ai.request.latency", description = "AI request timing", extraTags = {"method", "generateInterviewQuestions"})
+    @Counted(value = "ai.request.count", description = "AI request count", extraTags = {"method", "generateInterviewQuestions"})
     public List<String> generateInterviewQuestions(String role) {
         // Mock logic: return specific questions based on keywords in the role
         List<String> questions = new ArrayList<>();
@@ -56,6 +60,8 @@ public class AiService {
     /**
      * Simulates a chat response from the AI Interviewer.
      */
+    @Timed(value = "ai.request.latency", description = "AI response timing", extraTags = {"method", "generateAiResponse"})
+    @Counted(value = "ai.request.count", description = "AI response count", extraTags = {"method", "generateAiResponse"})
     /* public String generateAiResponse(String userMessage) {
         // Simple mock responses to make the interaction feel dynamic
         String[] genericResponses = {

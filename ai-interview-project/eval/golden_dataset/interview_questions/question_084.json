@@ -1,0 +1,37 @@
+{
+  "questionId": "Q084",
+  "domain": "Cloud & Infrastructure",
+  "difficulty": "JUNIOR",
+  "techStack": ["Docker", "Containers", "DevOps"],
+  "question": "Explain what Docker containers are and the benefits they provide over traditional virtual machines. What is a Dockerfile?",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Containers package application with dependencies in isolated environment",
+      "Containers share host OS kernel, VMs include full OS - containers are lighter and faster",
+      "Benefits: consistency across environments, faster startup, better resource utilization, easier scaling",
+      "Dockerfile defines container image: base image, dependencies, configuration, startup command",
+      "Docker images are immutable layers built from Dockerfile instructions"
+    ],
+    "codeExample": "# Dockerfile example\nFROM openjdk:17-jdk-slim\n\n# Set working directory\nWORKDIR /app\n\n# Copy application JAR\nCOPY target/myapp.jar app.jar\n\n# Expose port\nEXPOSE 8080\n\n# Run application\nENTRYPOINT [\"java\", \"-jar\", \"app.jar\"]\n\n# Build image\n# docker build -t myapp:1.0 .\n\n# Run container\n# docker run -p 8080:8080 myapp:1.0",
+    "explanation": "Docker containers are lightweight, standalone packages that include application code, runtime, libraries, and settings. Unlike VMs that virtualize hardware and run full OS instances, containers virtualize the OS and share the host kernel, making them much lighter (MBs vs GBs) and faster to start (seconds vs minutes). Dockerfile is a text file with instructions to build an image: FROM specifies base image, COPY adds files, RUN executes commands, EXPOSE declares ports, ENTRYPOINT defines startup command. Images are built in layers - each instruction creates a layer, enabling efficient caching and sharing."
+  },
+  "followUps": [
+    "What's the difference between ENTRYPOINT and CMD in a Dockerfile?",
+    "How do you handle secrets and sensitive data in Docker containers?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.84,
+    "tokenEfficiency": 0.76,
+    "vocabularyDiversity": 0.81,
+    "repetitionScore": 0.87,
+    "technicalAccuracy": 0.89,
+    "clarityScore": 0.85
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}

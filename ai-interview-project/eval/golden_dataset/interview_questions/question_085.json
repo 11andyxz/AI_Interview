@@ -1,0 +1,38 @@
+{
+  "questionId": "Q085",
+  "domain": "Cloud & Infrastructure",
+  "difficulty": "MID",
+  "techStack": ["AWS", "Cloud", "S3", "EC2", "RDS"],
+  "question": "Design a scalable web application architecture on AWS. Include compute, storage, database, and caching layers with high availability.",
+  "expectedAnswer": {
+    "keyPoints": [
+      "Compute: EC2 Auto Scaling Groups behind Application Load Balancer, multi-AZ deployment",
+      "Database: RDS with Multi-AZ for HA, Read Replicas for read scaling",
+      "Storage: S3 for static assets with CloudFront CDN",
+      "Caching: ElastiCache (Redis) for session management and application cache",
+      "Network: VPC with public/private subnets, NAT Gateway, Security Groups",
+      "Optional: Route 53 for DNS, CloudWatch for monitoring, WAF for security"
+    ],
+    "codeExample": "# Terraform example for AWS architecture\nresource \"aws_lb\" \"app\" {\n  name               = \"app-lb\"\n  load_balancer_type = \"application\"\n  subnets            = aws_subnet.public[*].id\n}\n\nresource \"aws_autoscaling_group\" \"app\" {\n  min_size            = 2\n  max_size            = 10\n  desired_capacity    = 4\n  vpc_zone_identifier = aws_subnet.private[*].id\n  target_group_arns   = [aws_lb_target_group.app.arn]\n  \n  launch_template {\n    id      = aws_launch_template.app.id\n    version = \"$Latest\"\n  }\n}\n\nresource \"aws_db_instance\" \"main\" {\n  engine               = \"postgres\"\n  instance_class       = \"db.r5.large\"\n  multi_az            = true\n  storage_encrypted   = true\n}",
+    "explanation": "Highly available AWS architecture: Application Load Balancer distributes traffic across EC2 instances in Auto Scaling Group spanning multiple Availability Zones (at least 2 for HA). Database uses RDS with Multi-AZ deployment (automatic failover to standby). Add Read Replicas for read-heavy workloads. ElastiCache Redis for caching and session storage (also Multi-AZ). Static assets in S3 served via CloudFront CDN for global distribution. Use private subnets for app servers and database, public subnets for load balancer. NAT Gateway for outbound internet access from private subnets. Route 53 provides DNS with health checks for failover. CloudWatch monitors metrics, triggers auto-scaling."
+  },
+  "followUps": [
+    "How would you implement disaster recovery for this architecture?",
+    "What's the difference between vertical and horizontal scaling on AWS?"
+  ],
+  "qualityMetrics": {
+    "completeness": 0.88,
+    "tokenEfficiency": 0.81,
+    "vocabularyDiversity": 0.85,
+    "repetitionScore": 0.89,
+    "technicalAccuracy": 0.91,
+    "clarityScore": 0.87
+  },
+  "validationResults": {
+    "structureValidator": {"passed": true, "message": "All required fields present and well-formed"},
+    "contentQualityValidator": {"passed": true, "message": "Content meets quality standards"},
+    "toxicityValidator": {"passed": true, "message": "No toxic content detected"},
+    "relevanceValidator": {"passed": true, "message": "Question relevant to domain and difficulty"},
+    "difficultyConsistencyValidator": {"passed": true, "message": "Difficulty level appropriate for content"}
+  }
+}
