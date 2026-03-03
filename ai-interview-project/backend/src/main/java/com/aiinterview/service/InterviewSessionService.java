@@ -5,6 +5,12 @@ import com.aiinterview.dto.QAHistory;
 import com.aiinterview.knowledge.KnowledgeBaseService;
 import com.aiinterview.knowledge.model.QuestionItem;
 import com.aiinterview.knowledge.model.RubricItem;
+import com.aiinterview.ml.adaptive.AbilityEstimate;
+import com.aiinterview.ml.adaptive.AdaptiveQuestionSelector;
+import com.aiinterview.ml.adaptive.CandidateAbilityEstimator;
+import com.aiinterview.ml.adaptive.ResponseRecord;
+import com.aiinterview.ml.adaptive.QuestionDifficultyCalibrator;
+import com.aiinterview.ml.adaptive.model.QuestionDifficultyCalibration;
 import com.aiinterview.model.Candidate;
 import com.aiinterview.model.Interview;
 import com.aiinterview.model.InterviewMessage;
@@ -13,7 +19,10 @@ import com.aiinterview.repository.CandidateRepository;
 import com.aiinterview.repository.InterviewMessageRepository;
 import com.aiinterview.repository.InterviewRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -26,6 +35,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class InterviewSessionService {
+
+    private static final Logger logger = LoggerFactory.getLogger(InterviewSessionService.class);
 
     @Autowired
     private InterviewRepository interviewRepository;
@@ -45,11 +56,22 @@ public class InterviewSessionService {
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private CandidateAbilityEstimator abilityEstimator;
 
-    // In-memory cache for active sessions (backed by Redis and DB)
+    @Autowired
+    private AdaptiveQuestionSelector adaptiveSelector;
+
+    @Autowired
+    private QuestionDifficultyCalibrator difficultyCalibrator;
+
+    @Value("${ml.adaptive.enabled:false}")
+    private boolean adaptiveEnabled;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, List<QAHistory>> sessionHistories = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> askedQuestions = new ConcurrentHashMap<>();
+    private final Map<String, AbilityEstimate> sessionAbilityEstimates = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
     /**
@@ -304,10 +326,37 @@ public class InterviewSessionService {
     }
 
     /**
-     * 从知识库选择下一个问题（合并自SessionService）
+     * Select next question using adaptive difficulty (IRT) when enabled,
+     * or random selection as fallback.
      */
     public Optional<QuestionItem> pickNextQuestion(String interviewId, String roleId) {
         Set<String> asked = askedQuestions.computeIfAbsent(interviewId, k -> new HashSet<>());
+
+        if (adaptiveEnabled) {
+            try {
+                AbilityEstimate ability = sessionAbilityEstimates.getOrDefault(
+                        interviewId, AbilityEstimate.prior());
+
+                if (adaptiveSelector.shouldTerminate(ability, asked.size(), 0)) {
+                    logger.info("Adaptive interview {} terminated: SE={}, questions={}",
+                            interviewId, ability.getStandardError(), asked.size());
+                    return Optional.empty();
+                }
+
+                Optional<QuestionItem> adaptive = adaptiveSelector.selectNextQuestion(
+                        interviewId, roleId, ability, asked);
+
+                if (adaptive.isPresent()) {
+                    asked.add(adaptive.get().getId());
+                    logger.debug("Adaptive selected question {} at theta={:.2f}",
+                            adaptive.get().getId(), ability.getTheta());
+                    return adaptive;
+                }
+            } catch (Exception e) {
+                logger.warn("Adaptive selection failed, falling back to random: {}", e.getMessage());
+            }
+        }
+
         List<QuestionItem> questions = knowledgeBaseService.getQuestions(roleId);
         List<QuestionItem> remaining = questions.stream()
                 .filter(q -> !asked.contains(q.getId()))
@@ -318,6 +367,31 @@ public class InterviewSessionService {
         QuestionItem selected = remaining.get(random.nextInt(remaining.size()));
         asked.add(selected.getId());
         return Optional.of(selected);
+    }
+
+    /**
+     * Update adaptive ability estimate after an answer is evaluated.
+     */
+    public void updateAbilityEstimate(String interviewId, String questionId, String roleId, double evaluationScore) {
+        if (!adaptiveEnabled) return;
+
+        try {
+            Optional<QuestionDifficultyCalibration> calOpt = difficultyCalibrator.getCalibration(questionId, roleId);
+            double b = calOpt.map(QuestionDifficultyCalibration::getDifficultyB).orElse(0.0);
+            double a = calOpt.map(QuestionDifficultyCalibration::getDiscriminationA).orElse(1.0);
+
+            ResponseRecord response = ResponseRecord.fromEvaluationScore(questionId, b, a, evaluationScore);
+            AbilityEstimate prior = sessionAbilityEstimates.getOrDefault(interviewId, AbilityEstimate.prior());
+            AbilityEstimate updated = abilityEstimator.updateAbility(prior, response);
+            sessionAbilityEstimates.put(interviewId, updated);
+
+            difficultyCalibrator.recordResponse(questionId, roleId, evaluationScore / 100.0);
+
+            logger.debug("Updated ability for {}: theta={:.2f}, SE={:.3f}",
+                    interviewId, updated.getTheta(), updated.getStandardError());
+        } catch (Exception e) {
+            logger.warn("Failed to update ability estimate: {}", e.getMessage());
+        }
     }
     
     /**

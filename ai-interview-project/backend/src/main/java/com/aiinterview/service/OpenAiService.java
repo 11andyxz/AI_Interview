@@ -162,6 +162,71 @@ public class OpenAiService {
     }
 
     /**
+     * Call OpenAI API with JSON mode enabled (response_format: {"type": "json_object"})
+     */
+    public Mono<String> chatWithJsonMode(List<OpenAiMessage> messages) {
+        OpenAiRequest request = new OpenAiRequest();
+        request.setModel(model);
+        request.setMessages(messages);
+        request.setTemperature(temperature);
+        request.setMaxTokens(maxTokens);
+        request.setStream(false);
+        request.setResponseFormat(java.util.Map.of("type", "json_object"));
+
+        return openAiWebClient.post()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(OpenAiResponse.class)
+                .timeout(Duration.ofSeconds(60))
+                .map(response -> {
+                    if (response.getChoices() != null && !response.getChoices().isEmpty()) {
+                        return response.getChoices().get(0).getMessage().getContent();
+                    }
+                    return "";
+                })
+                .onErrorResume(error -> {
+                    System.err.println("OpenAI JSON Mode API Error: " + error.getMessage());
+                    return Mono.just("{}");
+                });
+    }
+
+    /**
+     * Call OpenAI with custom model and temperature overrides
+     */
+    public Mono<String> chatWithConfig(List<OpenAiMessage> messages, String modelOverride,
+                                        Double temperatureOverride) {
+        OpenAiRequest request = new OpenAiRequest();
+        request.setModel(modelOverride != null ? modelOverride : model);
+        request.setMessages(messages);
+        request.setTemperature(temperatureOverride != null ? temperatureOverride : temperature);
+        request.setMaxTokens(maxTokens);
+        request.setStream(false);
+
+        return openAiWebClient.post()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(OpenAiResponse.class)
+                .timeout(Duration.ofSeconds(60))
+                .map(response -> {
+                    if (response.getChoices() != null && !response.getChoices().isEmpty()) {
+                        return response.getChoices().get(0).getMessage().getContent();
+                    }
+                    return "";
+                })
+                .onErrorResume(error -> {
+                    System.err.println("OpenAI API Error: " + error.getMessage());
+                    String userMessage = messages.stream()
+                        .filter(m -> "user".equals(m.getRole()))
+                        .reduce((first, second) -> second)
+                        .map(OpenAiMessage::getContent)
+                        .orElse("");
+                    return Mono.just(generateMockResponse(userMessage));
+                });
+    }
+
+    /**
      * Simple chat with system and user messages
      */
     public Mono<String> simpleChat(String systemPrompt, String userPrompt) {

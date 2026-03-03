@@ -1,7 +1,9 @@
 package com.aiinterview.model.openai;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import java.util.Map;
 
 public class OpenAiRequest {
     private String model;
@@ -12,6 +14,10 @@ public class OpenAiRequest {
     private Integer maxTokens;
     
     private Boolean stream;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("response_format")
+    private Map<String, String> responseFormat;
 
     public OpenAiRequest() {
         this.model = "gpt-3.5-turbo";
@@ -58,6 +64,14 @@ public class OpenAiRequest {
 
     public void setStream(Boolean stream) {
         this.stream = stream;
+    }
+
+    public Map<String, String> getResponseFormat() {
+        return responseFormat;
+    }
+
+    public void setResponseFormat(Map<String, String> responseFormat) {
+        this.responseFormat = responseFormat;
     }
 }
 

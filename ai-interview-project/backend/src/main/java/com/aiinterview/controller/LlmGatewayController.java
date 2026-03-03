@@ -1,5 +1,9 @@
 package com.aiinterview.controller;
 
+import com.aiinterview.ml.experiment.ExperimentTracker;
+import com.aiinterview.ml.gateway.ExperimentAwareLlmRouter;
+import com.aiinterview.ml.gateway.LlmRequest;
+import com.aiinterview.ml.gateway.LlmRouteDecision;
 import com.aiinterview.model.openai.OpenAiMessage;
 import com.aiinterview.service.LlmEvaluationService;
 import com.aiinterview.service.OpenAiService;
@@ -7,6 +11,8 @@ import com.aiinterview.service.PromptService;
 import com.aiinterview.session.SessionService;
 import com.aiinterview.session.model.InterviewSession;
 import com.aiinterview.session.model.QAHistory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -26,6 +32,8 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:3000")
 public class LlmGatewayController {
 
+    private static final Logger logger = LoggerFactory.getLogger(LlmGatewayController.class);
+
     @Autowired
     private OpenAiService openAiService;
 
@@ -37,6 +45,12 @@ public class LlmGatewayController {
 
     @Autowired
     private SessionService sessionService;
+
+    @Autowired
+    private ExperimentAwareLlmRouter experimentRouter;
+
+    @Autowired
+    private ExperimentTracker experimentTracker;
 
     @Value("${openai.max-history-messages:10}")
     private int maxHistoryMessages;
@@ -52,33 +66,49 @@ public class LlmGatewayController {
         @SuppressWarnings("unchecked")
         Map<String, Object> candidateInfo = (Map<String, Object>) body.get("candidateInfo");
 
-        // Get session and history
         Optional<InterviewSession> sessionOpt = sessionService.getSession(sessionId);
         List<QAHistory> history = sessionOpt.map(InterviewSession::getHistory).orElse(List.of());
 
-        // Build system prompt
-        String systemPrompt = promptService.buildSystemPrompt(roleId, level, candidateInfo);
-        
-        // Build user prompt with conversation history
+        LlmRequest llmRequest = new LlmRequest("question-generate", sessionId);
+        llmRequest.setRoleId(roleId);
+        llmRequest.setLevel(level);
+        LlmRouteDecision route = experimentRouter.route(llmRequest);
+
+        String systemPrompt = route.getPromptTemplate() != null
+                ? route.getPromptTemplate()
+                : promptService.buildSystemPrompt(roleId, level, candidateInfo);
         String userPrompt = promptService.buildConversationHistoryPrompt(history, maxHistoryMessages);
 
-        // Call OpenAI
         List<OpenAiMessage> messages = List.of(
             new OpenAiMessage("system", systemPrompt),
             new OpenAiMessage("user", userPrompt)
         );
 
-        return openAiService.chat(messages)
+        long startTime = System.currentTimeMillis();
+
+        return openAiService.chatWithConfig(messages, route.getModel(), route.getTemperature())
             .map(question -> {
-                Map<String, Object> response = Map.of(
+                long latency = System.currentTimeMillis() - startTime;
+
+                if (route.isInExperiment()) {
+                    experimentTracker.recordMetric(
+                            Long.parseLong(route.getExperimentId()), route.getVariant(),
+                            sessionId, estimateQuality(question), latency, estimateTokens(question));
+                }
+
+                Map<String, Object> response = new java.util.HashMap<>(Map.of(
                     "question", question,
                     "sessionId", sessionId,
                     "questionNumber", history.size() + 1
-                );
+                ));
+                if (route.isInExperiment()) {
+                    response.put("experimentId", route.getExperimentId());
+                    response.put("variant", route.getVariant());
+                }
                 return ResponseEntity.ok((Object) response);
             })
             .onErrorResume(error -> {
-                System.err.println("Question generation error: " + error.getMessage());
+                logger.error("Question generation error: {}", error.getMessage());
                 return Mono.just(ResponseEntity.status(500).body(Map.of(
                     "error", "Failed to generate question",
                     "message", error.getMessage()
@@ -95,21 +125,36 @@ public class LlmGatewayController {
         String answer = (String) body.get("answer");
         String roleId = (String) body.getOrDefault("roleId", "backend_java");
         String level = (String) body.getOrDefault("level", "mid");
+        String sessionId = (String) body.getOrDefault("sessionId", "anonymous");
+
+        LlmRequest llmRequest = new LlmRequest("eval", sessionId);
+        llmRequest.setRoleId(roleId);
+        LlmRouteDecision route = experimentRouter.route(llmRequest);
+        long startTime = System.currentTimeMillis();
 
         return evaluationService.evaluateAnswer(question, answer, roleId, level)
             .map(result -> {
-                Map<String, Object> response = Map.of(
+                long latency = System.currentTimeMillis() - startTime;
+
+                if (route.isInExperiment()) {
+                    experimentTracker.recordMetric(
+                            Long.parseLong(route.getExperimentId()), route.getVariant(),
+                            sessionId, result.getScore() != null ? result.getScore() : 0,
+                            latency, 0);
+                }
+
+                Map<String, Object> response = new java.util.HashMap<>(Map.of(
                     "score", result.getScore(),
                     "rubricLevel", result.getRubricLevel(),
                     "detailedScores", result.getDetailedScores(),
                     "strengths", result.getStrengths(),
                     "improvements", result.getImprovements(),
                     "followUpQuestions", result.getFollowUpQuestions()
-                );
+                ));
                 return ResponseEntity.ok((Object) response);
             })
             .onErrorResume(error -> {
-                System.err.println("Evaluation error: " + error.getMessage());
+                logger.error("Evaluation error: {}", error.getMessage());
                 return Mono.just(ResponseEntity.status(500).body(Map.of(
                     "error", "Failed to evaluate answer",
                     "message", error.getMessage()
@@ -124,6 +169,7 @@ public class LlmGatewayController {
     public Mono<ResponseEntity<Object>> chat(@RequestBody Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         List<Map<String, String>> messagesList = (List<Map<String, String>>) body.get("messages");
+        String sessionId = (String) body.getOrDefault("sessionId", "anonymous");
         
         if (messagesList == null || messagesList.isEmpty()) {
             return Mono.just(ResponseEntity.badRequest().body(Map.of(
@@ -136,8 +182,20 @@ public class LlmGatewayController {
             messages.add(new OpenAiMessage(msg.get("role"), msg.get("content")));
         }
 
-        return openAiService.chat(messages)
+        LlmRequest llmRequest = new LlmRequest("chat", sessionId);
+        LlmRouteDecision route = experimentRouter.route(llmRequest);
+        long startTime = System.currentTimeMillis();
+
+        return openAiService.chatWithConfig(messages, route.getModel(), route.getTemperature())
             .map(content -> {
+                long latency = System.currentTimeMillis() - startTime;
+
+                if (route.isInExperiment()) {
+                    experimentTracker.recordMetric(
+                            Long.parseLong(route.getExperimentId()), route.getVariant(),
+                            sessionId, estimateQuality(content), latency, estimateTokens(content));
+                }
+
                 Map<String, String> response = Map.of(
                     "content", content,
                     "role", "assistant"
@@ -145,7 +203,7 @@ public class LlmGatewayController {
                 return ResponseEntity.ok((Object) response);
             })
             .onErrorResume(error -> {
-                System.err.println("Chat error: " + error.getMessage());
+                logger.error("Chat error: {}", error.getMessage());
                 return Mono.just(ResponseEntity.status(500).body(Map.of(
                     "error", "Chat failed",
                     "message", error.getMessage()
@@ -205,6 +263,16 @@ public class LlmGatewayController {
             "status", configured ? "ready" : "not_configured",
             "message", configured ? "OpenAI service is ready" : "OpenAI API key not configured"
         ));
+    }
+
+    private double estimateQuality(String response) {
+        if (response == null || response.length() < 20) return 30.0;
+        if (response.length() > 200) return 80.0;
+        return 60.0;
+    }
+
+    private int estimateTokens(String response) {
+        return response != null ? response.length() / 4 : 0;
     }
 }
 
