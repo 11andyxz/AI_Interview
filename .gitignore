@@ -67,3 +67,9 @@ uploads/
 quick-test-*.sh
 test-*-integration.sh
 
+# Evaluation results
+**/eval/results/*
+!**/eval/results/.gitkeep
+
+# External tools
+tools/
