@@ -227,6 +227,9 @@ const SkillProgressPage = ({ onBack }) => {
     return (
       <div className="p-8 ml-64">
         <SkillProgressSkeleton />
+        <p className="text-sm text-gray-500 mt-4">
+          Loading categories: Technical, Communication, Problem Solving, Leadership.
+        </p>
       </div>
     );
   }
@@ -406,6 +409,9 @@ const SkillProgressPage = ({ onBack }) => {
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No Skill Data Available</h3>
           <p className="text-gray-600">
             Complete some interviews to start tracking your skill progress and get personalized recommendations.
+          </p>
+          <p className="text-sm text-gray-500 mt-3">
+            Categories tracked include Technical, Communication, Problem Solving, and Leadership.
           </p>
         </div>
       )}

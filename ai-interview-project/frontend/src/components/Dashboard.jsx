@@ -71,7 +71,7 @@ const Dashboard = () => {
       const data = await apiCall('/api/interviews', {
         timeout: 10000, // 10 second timeout
         retryOptions: {
-          maxRetries: 2
+          maxRetries: 0
         }
       });
       let filtered = data;
@@ -356,4 +356,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

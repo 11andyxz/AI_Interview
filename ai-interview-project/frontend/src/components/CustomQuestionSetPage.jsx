@@ -335,7 +335,7 @@ const CustomQuestionSetPage = ({ onBack }) => {
           className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
         >
           <Plus size={16} />
-          Create Set
+          New Set
         </button>
       </div>
 
@@ -437,13 +437,14 @@ const CustomQuestionSetPage = ({ onBack }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Set Name</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="e.g., Java Spring Boot Interview Questions"
-                  />
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Question set title"
+                />
                 </div>
 
                 <div>
@@ -566,13 +567,12 @@ const CustomQuestionSetPage = ({ onBack }) => {
                   >
                     Cancel
                   </button>
-                  <button
-                    onClick={editingSet ? handleUpdateQuestionSet : handleCreateQuestionSet}
-                    disabled={!formData.name.trim() || formData.questions.length === 0}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {editingSet ? 'Update Set' : 'Create Set'}
-                  </button>
+                <button
+                  onClick={editingSet ? handleUpdateQuestionSet : handleCreateQuestionSet}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  {editingSet ? 'Update Set' : 'Create Set'}
+                </button>
                 </div>
               </div>
             </div>

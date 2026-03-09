@@ -4,19 +4,9 @@ import DashboardLayout from './components/DashboardLayout';
 import InterviewRoom from './components/InterviewRoom';
 import Login from './components/Login';
 import RegisterPage from './components/RegisterPage';
-import PaymentPage from './components/PaymentPage';
 import PaymentSuccessPage from './components/PaymentSuccessPage';
 import PaymentCancelPage from './components/PaymentCancelPage';
-import NotesPage from './components/NotesPage';
-import ResumePage from './components/ResumePage';
-import KnowledgeBasePage from './components/KnowledgeBasePage';
-import MockInterviewPage from './components/MockInterviewPage';
 import ReportPage from './components/ReportPage';
-import UserProfilePage from './components/UserProfilePage';
-import ProgressDashboard from './components/ProgressDashboard';
-import SkillProgressPage from './components/SkillProgressPage';
-import SettingsPage from './components/SettingsPage';
-import CustomQuestionSetPage from './components/CustomQuestionSetPage';
 import NotFoundPage from './components/NotFoundPage';
 import { useGlobalShortcuts } from './hooks/useKeyboardShortcuts';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
@@ -108,7 +98,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Dashboard Layout with Sidebar */}
-          <Route path="/" element={
+          <Route path="/*" element={
             <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
@@ -121,12 +111,7 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Payment Pages */}
-          <Route path="/payment" element={
-            <ProtectedRoute>
-              <PaymentPage />
-            </ProtectedRoute>
-          } />
+          {/* Payment callback pages */}
           <Route path="/payment/success" element={
             <ProtectedRoute>
               <PaymentSuccessPage />
@@ -138,60 +123,10 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Feature Pages */}
-          <Route path="/notes" element={
-            <ProtectedRoute>
-              <NotesPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/resume" element={
-            <ProtectedRoute>
-              <ResumePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/knowledge-base" element={
-            <ProtectedRoute>
-              <KnowledgeBasePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/mock-interview" element={
-            <ProtectedRoute>
-              <MockInterviewPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/mock-interview/:id" element={
-            <ProtectedRoute>
-              <MockInterviewPage />
-            </ProtectedRoute>
-          } />
+          {/* Standalone report page */}
           <Route path="/report/:id" element={
             <ProtectedRoute>
               <ReportPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <UserProfilePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/progress" element={
-            <ProtectedRoute>
-              <ProgressDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/skills" element={
-            <ProtectedRoute>
-              <SkillProgressPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/question-sets" element={
-            <ProtectedRoute>
-              <CustomQuestionSetPage />
             </ProtectedRoute>
           } />
 

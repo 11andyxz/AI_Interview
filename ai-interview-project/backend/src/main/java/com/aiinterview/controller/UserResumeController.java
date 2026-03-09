@@ -11,17 +11,23 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/user/resume")
 @CrossOrigin(origins = "http://localhost:3000")
 public class UserResumeController {
+
+    private static final long MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+    private static final Set<String> ALLOWED_FILE_EXTENSIONS = Set.of(".pdf", ".doc", ".docx", ".txt");
     
     @Autowired
     private ResumeService resumeService;
@@ -63,15 +69,26 @@ public class UserResumeController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> uploadResume(
             HttpServletRequest request,
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(required = false) String resumeText,
-            @RequestParam(required = false, defaultValue = "false") boolean autoAnalyze) {
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestPart(value = "resumeText", required = false) MultipartFile resumeTextPart,
+            @RequestParam(required = false, defaultValue = "false") boolean autoAnalyze,
+            @RequestParam Map<String, String> formFields) {
         Long userId = (Long) request.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
 
         try {
+            String resumeText = formFields.get("resumeText");
+            if (!StringUtils.hasText(resumeText) && resumeTextPart != null && !resumeTextPart.isEmpty()) {
+                resumeText = new String(resumeTextPart.getBytes(), StandardCharsets.UTF_8);
+            }
+
+            String validationError = validateUploadInput(file, resumeText);
+            if (validationError != null) {
+                return ResponseEntity.badRequest().body(Map.of("error", validationError));
+            }
+
             UserResume resume = resumeService.uploadResume(userId, file, resumeText);
 
             // Auto-analyze if requested
@@ -89,8 +106,10 @@ public class UserResumeController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("resume", resume);
-            response.put("autoAnalyzed", autoAnalyze && resume.getAnalyzed());
+            response.put("autoAnalyzed", autoAnalyze && Boolean.TRUE.equals(resume.getAnalyzed()));
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
@@ -160,15 +179,12 @@ public class UserResumeController {
             
             Path filePath = filePathOpt.get();
             Resource resource = new UrlResource(filePath.toUri());
-            
-            if (resource.exists() && resource.isReadable()) {
-                return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, 
-                        "attachment; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
-            }
-            return ResponseEntity.notFound().build();
+
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
@@ -187,13 +203,24 @@ public class UserResumeController {
         }
 
         try {
+            var existingResume = resumeService.getResumeById(id, userId);
+            if (existingResume.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "Resume not found"));
+            }
+            if (Boolean.TRUE.equals(existingResume.get().getAnalyzed())) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Resume already analyzed"
+                ));
+            }
+
             resumeService.analyzeResume(id, userId);
 
             // Get the updated resume with analysis data
             var resumeOpt = resumeService.getResumeById(id, userId);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Resume analysis completed successfully");
+            response.put("message", "Resume analysis completed");
 
             if (resumeOpt.isPresent()) {
                 UserResume resume = resumeOpt.get();
@@ -207,7 +234,12 @@ public class UserResumeController {
             }
 
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("not found")) {
+                return ResponseEntity.status(404).body(Map.of("error", "Resume not found"));
+            }
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
@@ -250,5 +282,33 @@ public class UserResumeController {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
-}
 
+    private String validateUploadInput(MultipartFile file, String resumeText) {
+        boolean hasFile = file != null;
+        boolean hasText = StringUtils.hasText(resumeText);
+
+        if (!hasFile && !hasText) {
+            return "Either resume file or resume text is required";
+        }
+
+        if (hasFile) {
+            if (file.isEmpty()) {
+                return "Resume file cannot be empty";
+            }
+            if (file.getSize() > MAX_FILE_SIZE_BYTES) {
+                return "Resume file exceeds maximum size of 10MB";
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            if (StringUtils.hasText(originalFilename) && originalFilename.contains(".")) {
+                String lowerFilename = originalFilename.toLowerCase();
+                boolean extensionAllowed = ALLOWED_FILE_EXTENSIONS.stream().anyMatch(lowerFilename::endsWith);
+                if (!extensionAllowed) {
+                    return "Unsupported file type. Allowed types: pdf, doc, docx, txt";
+                }
+            }
+        }
+
+        return null;
+    }
+}

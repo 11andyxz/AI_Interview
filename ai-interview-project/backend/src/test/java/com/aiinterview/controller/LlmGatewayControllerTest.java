@@ -1,5 +1,8 @@
 package com.aiinterview.controller;
 
+import com.aiinterview.ml.experiment.ExperimentTracker;
+import com.aiinterview.ml.gateway.ExperimentAwareLlmRouter;
+import com.aiinterview.ml.gateway.LlmRouteDecision;
 import com.aiinterview.model.EvaluationResult;
 import com.aiinterview.model.openai.OpenAiMessage;
 import com.aiinterview.service.LlmEvaluationService;
@@ -46,6 +49,12 @@ class LlmGatewayControllerTest {
     
     @MockBean
     private SessionService sessionService;
+
+    @MockBean
+    private ExperimentAwareLlmRouter experimentRouter;
+
+    @MockBean
+    private ExperimentTracker experimentTracker;
     
     @MockBean
     private com.aiinterview.config.WebMvcConfig webMvcConfig;
@@ -60,6 +69,7 @@ class LlmGatewayControllerTest {
     void setUp() {
         when(promptService.buildSystemPrompt(anyString(), anyString(), any())).thenReturn("System prompt");
         when(promptService.buildConversationHistoryPrompt(anyList(), anyInt())).thenReturn("User prompt");
+        when(experimentRouter.route(any())).thenReturn(LlmRouteDecision.defaultRoute("gpt-3.5-turbo", 0.7));
     }
     
     @Test
@@ -73,7 +83,7 @@ class LlmGatewayControllerTest {
         InterviewSession session = new InterviewSession();
         session.setHistory(new ArrayList<>());
         when(sessionService.getSession(sessionId)).thenReturn(Optional.of(session));
-        when(openAiService.chat(anyList())).thenReturn(Mono.just("What is Java?"));
+        when(openAiService.chatWithConfig(anyList(), anyString(), anyDouble())).thenReturn(Mono.just("What is Java?"));
 
         mockMvc.perform(post("/api/llm/question-generate")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -84,7 +94,7 @@ class LlmGatewayControllerTest {
                 .andExpect(jsonPath("$.question").exists())
                 .andExpect(jsonPath("$.sessionId").value(sessionId));
 
-        verify(openAiService).chat(anyList());
+        verify(openAiService).chatWithConfig(anyList(), anyString(), anyDouble());
     }
     
     @Test
@@ -131,7 +141,7 @@ class LlmGatewayControllerTest {
         messages.add(msg1);
         body.put("messages", messages);
 
-        when(openAiService.chat(anyList())).thenReturn(Mono.just("Hi there!"));
+        when(openAiService.chatWithConfig(anyList(), anyString(), anyDouble())).thenReturn(Mono.just("Hi there!"));
 
         mockMvc.perform(post("/api/llm/chat")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -141,7 +151,7 @@ class LlmGatewayControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").value("Hi there!"));
 
-        verify(openAiService).chat(anyList());
+        verify(openAiService).chatWithConfig(anyList(), anyString(), anyDouble());
     }
 
     @Test
@@ -154,7 +164,7 @@ class LlmGatewayControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Messages are required"));
 
-        verify(openAiService, never()).chat(anyList());
+        verify(openAiService, never()).chatWithConfig(anyList(), anyString(), anyDouble());
     }
     
     @Test
@@ -181,4 +191,3 @@ class LlmGatewayControllerTest {
         verify(openAiService).isConfigured();
     }
 }
-

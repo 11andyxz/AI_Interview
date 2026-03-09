@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,6 +33,11 @@ public class ResumeAnalysisService {
         this.openAiService = openAiService;
         this.objectMapper = objectMapper;
         this.validator = validator;
+    }
+
+    // Backward-compatible constructor used by older unit tests.
+    public ResumeAnalysisService(OpenAiService openAiService, ObjectMapper objectMapper) {
+        this(openAiService, objectMapper, new ResumeAnalysisValidator());
     }
 
     /**
@@ -135,7 +139,8 @@ public class ResumeAnalysisService {
      */
     protected ResumeAnalysisResult parseAnalysisResult(String jsonResponse) {
         try {
-            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
+            String extractedJson = extractJsonFromResponse(jsonResponse);
+            JsonNode jsonNode = objectMapper.readTree(extractedJson);
 
             ResumeAnalysisResult result = new ResumeAnalysisResult();
 

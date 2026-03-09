@@ -158,7 +158,7 @@ test.describe('Andy User Full Flow E2E Tests', () => {
     await page.waitForURL('**/interview/**', { timeout: 15000 });
     
     // Verify we're in interview room
-    expect(page.url()).toMatch(/\/interview\/\d+/);
+    expect(page.url()).toMatch(/\/interview\/[^/]+/);
   });
 
   test('3. Interview Room Test', async ({ page }) => {
@@ -562,4 +562,3 @@ test.describe('Andy User Full Flow E2E Tests', () => {
     }
   });
 });
-

@@ -25,8 +25,10 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -37,6 +39,13 @@ import java.time.Duration;
 @RestController
 @RequestMapping("/api/interviews")
 public class InterviewController {
+
+    private static final Set<String> VALID_INTERVIEW_STATUSES = Set.of(
+        "in progress",
+        "completed",
+        "scheduled",
+        "cancelled"
+    );
 
     private final AiService aiService;
     private final InterviewRepository interviewRepository;
@@ -107,11 +116,14 @@ public class InterviewController {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
 
-        // Validate interview type
-        String interviewType = request.getInterviewType() != null ? request.getInterviewType() : "general";
-        if (!"general".equals(interviewType) && !"resume-based".equals(interviewType)) {
+        String rawInterviewType = request.getInterviewType();
+
+        // Validate and normalize interview type
+        String interviewType = normalizeInterviewType(rawInterviewType);
+        if (interviewType == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid interview type. Must be 'general' or 'resume-based'"));
         }
+        request.setInterviewType(interviewType);
 
         // For resume-based interviews, validate resume exists and is analyzed
         if ("resume-based".equals(interviewType)) {
@@ -142,8 +154,10 @@ public class InterviewController {
             }
             System.out.println("Resume validation passed for resumeId: " + request.getResumeId());
         } else {
-            // For general interviews, candidateId is still required
-            if (request.getCandidateId() == null) {
+            // General interviews can omit candidateId only when custom knowledge mode is enabled.
+            boolean legacyGeneralWithoutCandidate = rawInterviewType != null
+                && ("technical".equalsIgnoreCase(rawInterviewType) || "behavioral".equalsIgnoreCase(rawInterviewType));
+            if (request.getCandidateId() == null && !request.isUseCustomKnowledge() && !legacyGeneralWithoutCandidate) {
                 return ResponseEntity.badRequest().body(Map.of("error", "candidateId is required for general interviews"));
             }
         }
@@ -165,15 +179,18 @@ public class InterviewController {
                 // For resume-based interviews, build knowledge base from resume analysis
                 var analysisOpt = resumeService.getResumeAnalysisData(request.getResumeId(), userId);
                 if (analysisOpt.isPresent()) {
-                    Map<String, Object> knowledgeBase = Map.of(
-                        "type", "resume-based",
-                        "resumeAnalysis", analysisOpt.get(),
-                        "techStack", analysisOpt.get().getTechStack(),
-                        "experienceLevel", analysisOpt.get().getLevel()
-                    );
+                    Map<String, Object> knowledgeBase = new HashMap<>();
+                    knowledgeBase.put("type", "resume-based");
+                    knowledgeBase.put("resumeAnalysis", analysisOpt.get());
+                    if (analysisOpt.get().getTechStack() != null) {
+                        knowledgeBase.put("techStack", analysisOpt.get().getTechStack());
+                    }
+                    if (analysisOpt.get().getLevel() != null) {
+                        knowledgeBase.put("experienceLevel", analysisOpt.get().getLevel());
+                    }
                     response.put("knowledgeBase", knowledgeBase);
                 }
-            } else {
+            } else if (request.getCandidateId() != null) {
                 // For general interviews, use candidate-based knowledge base
                 Optional<Candidate> candidateOpt = candidateService.findById(request.getCandidateId());
                 if (candidateOpt.isPresent()) {
@@ -190,7 +207,8 @@ public class InterviewController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to create interview: " + e.getMessage()));
+            String message = e.getMessage() != null ? e.getMessage() : "Unknown error";
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to create interview: " + message));
         }
     }
 
@@ -339,9 +357,16 @@ public class InterviewController {
             return ResponseEntity.status(401).build();
         }
 
-        ResponseEntity<?> ownershipCheck = checkInterviewOwnership(id, userId);
-        if (ownershipCheck != null) {
-            return ownershipCheck;
+        Optional<Interview> interviewOpt = interviewRepository.findById(id);
+        if (interviewOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Interview interview = interviewOpt.get();
+        if (!userId.equals(interview.getUserId())) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!"Completed".equalsIgnoreCase(interview.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Interview is not completed"));
         }
 
         try {
@@ -362,9 +387,16 @@ public class InterviewController {
             return ResponseEntity.status(401).build();
         }
 
-        ResponseEntity<?> ownershipCheck = checkInterviewOwnership(id, userId);
-        if (ownershipCheck != null) {
-            return ownershipCheck;
+        Optional<Interview> interviewOpt = interviewRepository.findById(id);
+        if (interviewOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Interview interview = interviewOpt.get();
+        if (!userId.equals(interview.getUserId())) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!"Completed".equalsIgnoreCase(interview.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Interview is not completed"));
         }
 
         try {
@@ -385,9 +417,16 @@ public class InterviewController {
             return ResponseEntity.status(401).build();
         }
 
-        ResponseEntity<?> ownershipCheck = checkInterviewOwnership(id, userId);
-        if (ownershipCheck != null) {
-            return ownershipCheck;
+        Optional<Interview> interviewOpt = interviewRepository.findById(id);
+        if (interviewOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Interview interview = interviewOpt.get();
+        if (!userId.equals(interview.getUserId())) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!"Completed".equalsIgnoreCase(interview.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Interview is not completed"));
         }
 
         try {
@@ -396,9 +435,33 @@ public class InterviewController {
                 .header("Content-Type", "application/pdf")
                 .header("Content-Disposition", "attachment; filename=\"interview-report-" + id + ".pdf\"")
                 .body(pdfBytes);
-        } catch (RuntimeException | IOException e) {
-            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to generate PDF report"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
+    }
+
+    /**
+     * Legacy report endpoint compatibility: /report/pdf and /report/json
+     */
+    @GetMapping("/{id}/report/{format}")
+    public ResponseEntity<?> downloadInterviewReportByFormat(
+            @PathVariable String id,
+            @PathVariable String format,
+            HttpServletRequest request) {
+        if ("pdf".equalsIgnoreCase(format)) {
+            return downloadInterviewReport(id, request);
+        }
+        if ("json".equalsIgnoreCase(format)) {
+            return getInterviewReportJson(id, request);
+        }
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid report format. Supported: pdf, json"));
+    }
+
+    @GetMapping("/{id}/report/pdf")
+    public ResponseEntity<?> downloadInterviewReportPdfAlias(@PathVariable String id, HttpServletRequest request) {
+        return downloadInterviewReport(id, request);
     }
     
     /**
@@ -456,18 +519,48 @@ public class InterviewController {
             return ResponseEntity.status(401).build();
         }
 
-        ResponseEntity<?> ownershipCheck = checkInterviewOwnership(id, userId);
-        if (ownershipCheck != null) {
-            return ownershipCheck;
+        Optional<Interview> interviewOpt = interviewRepository.findById(id);
+        if (interviewOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!userId.equals(interviewOpt.get().getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+        
+        interviewRepository.delete(interviewOpt.get());
+        return ResponseEntity.ok(Map.of("success", true, "message", "Interview deleted successfully"));
+    }
+
+    /**
+     * Update interview status.
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateInterviewStatus(
+            @PathVariable String id,
+            @RequestBody Map<String, String> requestBody,
+            HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
 
         Optional<Interview> interviewOpt = interviewRepository.findById(id);
         if (interviewOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
-        interviewRepository.delete(interviewOpt.get());
-        return ResponseEntity.ok(Map.of("success", true, "message", "Interview deleted successfully"));
+        Interview interview = interviewOpt.get();
+        if (!userId.equals(interview.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+
+        String newStatus = requestBody.get("status");
+        if (newStatus == null || !VALID_INTERVIEW_STATUSES.contains(newStatus.toLowerCase(Locale.ROOT))) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid interview status"));
+        }
+
+        interview.setStatus(newStatus);
+        Interview updated = interviewRepository.save(interview);
+        return ResponseEntity.ok(Map.of("success", true, "interview", updated));
     }
 
     /**
@@ -673,5 +766,23 @@ public class InterviewController {
         } catch (Exception e) {
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         }
+    }
+
+    private String normalizeInterviewType(String rawType) {
+        if (rawType == null || rawType.trim().isEmpty()) {
+            return "general";
+        }
+
+        String normalized = rawType.trim().toLowerCase(Locale.ROOT);
+        if ("general".equals(normalized) || "resume-based".equals(normalized)) {
+            return normalized;
+        }
+
+        // Backward-compatible aliases.
+        if ("technical".equals(normalized) || "behavioral".equals(normalized)) {
+            return "general";
+        }
+
+        return null;
     }
 }

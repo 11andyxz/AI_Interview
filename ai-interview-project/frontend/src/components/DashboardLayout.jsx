@@ -9,6 +9,11 @@ import KnowledgeBasePage from './KnowledgeBasePage';
 import MockInterviewPage from './MockInterviewPage';
 import PaymentPage from './PaymentPage';
 import UserProfilePage from './UserProfilePage';
+import ProgressDashboard from './ProgressDashboard';
+import SkillProgressPage from './SkillProgressPage';
+import SettingsPage from './SettingsPage';
+import CustomQuestionSetPage from './CustomQuestionSetPage';
+import NotFoundPage from './NotFoundPage';
 import { useToast } from './common/useToast';
 import ToastContainer from './common/ToastContainer';
 
@@ -23,6 +28,13 @@ const DashboardLayout = () => {
 
   const handleModalSubmit = async (formData) => {
     try {
+      const candidateId = formData.candidateId === '' || formData.candidateId == null
+        ? null
+        : Number(formData.candidateId);
+      const resumeId = formData.resumeId === '' || formData.resumeId == null
+        ? null
+        : Number(formData.resumeId);
+
       const accessToken = localStorage.getItem('accessToken');
       const headers = {
         'Content-Type': 'application/json',
@@ -35,13 +47,13 @@ const DashboardLayout = () => {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          candidateId: formData.candidateId,
+          candidateId: Number.isNaN(candidateId) ? null : candidateId,
           positionType: formData.positionType,
           programmingLanguages: formData.programmingLanguages,
           language: formData.language,
           useCustomKnowledge: formData.useCustomKnowledge,
           interviewType: formData.interviewType,
-          resumeId: formData.resumeId,
+          resumeId: Number.isNaN(resumeId) ? null : resumeId,
           templateId: formData.templateId,
           questionSetId: formData.questionSetId
         }),
@@ -50,10 +62,15 @@ const DashboardLayout = () => {
       if (response.ok) {
         const data = await response.json();
         const knowledgeBase = data.knowledgeBase;
-        const interviewId = data?.interview?.id || Date.now();
-        
+        const interviewId = data?.interview?.id || data?.id;
+
+        if (!interviewId) {
+          error('Interview created, but no interview id was returned.');
+          return;
+        }
+
         localStorage.setItem(`interview_${interviewId}_kb`, JSON.stringify(knowledgeBase));
-        
+
         success('Interview created successfully');
         navigate(`/interview/${interviewId}`);
       } else {
@@ -77,8 +94,14 @@ const DashboardLayout = () => {
           <Route path="/resume" element={<ResumePage />} />
           <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
           <Route path="/mock-interview" element={<MockInterviewPage />} />
+          <Route path="/mock-interview/:id" element={<MockInterviewPage />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/progress" element={<ProgressDashboard />} />
+          <Route path="/skills" element={<SkillProgressPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/question-sets" element={<CustomQuestionSetPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <NewInterviewModal
@@ -91,4 +114,3 @@ const DashboardLayout = () => {
 };
 
 export default DashboardLayout;
-

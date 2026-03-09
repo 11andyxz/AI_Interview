@@ -69,13 +69,15 @@ class ResumeAnalysisServiceTest {
 
         when(openAiService.simpleChat(any(), any())).thenReturn(Mono.just(invalidJsonResponse));
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            resumeAnalysisService.analyzeResumeWithOpenAI(resumeText);
-        });
+        // When
+        ResumeAnalysisResult result = resumeAnalysisService.analyzeResumeWithOpenAI(resumeText);
 
-        assertTrue(exception.getMessage().contains("Failed to analyze resume"));
-        verify(openAiService, times(1)).simpleChat(any(), any());
+        // Then - fallback result should be returned instead of throwing
+        assertNotNull(result);
+        assertEquals("junior", result.getLevel());
+        assertTrue(result.getTechStack().isEmpty());
+        assertTrue(result.getSummary().contains("temporarily unavailable"));
+        verify(openAiService, times(2)).simpleChat(any(), any());
     }
 
     @Test
@@ -85,13 +87,14 @@ class ResumeAnalysisServiceTest {
 
         when(openAiService.simpleChat(any(), any())).thenReturn(Mono.error(new RuntimeException("OpenAI service error")));
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            resumeAnalysisService.analyzeResumeWithOpenAI(resumeText);
-        });
+        // When
+        ResumeAnalysisResult result = resumeAnalysisService.analyzeResumeWithOpenAI(resumeText);
 
-        assertTrue(exception.getMessage().contains("Failed to analyze resume"));
-        verify(openAiService, times(1)).simpleChat(any(), any());
+        // Then - fallback result should be returned instead of throwing
+        assertNotNull(result);
+        assertEquals("junior", result.getLevel());
+        assertTrue(result.getSummary().contains("temporarily unavailable"));
+        verify(openAiService, times(2)).simpleChat(any(), any());
     }
 
     @Test

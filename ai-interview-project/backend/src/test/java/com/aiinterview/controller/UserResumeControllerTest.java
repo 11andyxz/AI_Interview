@@ -13,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -161,14 +163,18 @@ class UserResumeControllerTest {
 
     @Test
     void testDownloadResume_Success() throws Exception {
-        when(resumeService.getResumeFilePath(resumeId, userId))
-            .thenReturn(java.util.Optional.of(java.nio.file.Paths.get("test.pdf")));
+        Path tempFile = Files.createTempFile("resume-test", ".pdf");
+        try {
+            Files.writeString(tempFile, "dummy resume content");
+            when(resumeService.getResumeFilePath(resumeId, userId))
+                .thenReturn(java.util.Optional.of(tempFile));
 
-        // This test would need file system mocking for complete testing
-        // For now, we'll test the basic endpoint structure
-        mockMvc.perform(get("/api/user/resume/{id}/download", resumeId)
-                .requestAttr("userId", userId))
-            .andExpect(status().isOk());
+            mockMvc.perform(get("/api/user/resume/{id}/download", resumeId)
+                    .requestAttr("userId", userId))
+                .andExpect(status().isOk());
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
     }
 
     @Test
@@ -183,6 +189,9 @@ class UserResumeControllerTest {
 
     @Test
     void testAnalyzeResume_Success() throws Exception {
+        when(resumeService.getResumeById(resumeId, userId))
+            .thenReturn(Optional.of(mockResume));
+
         mockMvc.perform(post("/api/user/resume/{id}/analyze", resumeId)
                 .requestAttr("userId", userId))
             .andExpect(status().isOk())
@@ -293,14 +302,11 @@ class UserResumeControllerTest {
 
     @Test
     void testUploadResume_TextOnly_Success() throws Exception {
-        MockMultipartFile textFile = new MockMultipartFile(
-            "resumeText", "", "text/plain", "Resume text content".getBytes());
-
-        when(resumeService.uploadResume(eq(userId), any(), any()))
+        when(resumeService.uploadResume(eq(userId), isNull(), eq("Resume text content")))
             .thenReturn(mockResume);
 
         mockMvc.perform(multipart("/api/user/resume")
-                .file(textFile)
+                .param("resumeText", "Resume text content")
                 .requestAttr("userId", userId))
             .andExpect(status().isOk());
     }

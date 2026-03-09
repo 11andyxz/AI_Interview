@@ -108,6 +108,7 @@ const KnowledgeBasePage = () => {
 
       if (response.ok) {
         success('Knowledge base updated successfully');
+        setShowCreateModal(false);
         setEditingKb(null);
         setFormData({ name: '', description: '', content: '' });
         loadKnowledgeBases();
@@ -221,7 +222,7 @@ const KnowledgeBasePage = () => {
           icon="file"
           title="No knowledge bases"
           message="Create your first knowledge base to get started"
-          actionLabel="Create Knowledge Base"
+          actionLabel="New Knowledge Base"
           onAction={() => setShowCreateModal(true)}
         />
       ) : (
@@ -245,12 +246,14 @@ const KnowledgeBasePage = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => openEditModal(kb)}
+                      aria-label="Edit"
                       className="text-gray-400 hover:text-blue-600"
                     >
                       <Edit size={18} />
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(kb.id)}
+                      aria-label="Delete"
                       className="text-gray-400 hover:text-red-600"
                     >
                       <Trash2 size={18} />
@@ -272,8 +275,19 @@ const KnowledgeBasePage = () => {
 
       {/* Create/Edit Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          data-testid="modal-backdrop"
+          onClick={() => {
+            setShowCreateModal(false);
+            setEditingKb(null);
+            setFormData({ name: '', description: '', content: '' });
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold mb-4">
               {editingKb ? 'Edit Knowledge Base' : 'Create New Knowledge Base'}
             </h3>
@@ -282,6 +296,7 @@ const KnowledgeBasePage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
                 <input
                   type="text"
+                  name="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -291,6 +306,7 @@ const KnowledgeBasePage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
+                  name="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg h-24"
@@ -300,6 +316,7 @@ const KnowledgeBasePage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Content (JSON)</label>
                 <textarea
+                  name="content"
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg h-32 font-mono text-sm"
@@ -344,4 +361,3 @@ const KnowledgeBasePage = () => {
 };
 
 export default KnowledgeBasePage;
-

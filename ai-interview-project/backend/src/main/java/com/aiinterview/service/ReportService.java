@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -49,6 +50,9 @@ public class ReportService {
         report.put("title", interview.getTitle());
         report.put("status", interview.getStatus());
         report.put("date", interview.getDate());
+        report.put("language", interview.getLanguage());
+        report.put("techStack", interview.getTechStack());
+        report.put("programmingLanguages", interview.getProgrammingLanguages());
         report.put("createdAt", interview.getCreatedAt());
         report.put("updatedAt", interview.getUpdatedAt());
 
@@ -70,6 +74,7 @@ public class ReportService {
         // Conversation summary
         report.put("totalQuestions", history.size());
         report.put("conversationHistory", history);
+        report.put("score", calculateOverallScore(history));
 
         // Generate comprehensive feedback using OpenAI
         String feedback = null;
@@ -227,5 +232,13 @@ public class ReportService {
             .sum();
         return total / history.size();
     }
-}
 
+    private double calculateOverallScore(List<QAHistory> history) {
+        return history.stream()
+            .map(QAHistory::getScore)
+            .filter(Objects::nonNull)
+            .mapToDouble(Double::doubleValue)
+            .average()
+            .orElse(75.0);
+    }
+}

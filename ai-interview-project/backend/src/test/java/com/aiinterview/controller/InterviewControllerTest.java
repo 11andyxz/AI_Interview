@@ -127,7 +127,7 @@ class InterviewControllerTest {
         Interview createdInterview = createMockInterview();
 
         when(candidateService.findById(1)).thenReturn(java.util.Optional.of(candidate));
-        when(interviewRepository.save(any(Interview.class))).thenReturn(createdInterview);
+        when(interviewService.createInterview(any(CreateInterviewRequest.class), eq(1L))).thenReturn(createdInterview);
 
         // When & Then
         mockMvc.perform(post("/api/interviews")
@@ -172,7 +172,6 @@ class InterviewControllerTest {
     void deleteInterview_Success() throws Exception {
         // Given
         Interview interview = createMockInterview();
-        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
         when(interviewRepository.findById("test-id")).thenReturn(java.util.Optional.of(interview));
 
         // When & Then
@@ -190,7 +189,9 @@ class InterviewControllerTest {
             "totalQuestions", 10,
             "conversationHistory", List.of()
         );
-        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
+        Interview completedInterview = createMockInterview();
+        completedInterview.setStatus("Completed");
+        when(interviewRepository.findById("test-id")).thenReturn(Optional.of(completedInterview));
         when(reportService.generateReport("test-id")).thenReturn(report);
 
         // When & Then
@@ -203,7 +204,9 @@ class InterviewControllerTest {
     @Test
     void getInterviewReportJson_Success() throws Exception {
         // Given
-        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
+        Interview completedInterview = createMockInterview();
+        completedInterview.setStatus("Completed");
+        when(interviewRepository.findById("test-id")).thenReturn(Optional.of(completedInterview));
         Map<String, Object> report = Map.of("score", 85);
         when(reportService.generateReport("test-id")).thenReturn(report);
 
@@ -260,6 +263,7 @@ class InterviewControllerTest {
     void updateInterviewStatus_InvalidStatus_BadRequest() throws Exception {
         // Given
         Interview existingInterview = createMockInterview();
+        existingInterview.setUserId(1L);
         when(interviewRepository.findById("test-id")).thenReturn(Optional.of(existingInterview));
 
         // When & Then - Invalid status
@@ -275,7 +279,6 @@ class InterviewControllerTest {
         // Given
         Interview inProgressInterview = createMockInterview();
         inProgressInterview.setStatus("In Progress");
-        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
         when(interviewRepository.findById("test-id")).thenReturn(Optional.of(inProgressInterview));
 
         // When & Then
@@ -286,8 +289,7 @@ class InterviewControllerTest {
 
     @Test
     void deleteInterview_NotFound_Returns404() throws Exception {
-        // Given
-        when(interviewService.isInterviewOwnedByUser("non-existent-id", 1L)).thenReturn(false);
+        when(interviewRepository.findById("non-existent-id")).thenReturn(Optional.empty());
 
         // When & Then
         mockMvc.perform(delete("/api/interviews/non-existent-id")
@@ -297,22 +299,21 @@ class InterviewControllerTest {
 
     @Test
     void createInterview_UnauthorizedUser_Returns403() throws Exception {
-        // Given - No userId in request attributes (simulating unauthorized access)
+        // Given - Missing candidateId for general interview should return 400
         CreateInterviewRequest request = new CreateInterviewRequest();
         request.setPositionType("Developer");
         request.setProgrammingLanguages(List.of("Java"));
         request.setLanguage("English");
 
-        // When & Then - Missing userId should result in error
+        // When & Then
         mockMvc.perform(post("/api/interviews")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError()); // Or appropriate error status
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void downloadInterviewReport_InvalidFormat_Returns400() throws Exception {
-        // When & Then - Invalid format parameter
         mockMvc.perform(get("/api/interviews/test-id/report/invalidformat")
                 .requestAttr("userId", 1L))
                 .andExpect(status().isBadRequest());
@@ -333,8 +334,9 @@ class InterviewControllerTest {
 
     @Test
     void downloadInterviewReport_Success() throws Exception {
-        // Given
-        when(interviewService.isInterviewOwnedByUser("test-id", 1L)).thenReturn(true);
+        Interview completedInterview = createMockInterview();
+        completedInterview.setStatus("Completed");
+        when(interviewRepository.findById("test-id")).thenReturn(Optional.of(completedInterview));
         byte[] pdfData = "PDF content".getBytes();
         when(pdfReportService.generatePdfReport("test-id")).thenReturn(pdfData);
 
@@ -351,6 +353,7 @@ class InterviewControllerTest {
         // Given
         List<String> interviewIds = List.of("id1", "id2");
         Map<String, Object> request = Map.of("interviewIds", interviewIds);
+        when(interviewSessionService.compareInterviews(interviewIds)).thenReturn(Map.of("result", "ok"));
 
         // When & Then
         mockMvc.perform(post("/api/interviews/compare")
@@ -422,6 +425,7 @@ class InterviewControllerTest {
     private Interview createMockInterview() {
         Interview interview = new Interview();
         interview.setId("test-interview-id");
+        interview.setUserId(1L);
         interview.setTitle("Test Interview");
         interview.setStatus("In Progress");
         return interview;

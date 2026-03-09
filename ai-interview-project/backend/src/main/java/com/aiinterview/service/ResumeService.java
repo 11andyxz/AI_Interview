@@ -13,9 +13,11 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,6 +45,7 @@ public class ResumeService {
     private ObjectMapper objectMapper;
 
     private static final String UPLOAD_DIR = "uploads/resumes/";
+    private static final String DEFAULT_TEXT_FILENAME = "resume.txt";
     
     /**
      * Get all resumes for a user
@@ -62,22 +65,50 @@ public class ResumeService {
      * Upload and save resume file
      */
     public UserResume uploadResume(Long userId, MultipartFile file, String resumeText) throws IOException {
+        boolean hasFile = file != null && !file.isEmpty();
+        boolean hasText = StringUtils.hasText(resumeText);
+
+        if (!hasFile && !hasText) {
+            throw new IllegalArgumentException("Either resume file or resume text is required");
+        }
+
         // Create upload directory if not exists
         Path uploadPath = Paths.get(UPLOAD_DIR);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
-        
+
+        String originalFilename;
+        String fileContentType;
+        long fileSize;
+
         // Generate unique filename
-        String originalFilename = file.getOriginalFilename();
-        String fileExtension = originalFilename != null && originalFilename.contains(".") 
-            ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
-            : "";
-        String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
+        String uniqueFilename = UUID.randomUUID().toString();
+        if (hasFile) {
+            originalFilename = file.getOriginalFilename();
+            String fileExtension = originalFilename != null && originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                : "";
+            uniqueFilename += fileExtension;
+            fileContentType = file.getContentType();
+            fileSize = file.getSize();
+        } else {
+            uniqueFilename += ".txt";
+            originalFilename = DEFAULT_TEXT_FILENAME;
+            fileContentType = "text/plain";
+            fileSize = resumeText.getBytes(StandardCharsets.UTF_8).length;
+        }
+
         Path filePath = uploadPath.resolve(uniqueFilename);
-        
-        // Save file
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // Save file or text fallback
+        if (hasFile) {
+            try (InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } else {
+            Files.writeString(filePath, resumeText, StandardCharsets.UTF_8);
+        }
         
         // Create resume record
         UserResume resume = new UserResume();
@@ -85,8 +116,8 @@ public class ResumeService {
         resume.setFileName(uniqueFilename);
         resume.setOriginalFileName(originalFilename);
         resume.setFilePath(filePath.toString());
-        resume.setFileSize(file.getSize());
-        resume.setFileType(file.getContentType());
+        resume.setFileSize(fileSize);
+        resume.setFileType(fileContentType);
         resume.setResumeText(resumeText);
         resume.setAnalyzed(false);
         
@@ -416,4 +447,3 @@ public class ResumeService {
         analyzeResume(id, userId);
     }
 }
-

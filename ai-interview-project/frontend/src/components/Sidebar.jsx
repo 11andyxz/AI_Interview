@@ -74,7 +74,7 @@ const Sidebar = ({ onNewInterview }) => {
           className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors shadow-sm hover:shadow"
         >
           <Plus size={18} />
-          New Interview
+          Start Interview
         </button>
       </div>
 

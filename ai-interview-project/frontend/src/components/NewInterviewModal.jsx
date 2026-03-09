@@ -3,6 +3,9 @@ import LoadingSpinner from './common/LoadingSpinner';
 import { X, FileText, BookOpen } from 'lucide-react';
 import InterviewTemplateModal from './InterviewTemplateModal';
 
+const DEFAULT_POSITION_TYPE = 'Software Developer';
+const DEFAULT_PROGRAMMING_LANGUAGES = ['JavaScript'];
+
 const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   const [candidates, setCandidates] = useState([]);
   const [resumes, setResumes] = useState([]);
@@ -10,8 +13,8 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     candidateId: '',
     useCustomKnowledge: false,
-    positionType: '',
-    programmingLanguages: [],
+    positionType: DEFAULT_POSITION_TYPE,
+    programmingLanguages: DEFAULT_PROGRAMMING_LANGUAGES,
     language: 'English',
     templateId: null,
     questionSetId: null,
@@ -19,6 +22,7 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
     resumeId: null
   });
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [formError, setFormError] = useState('');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [showQuestionSetModal, setShowQuestionSetModal] = useState(false);
@@ -54,11 +58,19 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
       const data = await response.json();
       setCandidates(data.candidates || []);
       if (data.candidates && data.candidates.length > 0) {
-        setFormData(prev => ({ ...prev, candidateId: data.candidates[0].id }));
+        setFormData(prev => ({
+          ...prev,
+          candidateId: data.candidates[0].id,
+          useCustomKnowledge: prev.useCustomKnowledge
+        }));
+      } else {
+        // Allow general interview creation without a candidate by using custom knowledge mode.
+        setFormData(prev => ({ ...prev, candidateId: '', useCustomKnowledge: true }));
       }
     } catch (err) {
       console.error('Failed to load candidates:', err);
       setCandidates([]);
+      setFormData(prev => ({ ...prev, candidateId: '', useCustomKnowledge: true }));
     } finally {
       setLoading(false);
     }
@@ -96,9 +108,10 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
       // Reset fields when switching types
       candidateId: interviewType === 'general' ? (candidates.length > 0 ? candidates[0].id : '') : '',
       resumeId: interviewType === 'resume-based' ? defaultResumeId : null,
-      positionType: '',
-      programmingLanguages: []
+      positionType: interviewType === 'general' ? DEFAULT_POSITION_TYPE : '',
+      programmingLanguages: interviewType === 'general' ? DEFAULT_PROGRAMMING_LANGUAGES : []
     }));
+    setFormError('');
 
     // If switching to resume-based and we have a default resume, load its analysis
     if (interviewType === 'resume-based' && defaultResumeId) {
@@ -200,23 +213,31 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
   };
 
   const handleSubmit = () => {
-    if (formData.interviewType === 'general' && !formData.candidateId) {
-      alert('Please select a candidate for general interviews');
-      return;
+    setFormError('');
+    const submitData = { ...formData };
+
+    if (submitData.interviewType === 'general' && !submitData.candidateId) {
+      if (candidates.length === 0) {
+        submitData.useCustomKnowledge = true;
+      } else if (!submitData.useCustomKnowledge) {
+        setFormError('Please select a candidate for general interviews.');
+        return;
+      }
     }
+
     if (formData.interviewType === 'resume-based' && !formData.resumeId) {
-      alert('Please select a resume for resume-based interviews');
+      setFormError('Please select a resume for resume-based interviews.');
       return;
     }
     if (!formData.positionType || formData.programmingLanguages.length === 0) {
-      alert('Please fill in required fields');
+      setFormError('Please fill in all required fields.');
       return;
     }
     if (!agreeTerms) {
-      alert('Please agree to the terms of service');
+      setFormError('Please agree to the terms of service.');
       return;
     }
-    onSubmit(formData);
+    onSubmit(submitData);
   };
 
   if (!isOpen) return null;
@@ -280,6 +301,12 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
             <FileText size={20} />
             {selectedTemplate ? `Using: ${selectedTemplate.title}` : 'Use Interview Template (Optional)'}
           </button>
+          <div className="mt-2 text-xs text-gray-500">
+            Suggested: Backend Developer, Frontend Engineer, Senior Engineer
+          </div>
+          <div className="mt-1 text-xs text-gray-500">
+            Template details include tech stack, level, and duration in minutes.
+          </div>
           {selectedTemplate && (
             <div className="mt-2 text-sm text-gray-600">
               {selectedTemplate.techStack} • {selectedTemplate.level} • {selectedTemplate.durationMinutes} min
@@ -318,7 +345,7 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
                 </div>
               ) : candidates.length === 0 ? (
                 <div className="text-sm text-gray-500 p-3 border border-gray-300 rounded-lg bg-gray-50">
-                  No candidates available. Please add candidates first.
+                  No candidates available. Interview creation will use Custom Knowledge Base mode automatically.
                 </div>
               ) : (
                 <select
@@ -479,6 +506,11 @@ const NewInterviewModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
 
           {/* Submit Button */}
+          {formError && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
+              {formError}
+            </div>
+          )}
           <button
             onClick={handleSubmit}
             data-testid="create-interview-button"
@@ -606,4 +638,3 @@ const QuestionSetSelectorModal = ({ isOpen, onClose, onSelectQuestionSet }) => {
 };
 
 export default NewInterviewModal;
-
