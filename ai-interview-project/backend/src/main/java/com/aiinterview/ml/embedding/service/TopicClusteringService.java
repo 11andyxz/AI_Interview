@@ -4,6 +4,7 @@ import com.aiinterview.ml.embedding.entity.QuestionEmbedding;
 import com.aiinterview.ml.embedding.repository.QuestionEmbeddingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "ml.embedding.enabled", havingValue = "true", matchIfMissing = false)
 @RequiredArgsConstructor
 public class TopicClusteringService {
     

@@ -9,6 +9,7 @@ import com.aiinterview.ml.embedding.repository.QuestionEmbeddingRepository;
 import com.aiinterview.ml.embedding.service.TopicCoverageTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -49,8 +50,8 @@ public class AdaptiveQuestionSelector {
             @Qualifier("questionKnowledgeBaseService") KnowledgeBaseService knowledgeBaseService,
             QuestionDifficultyCalibrationRepository calibrationRepository,
             CandidateAbilityEstimator abilityEstimator,
-            TopicCoverageTracker coverageTracker,
-            QuestionEmbeddingRepository embeddingRepository) {
+            @Autowired(required = false) TopicCoverageTracker coverageTracker,
+            @Autowired(required = false) QuestionEmbeddingRepository embeddingRepository) {
         this.knowledgeBaseService = knowledgeBaseService;
         this.calibrationRepository = calibrationRepository;
         this.abilityEstimator = abilityEstimator;
@@ -96,7 +97,7 @@ public class AdaptiveQuestionSelector {
 
         // Get embeddings for cluster information (if available)
         Map<String, QuestionEmbedding> embeddings = new HashMap<>();
-        boolean useTopicDiversity = (sessionId != null);
+        boolean useTopicDiversity = (sessionId != null && embeddingRepository != null && coverageTracker != null);
         Long roleIdNumeric = parseRoleId(roleId);
         
         if (useTopicDiversity && roleIdNumeric != null) {

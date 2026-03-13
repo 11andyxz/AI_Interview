@@ -2,6 +2,7 @@ package com.aiinterview.ml.model;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -12,6 +13,7 @@ import java.util.*;
  * Pure Java implementation without external ML libraries.
  */
 @Component
+@ConditionalOnProperty(name = "ml.nlp.enabled", havingValue = "true", matchIfMissing = false)
 public class ResponseScoringModel implements Serializable {
     
     private static final long serialVersionUID = 1L;

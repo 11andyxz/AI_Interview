@@ -1,5 +1,6 @@
 package com.aiinterview.ml.nlp;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -9,6 +10,7 @@ import java.util.*;
  * Computes Term Frequency-Inverse Document Frequency vectors for text similarity.
  */
 @Component
+@ConditionalOnProperty(name = "ml.nlp.enabled", havingValue = "true", matchIfMissing = false)
 public class TfIdfVectorizer {
     
     // IDF values: term -> idf score

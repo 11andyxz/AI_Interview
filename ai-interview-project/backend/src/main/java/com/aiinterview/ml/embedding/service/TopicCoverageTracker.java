@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
  * Computes Shannon entropy to measure topic diversity and identifies coverage gaps.
  */
 @Service
+@ConditionalOnProperty(name = "ml.embedding.enabled", havingValue = "true", matchIfMissing = false)
 public class TopicCoverageTracker {
     
     private static final Logger logger = LoggerFactory.getLogger(TopicCoverageTracker.class);

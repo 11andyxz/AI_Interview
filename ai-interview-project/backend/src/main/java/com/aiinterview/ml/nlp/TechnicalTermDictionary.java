@@ -2,6 +2,7 @@ package com.aiinterview.ml.nlp;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import java.util.*;
  * Used by ResponseFeatureExtractor to compute technical term density features.
  */
 @Component
+@ConditionalOnProperty(name = "ml.nlp.enabled", havingValue = "true", matchIfMissing = false)
 public class TechnicalTermDictionary {
     
     private final ObjectMapper objectMapper = new ObjectMapper();

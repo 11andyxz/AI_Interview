@@ -1,6 +1,7 @@
 package com.aiinterview.ml.nlp;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
  * readability, confidence, and specificity metrics.
  */
 @Component
+@ConditionalOnProperty(name = "ml.nlp.enabled", havingValue = "true", matchIfMissing = false)
 public class ResponseFeatureExtractor {
     
     @Autowired

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
  * and sliding-window regression.
  */
 @Component
+@ConditionalOnProperty(name = "ml.prediction.enabled", havingValue = "true", matchIfMissing = false)
 public class InterviewOutcomePredictor {
     
     private static final Logger logger = LoggerFactory.getLogger(InterviewOutcomePredictor.class);

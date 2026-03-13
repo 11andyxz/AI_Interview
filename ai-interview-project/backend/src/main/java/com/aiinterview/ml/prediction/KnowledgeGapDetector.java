@@ -4,6 +4,7 @@ import com.aiinterview.ml.embedding.service.TopicCoverageTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
  * Uses topic clustering and score analysis to provide targeted recommendations.
  */
 @Component
+@ConditionalOnProperty(name = "ml.prediction.enabled", havingValue = "true", matchIfMissing = false)
 public class KnowledgeGapDetector {
     
     private static final Logger logger = LoggerFactory.getLogger(KnowledgeGapDetector.class);
