@@ -1,0 +1,61 @@
+# Baseline Model Configuration
+# Used for outcome prediction evaluation
+
+model:
+  name: "baseline_gbrt"
+  type: "gradient_boosted_trees"
+  version: "1.0"
+  
+  parameters:
+    n_estimators: 50
+    max_depth: 5
+    learning_rate: 0.1
+    subsample: 0.8
+    random_state: 42
+    
+  features:
+    - response_length_log
+    - vocabulary_richness
+    - technical_term_coverage
+    - tfidf_similarity
+    - readability_score
+    - confidence_indicator
+    - response_completeness
+    - code_snippet_quality
+    - question_difficulty_match
+    - time_to_respond
+    - revision_count
+    - follow_up_clarity
+
+evaluation:
+  metrics:
+    - rmse
+    - mae
+    - r2
+    - accuracy
+    - precision
+    - recall
+    - f1
+    - brier_score
+  
+  pass_threshold: 60.0  # Score threshold for pass/fail classification
+  confidence_threshold: 0.7  # Minimum confidence for prediction
+  min_questions: 5  # Minimum questions for model activation
+  
+  segment_by:
+    - tech_stack
+    - role_level
+    - question_count_bin
+  
+  question_bins: [0, 4, 7, 10, 999]
+  question_bin_labels: ["0-3", "4-6", "7-9", "10+"]
+
+cross_validation:
+  enabled: false
+  n_folds: 5
+  stratify_by: null
+
+data:
+  train_test_split: 0.8
+  random_seed: 42
+  min_samples_per_segment: 5

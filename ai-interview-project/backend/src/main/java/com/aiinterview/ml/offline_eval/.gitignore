@@ -1,0 +1,23 @@
+# Ignore extracted data files (may contain sensitive information)
+data/
+
+# Ignore evaluation results (too large for git)
+results/*.csv
+results/*.json
+results/*.html
+
+# Keep result directory structure
+!results/.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter notebooks (if any)
+*.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.log
+.DS_Store

@@ -1,0 +1,88 @@
+# Experiment Configuration Template
+# Copy this file and customize for your experiment
+
+experiment:
+  id: "EXP-XXX"
+  name: "Experiment Name Here"
+  description: "Brief description of what this experiment tests"
+  hypothesis: "What change do you expect and why"
+  
+  owner: "your_name"
+  created_date: "YYYY-MM-DD"
+  status: "planned"  # planned | in-progress | completed | failed
+  
+  priority: "P1"  # P0 | P1 | P2
+  estimated_duration: "X days"
+
+# Model configuration  
+model:
+  base_model: "baseline_gbrt"  # Which model to start from
+  modifications:
+    - "List specific changes made to base model"
+    - "E.g., added context-aware features"
+    - "E.g., tuned learning rate from 0.1 to 0.05"
+  
+  new_features:
+    - feature_name_1: "Description of new feature"
+    - feature_name_2: "Description of another feature"
+
+# Evaluation configuration
+evaluation:
+  data_source: "path/to/data.csv"
+  data_date_range: "2026-03-01 to 2026-03-15"
+  data_filters:
+    role_level: null  # null = all, or specify: junior/mid/senior
+    tech_stack: null  # null = all, or specify stack
+    min_questions: 5
+  
+  metrics:
+    primary: "rmse"  # Primary success metric
+    secondary: ["mae", "r2", "false_negative_rate"]
+  
+  success_criteria:
+    - "Primary metric improves by >10%"
+    - "No degradation in secondary metrics >5%"
+    - "False negative rate for senior roles <5%"
+
+# Comparison baseline
+baseline:
+  model_version: "1.0"
+  rmse: 10.12
+  mae: 8.45
+  r2: 0.83
+  false_negative_rate: 0.060
+
+# Expected results
+expected_results:
+  rmse_target: 9.0
+  improvement_pct: 11.0
+  segments_to_improve:
+    - "senior roles"
+    - "short interviews (3-4 questions)"
+
+# Risks and mitigation
+risks:
+  - risk: "Overfitting to test data"
+    mitigation: "Use cross-validation and separate validation set"
+  - risk: "Increased latency"
+    mitigation: "Benchmark feature extraction time"
+
+# Rollout plan
+rollout:
+  phase_1: "Offline validation (3 days)"
+  phase_2: "Staging A/B test (5 days, 50% traffic)"
+  phase_3: "Production rollout (gradual, 25% → 50% → 100%)"
+  rollback_criteria:
+    - "RMSE degrades >5% from baseline"
+    - "API error rate >3%"
+
+# Results (fill after experiment)
+results:
+  status: null  # success | partial_success | failed
+  actual_metrics:
+    rmse: null
+    mae: null
+    r2: null
+  analysis: "Summary of findings"
+  learned: "Key learnings from experiment"
+  next_steps: "Recommended follow-up actions"

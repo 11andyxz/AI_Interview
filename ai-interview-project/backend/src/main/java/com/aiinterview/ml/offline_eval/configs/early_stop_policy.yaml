@@ -1,0 +1,50 @@
+# Early-Stopping Policy Configuration
+
+policy:
+  name: "baseline_policy"
+  description: "Baseline early-stopping policy with role-specific thresholds"
+  version: "1.0"
+
+# Global thresholds (applied when role-specific not available)
+global:
+  min_questions: 5
+  pass_threshold: 0.95  # Probability threshold for early pass
+  fail_threshold: 0.05  # Probability threshold for early fail
+  confidence_requirement: 0.90  # Minimum model confidence
+  stability_window: 2  # Number of consistent predictions required
+
+# Role-specific overrides
+role_specific:
+  junior:
+    min_questions: 4
+    pass_threshold: 0.92
+    fail_threshold: 0.08
+    confidence_requirement: 0.88
+    rationale: "Junior roles have clearer signals, allow earlier stopping"
+  
+  mid:
+    min_questions: 5
+    pass_threshold: 0.94
+    fail_threshold: 0.06
+    confidence_requirement: 0.90
+    rationale: "Balanced approach for mid-level roles"
+  
+  senior:
+    min_questions: 6
+    pass_threshold: 0.96
+    fail_threshold: 0.04
+    confidence_requirement: 0.92
+    rationale: "Conservative thresholds for senior roles to reduce false negatives"
+
+# Guardrails
+guardrails:
+  max_questions: 15  # Always stop after this many questions
+  manual_override: true  # Allow interviewer to continue despite early stop recommendation
+  require_stability: true  # Require stable predictions before stopping
+  log_all_decisions: true  # Log every stopping decision for audit
+
+# Monitoring
+monitoring:
+  track_premature_stops: true
+  alert_on_premature_rate_gt: 0.05  # Alert if >5% premature stops
+  review_period: "weekly"
