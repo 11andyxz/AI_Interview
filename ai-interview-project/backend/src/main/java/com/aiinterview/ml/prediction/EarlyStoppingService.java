@@ -1,5 +1,6 @@
 package com.aiinterview.ml.prediction;
 
+import com.aiinterview.ml.prediction.config.EarlyStoppingConfig;
 import com.aiinterview.ml.prediction.entity.CandidateSkillProfile;
 import com.aiinterview.ml.prediction.repository.CandidateSkillProfileRepository;
 import org.slf4j.Logger;
@@ -12,7 +13,7 @@ import java.util.List;
 
 /**
  * Early stopping service for interviews based on outcome predictions.
- * Determines when to stop interview early based on pass/fail probability.
+ * Week 17 P0 Task 2: Unified dual-threshold policy (0.90/0.10, min 6 questions).
  */
 @Service
 @ConditionalOnProperty(name = "ml.prediction.enabled", havingValue = "true", matchIfMissing = false)
@@ -26,14 +27,12 @@ public class EarlyStoppingService {
     @Autowired
     private CandidateSkillProfileRepository profileRepository;
     
-    // Early stopping thresholds
-    private static final double EARLY_PASS_THRESHOLD = 0.95;      // Stop if pass prob > 95%
-    private static final double EARLY_FAIL_THRESHOLD = 0.05;      // Stop if pass prob < 5%
-    private static final int MIN_QUESTIONS_FOR_STOPPING = 5;      // Minimum questions before allowing early stop
-    private static final double STABILITY_THRESHOLD = 0.2;        // Max stability for early stopping (balanced)
+    @Autowired
+    private EarlyStoppingConfig config;
     
     /**
      * Evaluate whether interview should stop early.
+     * Week 17 P0 Task 2: Uses new policy (0.90/0.10) if enabled, otherwise baseline.
      * 
      * @param profile Candidate skill profile
      * @param recentScores Recent question scores
@@ -45,11 +44,29 @@ public class EarlyStoppingService {
         decision.setShouldStop(false);
         decision.setReason("continue");
         
+        // Determine which policy to use
+        double passThreshold;
+        double failThreshold;
+        int minQuestions;
+        String policyName;
+        
+        if (config.getNewPolicy().isEnabled()) {
+            passThreshold = config.getNewPolicy().getPassThreshold();
+            failThreshold = config.getNewPolicy().getFailThreshold();
+            minQuestions = config.getNewPolicy().getMinQuestions();
+            policyName = "new_policy";
+        } else {
+            passThreshold = config.getPassThreshold();
+            failThreshold = config.getFailThreshold();
+            minQuestions = config.getMinQuestions();
+            policyName = "baseline";
+        }
+        
         // Check minimum question requirement
-        if (recentScores.size() < MIN_QUESTIONS_FOR_STOPPING) {
+        if (recentScores.size() < minQuestions) {
             decision.setConfidence(0.0);
             decision.setMessage("Insufficient questions answered (" + recentScores.size() + "/" + 
-                              MIN_QUESTIONS_FOR_STOPPING + ")");
+                              minQuestions + ")");
             return decision;
         }
         
@@ -66,7 +83,8 @@ public class EarlyStoppingService {
         decision.setConfidence(confidence);
         
         // Check early pass condition
-        if (passProbability > EARLY_PASS_THRESHOLD && stability < STABILITY_THRESHOLD) {
+        if (passProbability > passThreshold && 
+            stability < config.getStabilityThreshold()) {
             decision.setShouldStop(true);
             decision.setReason("early_pass");
             decision.setMessage(String.format(
@@ -74,14 +92,15 @@ public class EarlyStoppingService {
                 passProbability * 100
             ));
             
-            logger.info("Early pass triggered for session {}: pass_prob={:.3f}, stability={:.3f}",
-                       profile.getSessionId(), passProbability, stability);
+            logger.info("Early pass triggered for session {}: pass_prob={}, stability={}, policy={}, threshold={}",
+                       profile.getSessionId(), passProbability, stability, policyName, passThreshold);
             
             return decision;
         }
         
         // Check early fail condition
-        if (passProbability < EARLY_FAIL_THRESHOLD && stability < STABILITY_THRESHOLD) {
+        if (passProbability < failThreshold && 
+            stability < config.getStabilityThreshold()) {
             decision.setShouldStop(true);
             decision.setReason("early_fail");
             decision.setMessage(String.format(
@@ -89,14 +108,14 @@ public class EarlyStoppingService {
                 passProbability * 100
             ));
             
-            logger.info("Early fail triggered for session {}: pass_prob={:.3f}, stability={:.3f}",
-                       profile.getSessionId(), passProbability, stability);
+            logger.info("Early fail triggered for session {}: pass_prob={}, stability={}, policy={}, threshold={}",
+                       profile.getSessionId(), passProbability, stability, policyName, failThreshold);
             
             return decision;
         }
         
         // Check if performance is too unstable for early stopping
-        if (stability > STABILITY_THRESHOLD) {
+        if (stability > config.getStabilityThreshold()) {
             decision.setMessage(String.format(
                 "Performance too unstable (%.2f) - continue collecting data",
                 stability
@@ -128,24 +147,32 @@ public class EarlyStoppingService {
     }
     
     /**
-     * Check if early stopping is appropriate (validation)
+     * Check if early stopping is appropriate (validation).
      */
     public boolean isEarlyStoppingAppropriate(double passProbability, 
                                              double stability, 
                                              int questionCount) {
+        // Use new policy if enabled
+        int minQuestions = config.getNewPolicy().isEnabled() ? 
+            config.getNewPolicy().getMinQuestions() : config.getMinQuestions();
+        double passThreshold = config.getNewPolicy().isEnabled() ? 
+            config.getNewPolicy().getPassThreshold() : config.getPassThreshold();
+        double failThreshold = config.getNewPolicy().isEnabled() ? 
+            config.getNewPolicy().getFailThreshold() : config.getFailThreshold();
+        
         // Must have minimum questions
-        if (questionCount < MIN_QUESTIONS_FOR_STOPPING) {
+        if (questionCount < minQuestions) {
             return false;
         }
         
         // Performance must be stable
-        if (stability > STABILITY_THRESHOLD) {
+        if (stability > config.getStabilityThreshold()) {
             return false;
         }
         
         // Pass probability must be extreme (very high or very low)
-        return passProbability > EARLY_PASS_THRESHOLD || 
-               passProbability < EARLY_FAIL_THRESHOLD;
+        return passProbability > passThreshold || 
+               passProbability < failThreshold;
     }
     
     /**

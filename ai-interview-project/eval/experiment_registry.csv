@@ -1,0 +1,2 @@
+experiment_id,timestamp,model_version,slice,config_params,rmse,mae,brier_score,sample_size,avg_latency_ms,p50_latency_ms,p90_latency_ms,p95_latency_ms,p99_latency_ms,early_stop_rate,avg_questions,notes
+baseline_20260327_001,2026-03-27T10:00:00,embedding-v1.0,all,"{""pass_threshold"":0.95,""fail_threshold"":0.05,""min_questions"":5}",9.8,7.2,0.082,250,1340,1280,1920,2340,3100,0.12,10.0,Week 16 baseline metrics
