@@ -354,7 +354,7 @@ def main():
     parser.add_argument(
         '--db-host',
         type=str,
-        default=os.getenv('DB_HOST', 'mysql-4c9be66-andyxiongzheng-9267.g.aivencloud.com'),
+        default=os.getenv('DB_HOST'),
         help='Database host'
     )
     parser.add_argument(

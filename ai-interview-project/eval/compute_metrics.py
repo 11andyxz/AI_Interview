@@ -16,6 +16,7 @@ import numpy as np
 from typing import List, Dict, Any, Tuple
 from datetime import datetime
 import pandas as pd
+from scipy import stats
 
 
 def compute_rmse(y_true: List[float], y_pred: List[float]) -> float:
@@ -259,20 +260,21 @@ def generate_metrics_report(results: List[Dict[str, Any]], model_version: str, c
 
 def compare_experiments(baseline_report: Dict[str, Any], candidate_report: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Compare two experiment reports and compute deltas.
+    Compare two experiment reports and compute deltas with statistical significance.
     
     Args:
         baseline_report: Baseline experiment metrics
         candidate_report: Candidate experiment metrics
         
     Returns:
-        Comparison report with absolute and relative deltas
+        Comparison report with absolute/relative deltas, t-test, and confidence intervals
     """
     comparison = {
         'baseline_id': baseline_report['experiment_id'],
         'candidate_id': candidate_report['experiment_id'],
         'timestamp': datetime.now().isoformat(),
-        'deltas': {}
+        'deltas': {},
+        'statistical_tests': {}
     }
     
     # Compare key metrics
@@ -307,6 +309,164 @@ def compare_experiments(baseline_report: Dict[str, Any], candidate_report: Dict[
             'absolute_delta': candidate_questions - baseline_questions,
             'relative_delta_pct': ((candidate_questions - baseline_questions) / baseline_questions * 100) if baseline_questions > 0 else 0.0
         }
+    
+    return comparison
+
+
+def compute_statistical_significance(baseline_data: List[float], candidate_data: List[float], 
+                                     metric_name: str, alpha: float = 0.05) -> Dict[str, Any]:
+    """
+    Compute paired t-test and confidence intervals for metric comparison.
+    
+    Args:
+        baseline_data: Baseline metric values (per-sample)
+        candidate_data: Candidate metric values (per-sample)
+        metric_name: Name of the metric being tested
+        alpha: Significance level (default: 0.05 for 95% CI)
+        
+    Returns:
+        Dictionary with t-test results, p-value, and confidence intervals
+    """
+    if len(baseline_data) != len(candidate_data):
+        raise ValueError(f"Sample size mismatch: baseline={len(baseline_data)}, candidate={len(candidate_data)}")
+    
+    if len(baseline_data) < 2:
+        return {
+            'metric': metric_name,
+            'test_type': 'paired_t_test',
+            'error': 'Insufficient data (need at least 2 samples)',
+            'n': len(baseline_data)
+        }
+    
+    baseline_arr = np.array(baseline_data)
+    candidate_arr = np.array(candidate_data)
+    
+    # Paired t-test (same samples measured under two conditions)
+    t_statistic, p_value = stats.ttest_rel(candidate_arr, baseline_arr)
+    
+    # Compute mean difference and confidence interval
+    differences = candidate_arr - baseline_arr
+    mean_diff = np.mean(differences)
+    std_diff = np.std(differences, ddof=1)
+    n = len(differences)
+    
+    # Confidence interval for mean difference
+    confidence_level = 1 - alpha
+    t_critical = stats.t.ppf((1 + confidence_level) / 2, df=n-1)
+    margin_of_error = t_critical * (std_diff / np.sqrt(n))
+    ci_lower = mean_diff - margin_of_error
+    ci_upper = mean_diff + margin_of_error
+    
+    # Effect size (Cohen's d)
+    pooled_std = np.sqrt((np.var(baseline_arr, ddof=1) + np.var(candidate_arr, ddof=1)) / 2)
+    cohens_d = mean_diff / pooled_std if pooled_std > 0 else 0.0
+    
+    # Statistical significance determination
+    is_significant = p_value < alpha
+    
+    result = {
+        'metric': metric_name,
+        'test_type': 'paired_t_test',
+        'n': n,
+        't_statistic': float(t_statistic),
+        'p_value': float(p_value),
+        'alpha': alpha,
+        'is_significant': is_significant,
+        'significance': 'significant' if is_significant else 'not significant',
+        'mean_difference': float(mean_diff),
+        'confidence_interval': {
+            'level': confidence_level,
+            'lower': float(ci_lower),
+            'upper': float(ci_upper)
+        },
+        'effect_size_cohens_d': float(cohens_d),
+        'interpretation': _interpret_effect_size(cohens_d)
+    }
+    
+    return result
+
+
+def _interpret_effect_size(cohens_d: float) -> str:
+    """
+    Interpret Cohen's d effect size.
+    
+    Args:
+        cohens_d: Cohen's d value
+        
+    Returns:
+        Interpretation string
+    """
+    abs_d = abs(cohens_d)
+    if abs_d < 0.2:
+        return 'negligible'
+    elif abs_d < 0.5:
+        return 'small'
+    elif abs_d < 0.8:
+        return 'medium'
+    else:
+        return 'large'
+
+
+def compare_experiments_with_significance(baseline_results: List[Dict[str, Any]], 
+                                          candidate_results: List[Dict[str, Any]],
+                                          baseline_id: str,
+                                          candidate_id: str) -> Dict[str, Any]:
+    """
+    Compare two experiments with statistical significance testing.
+    
+    Args:
+        baseline_results: List of result dictionaries from baseline experiment
+        candidate_results: List of result dictionaries from candidate experiment
+        baseline_id: Baseline experiment identifier
+        candidate_id: Candidate experiment identifier
+        
+    Returns:
+        Comprehensive comparison report with t-tests and CIs
+    """
+    comparison = {
+        'baseline_id': baseline_id,
+        'candidate_id': candidate_id,
+        'timestamp': datetime.now().isoformat(),
+        'sample_size': {'baseline': len(baseline_results), 'candidate': len(candidate_results)},
+        'deltas': {},
+        'statistical_tests': {}
+    }
+    
+    # Ensure equal length for paired test (match by index)
+    min_length = min(len(baseline_results), len(candidate_results))
+    if len(baseline_results) != len(candidate_results):
+        print(f"[WARN] Sample size mismatch. Using first {min_length} samples for paired test.")
+        baseline_results = baseline_results[:min_length]
+        candidate_results = candidate_results[:min_length]
+    
+    # Extract metrics for comparison
+    metrics_to_test = [
+        ('predicted_score', 'Prediction Score'),
+        ('latency_ms', 'Latency (ms)'),
+        ('num_questions', 'Number of Questions')
+    ]
+    
+    for field_name, display_name in metrics_to_test:
+        baseline_vals = [r.get(field_name) for r in baseline_results if r.get(field_name) is not None]
+        candidate_vals = [r.get(field_name) for r in candidate_results if r.get(field_name) is not None]
+        
+        if len(baseline_vals) >= 2 and len(candidate_vals) >= 2 and len(baseline_vals) == len(candidate_vals):
+            # Compute basic stats
+            baseline_mean = np.mean(baseline_vals)
+            candidate_mean = np.mean(candidate_vals)
+            absolute_delta = candidate_mean - baseline_mean
+            relative_delta = (absolute_delta / baseline_mean * 100) if baseline_mean != 0 else 0.0
+            
+            comparison['deltas'][field_name] = {
+                'baseline_mean': float(baseline_mean),
+                'candidate_mean': float(candidate_mean),
+                'absolute_delta': float(absolute_delta),
+                'relative_delta_pct': float(relative_delta)
+            }
+            
+            # Compute statistical significance
+            sig_test = compute_statistical_significance(baseline_vals, candidate_vals, display_name)
+            comparison['statistical_tests'][field_name] = sig_test
     
     return comparison
 
@@ -348,12 +508,13 @@ def load_and_compute_metrics(csv_file: str, model_version: str, config_params: D
 
 def main():
     """Main entry point for standalone execution."""
-    parser = argparse.ArgumentParser(description='Compute standardized ML metrics for AI Interview evaluation')
+    parser = argparse.ArgumentParser(description='Compute standardized ML metrics with statistical significance testing')
     parser.add_argument('--input', required=True, help='Input CSV file with evaluation results')
     parser.add_argument('--output', required=True, help='Output JSON file for metrics report')
     parser.add_argument('--model-version', default='unknown', help='Model version identifier')
     parser.add_argument('--config', default='{}', help='Configuration parameters as JSON string')
     parser.add_argument('--baseline', help='Baseline metrics JSON for comparison')
+    parser.add_argument('--baseline-csv', help='Baseline CSV for statistical testing (paired t-test)')
     
     args = parser.parse_args()
     
@@ -373,6 +534,59 @@ def main():
         print(f"[INFO] Comparison to baseline:")
         for metric, delta in comparison['deltas'].items():
             print(f"  {metric}: {delta['baseline']:.3f} → {delta['candidate']:.3f} ({delta['relative_delta_pct']:+.1f}%)")
+    
+    # If baseline CSV provided, compute statistical significance with t-test and CI
+    if args.baseline_csv:
+        print(f"[INFO] Computing statistical significance with paired t-test...")
+        
+        # Load baseline CSV
+        baseline_results = []
+        with open(args.baseline_csv, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                result = {
+                    'predicted_score': float(row.get('predicted_score', 0)) if row.get('predicted_score') else None,
+                    'latency_ms': float(row.get('latency_ms', 0)) if row.get('latency_ms') else None,
+                    'num_questions': int(row.get('num_questions', 0)) if row.get('num_questions') else None
+                }
+                baseline_results.append(result)
+        
+        # Load candidate CSV
+        candidate_results = []
+        with open(args.input, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                result = {
+                    'predicted_score': float(row.get('predicted_score', 0)) if row.get('predicted_score') else None,
+                    'latency_ms': float(row.get('latency_ms', 0)) if row.get('latency_ms') else None,
+                    'num_questions': int(row.get('num_questions', 0)) if row.get('num_questions') else None
+                }
+                candidate_results.append(result)
+        
+        # Compute statistical comparison
+        baseline_id = baseline_report.get('experiment_id', 'baseline') if args.baseline else 'baseline'
+        statistical_comparison = compare_experiments_with_significance(
+            baseline_results, 
+            candidate_results,
+            baseline_id,
+            report['experiment_id']
+        )
+        
+        report['statistical_comparison'] = statistical_comparison
+        
+        print(f"[INFO] Statistical significance results:")
+        for metric_field, test_result in statistical_comparison.get('statistical_tests', {}).items():
+            metric_name = test_result.get('metric')
+            p_value = test_result.get('p_value')
+            is_sig = test_result.get('is_significant')
+            ci = test_result.get('confidence_interval', {})
+            effect = test_result.get('interpretation')
+            
+            sig_marker = "✓ SIGNIFICANT" if is_sig else "✗ not significant"
+            print(f"  {metric_name}:")
+            print(f"    t-test: p={p_value:.4f} ({sig_marker})")
+            print(f"    95% CI: [{ci.get('lower', 0):.3f}, {ci.get('upper', 0):.3f}]")
+            print(f"    Effect size: {effect}")
     
     # Write report
     with open(args.output, 'w') as f:

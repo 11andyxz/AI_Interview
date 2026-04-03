@@ -23,7 +23,10 @@ import java.net.UnknownHostException;
  * @author AI Interview Team
  * @version 1.0.0
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration.class
+})
 @EnableScheduling
 public class AiInterviewApplication {
 

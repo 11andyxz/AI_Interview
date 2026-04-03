@@ -1,14 +1,17 @@
 # Early-Stop Policy Rollout Plan
 
-**Document Version**: 1.0  
+**Document Version**: 1.1  
 **Date**: March 27, 2026  
-**Status**: Ready for Rollout
+**A/B Test Launch Date**: April 2, 2026 (Week 18, Wednesday)  
+**Status**: ✅ A/B Test Launched - Phase 4 Full Rollout (50/50 split)
 
 ---
 
 ## Executive Summary
 
 This document specifies the controlled rollout plan for the new dual-threshold early-stopping policy (0.90/0.10, minimum 6 questions), designed to reduce average interview length while maintaining prediction accuracy within acceptable bounds (RMSE change within 1-2%).
+
+**Status Update (April 2, 2026)**: A/B test successfully launched with 50/50 traffic allocation. Feature flags enabled in production configuration. Monitoring active via Grafana dashboard.
 
 ---
 

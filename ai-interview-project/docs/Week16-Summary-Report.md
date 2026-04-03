@@ -258,7 +258,7 @@ spring.datasource.password=your_password
 # NEW (Aiven Cloud):
 spring.datasource.url=jdbc:mysql://your-mysql-host.example.com:3306/ai_interview?sslMode=REQUIRED
 spring.datasource.username=your_db_username
-spring.datasource.password=your_db_password
+spring.datasource.password=${DB_PASSWORD}
 ```
 
 **Impact**:
