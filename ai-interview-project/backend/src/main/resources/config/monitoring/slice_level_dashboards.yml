@@ -1,0 +1,399 @@
+# Slice-Level ML Monitoring Dashboard Configuration
+# Week 20 Task 4: Decision-grade ML Monitoring Upgrade
+# Purpose: Enable go/hold/rollback decisions within 10 minutes
+
+---
+# Dashboard: Early Stop Quality Metrics (Slice-level)
+dashboard_id: "early_stop_quality_slices"
+refresh_interval: 60s  # 1-minute refresh for real-time monitoring
+
+panels:
+  # Panel 1: Slice RMSE Trend (7-day rolling)
+  - id: "slice_rmse_trend"
+    title: "Score Prediction RMSE by Slice (7-day rolling)"
+    type: "time_series"
+    datasource: "prometheus"
+    targets:
+      - expr: |
+          avg_over_time(
+            interview_prediction_rmse{slice=~"junior|mid|senior"}[1h]
+          )
+        legend: "{{slice}} RMSE"
+    
+    thresholds:
+      - value: 11.5
+        color: "red"
+        label: "Junior guardrail (RMSE ≤ 11.5)"
+      - value: 15.0
+        color: "yellow"
+        label: "Warning threshold"
+    
+    alerts:
+      - name: "Junior RMSE exceeds guardrail"
+        condition: "junior_rmse > 11.5 for 10m"
+        severity: "critical"
+        action: "rollback"
+  
+  # Panel 2: Early-Stop Distribution by Slice
+  - id: "early_stop_distribution"
+    title: "Early-Stop Distribution (Pass/Fail/No-Stop) by Slice"
+    type: "stacked_bar"
+    datasource: "prometheus"
+    targets:
+      - expr: |
+          sum by (slice, decision) (
+            rate(interview_early_stop_decision_total{slice=~"junior|mid|senior"}[5m])
+          )
+        legend: "{{slice}}-{{decision}}"
+    
+    annotations:
+      - text: "Baseline: 74.4% early-stop (threshold=0.90)"
+        value: 0.744
+      - text: "Target: 73.9% early-stop (threshold=0.85)"
+        value: 0.739
+    
+    alerts:
+      - name: "Premature stop rate too high"
+        condition: "premature_stop_rate > 0.03 for 15m"
+        severity: "warning"
+        action: "hold_deployment"
+  
+  # Panel 3: Confidence Score Drift Detection
+  - id: "confidence_score_drift"
+    title: "Confidence Score Distribution Drift (Beta vs Actual)"
+    type: "histogram"
+    datasource: "prometheus"
+    targets:
+      - expr: |
+          histogram_quantile(0.50, 
+            sum(rate(interview_confidence_score_bucket[5m])) by (le, slice)
+          )
+        legend: "{{slice}} P50 confidence"
+      - expr: |
+          histogram_quantile(0.90,
+            sum(rate(interview_confidence_score_bucket[5m])) by (le, slice)
+          )
+        legend: "{{slice}} P90 confidence"
+    
+    expected_distribution:
+      model: "Beta(8, 2)"
+      mean: 0.80
+      p50: 0.81
+      p90: 0.94
+    
+    alerts:
+      - name: "Confidence drift detected"
+        condition: "abs(p50_actual - 0.81) > 0.10 for 20m"
+        severity: "warning"
+        action: "investigate"
+  
+  # Panel 4: Question Count per Session (Efficiency)
+  - id: "avg_questions_per_session"
+    title: "Average Questions per Session by Slice"
+    type: "time_series"
+    datasource: "prometheus"
+    targets:
+      - expr: |
+          avg_over_time(
+            interview_questions_per_session{slice=~"junior|mid|senior"}[1h]
+          ) by (slice)
+        legend: "{{slice}} avg questions"
+    
+    baseline_values:
+      junior: 6.62
+      mid: 6.62
+      senior: 6.62
+    
+    target_reduction: 0.106  # -10.6% reduction vs baseline
+    
+    alerts:
+      - name: "Efficiency degradation"
+        condition: "avg_questions > baseline * 1.05 for 30m"
+        severity: "info"
+        action: "investigate"
+  
+  # Panel 5: Data Freshness (Last Update Timestamp)
+  - id: "data_freshness"
+    title: "Metrics Data Freshness (Time since last update)"
+    type: "single_stat"
+    datasource: "prometheus"
+    targets:
+      - expr: |
+          time() - max(interview_metrics_last_update_timestamp)
+        unit: "seconds"
+    
+    thresholds:
+      - value: 300  # 5 minutes
+        color: "green"
+        status: "healthy"
+      - value: 600  # 10 minutes
+        color: "yellow"
+        status: "stale"
+      - value: 1800  # 30 minutes
+        color: "red"
+        status: "missing"
+    
+    alerts:
+      - name: "Metrics data missing"
+        condition: "time_since_update > 600 for 5m"
+        severity: "critical"
+        action: "check_pipeline"
+
+---
+# Dashboard: Decision Gate Metrics (Rollout Support)
+dashboard_id: "decision_gate_rollout"
+refresh_interval: 30s
+
+panels:
+  # Panel 6: Go/Hold/Rollback Signal Summary
+  - id: "decision_signal_summary"
+    title: "Rollout Decision Signals (Real-time)"
+    type: "stat_panel"
+    datasource: "prometheus"
+    
+    metrics:
+      - name: "Guardrail Status"
+        expr: |
+          (junior_rmse <= 11.5) and 
+          (premature_stop_rate < 0.03) and 
+          (min_questions_compliance >= 0.95)
+        display: "✓ ALL PASS" | "✗ FAILED"
+        color_pass: "green"
+        color_fail: "red"
+      
+      - name: "Quality Delta vs Baseline"
+        expr: "avg_questions_reduction_pct"
+        display: "{{value}}% reduction"
+        threshold_good: -5.0  # >5% reduction
+        threshold_neutral: 0.0
+        threshold_bad: 5.0    # >5% increase
+      
+      - name: "Statistical Significance"
+        expr: "ab_test_p_value < 0.05"
+        display: "p={{p_value}}"
+        significant_threshold: 0.05
+      
+      - name: "Data Quality"
+        expr: |
+          (missing_data_rate < 0.01) and
+          (data_freshness < 300)
+        display: "Healthy" | "Degraded"
+    
+    decision_logic: |
+      if guardrails_fail:
+        return "❌ ROLLBACK"
+      elif quality_delta > -5% and not significant:
+        return "⚠ HOLD"
+      elif quality_delta < -5% and significant and guardrails_pass:
+        return "✅ GO"
+      else:
+        return "⚠ HOLD - Insufficient evidence"
+  
+  # Panel 7: Slice-level Metric Heatmap
+  - id: "slice_metric_heatmap"
+    title: "Slice Metric Health Matrix"
+    type: "heatmap"
+    datasource: "prometheus"
+    
+    rows:  # Slices
+      - junior
+      - mid
+      - senior
+    
+    columns:  # Metrics
+      - rmse
+      - premature_stop_rate
+      - avg_questions
+      - confidence_drift
+      - data_completeness
+    
+    color_scale:
+      - value: 0
+        color: "green"
+        label: "Healthy"
+      - value: 0.5
+        color: "yellow"
+        label: "Warning"
+      - value: 1.0
+        color: "red"
+        label: "Critical"
+    
+    health_scoring:
+      rmse: |
+        if value <= 11.5: return 0.0  # Green
+        elif value <= 15.0: return 0.5  # Yellow
+        else: return 1.0  # Red
+      
+      premature_stop_rate: |
+        if value < 0.03: return 0.0
+        elif value < 0.05: return 0.5
+        else: return 1.0
+
+---
+# Alerting Rules
+alerting_rules:
+  # Critical alerts (immediate action required)
+  - name: "Junior RMSE Guardrail Breach"
+    severity: critical
+    condition: |
+      interview_prediction_rmse{slice="junior"} > 11.5
+      for: 10m
+    labels:
+      component: "ml_model"
+      slice: "junior"
+      guardrail: "rmse"
+    annotations:
+      summary: "Junior RMSE exceeds 11.5 guardrail"
+      description: "Current RMSE: {{$value}}, Threshold: 11.5"
+      runbook: "https://wiki/runbooks/ml_rmse_breach"
+      action: "ROLLBACK to baseline immediately"
+    
+    notification_channels:
+      - pagerduty: "ml_on_call"
+      - slack: "#ml-alerts-critical"
+  
+  - name: "Premature Stop Rate High"
+    severity: critical
+    condition: |
+      rate(interview_early_stop_premature_total[15m]) / 
+      rate(interview_early_stop_total[15m]) > 0.03
+      for: 15m
+    labels:
+      component: "early_stop_policy"
+      guardrail: "premature_stop"
+    annotations:
+      summary: "Premature early-stop rate exceeds 3%"
+      description: "Current rate: {{$value | humanizePercentage}}"
+      runbook: "https://wiki/runbooks/premature_stop_mitigation"
+      action: "HOLD deployment, investigate threshold calibration"
+    
+    notification_channels:
+      - pagerduty: "ml_on_call"
+      - slack: "#ml-alerts-critical"
+  
+  # Warning alerts (investigation needed)
+  - name: "Confidence Score Drift"
+    severity: warning
+    condition: |
+      abs(
+        histogram_quantile(0.50, interview_confidence_score_bucket) - 0.81
+      ) > 0.10
+      for: 20m
+    labels:
+      component: "openai_integration"
+      metric: "confidence_drift"
+    annotations:
+      summary: "Confidence score distribution drifting from Beta(8,2)"
+      description: "P50 confidence: {{$value}}, Expected: 0.81"
+      runbook: "https://wiki/runbooks/confidence_drift"
+      action: "Check OpenAI API changes, review prompt stability"
+    
+    notification_channels:
+      - slack: "#ml-alerts-warning"
+  
+  - name: "Data Freshness Degraded"
+    severity: warning
+    condition: |
+      (time() - interview_metrics_last_update_timestamp) > 600
+      for: 5m
+    labels:
+      component: "metrics_pipeline"
+      issue: "data_staleness"
+    annotations:
+      summary: "Metrics data stale (>10 minutes old)"
+      description: "Last update: {{$value | humanizeDuration}} ago"
+      runbook: "https://wiki/runbooks/metrics_pipeline_debug"
+      action: "Check metrics exporter, validate data pipeline"
+    
+    notification_channels:
+      - slack: "#ml-alerts-warning"
+  
+  # Info alerts (monitoring only)
+  - name: "Efficiency Improvement Detected"
+    severity: info
+    condition: |
+      (
+        avg(interview_questions_per_session) -
+        avg(interview_questions_per_session offset 7d)
+      ) / avg(interview_questions_per_session offset 7d) < -0.05
+      for: 1h
+    labels:
+      component: "early_stop_policy"
+      metric: "efficiency"
+    annotations:
+      summary: "Significant question reduction detected (>5%)"
+      description: "Current avg: {{$value}}, 7-day baseline: {{$baseline}}"
+      action: "Monitor for quality impact, prepare for deployment decision"
+    
+    notification_channels:
+      - slack: "#ml-metrics"
+
+---
+# Data Collection Configuration
+metrics_collection:
+  # Prometheus metrics to export
+  prometheus_metrics:
+    - name: "interview_prediction_rmse"
+      type: "gauge"
+      help: "Score prediction RMSE by slice"
+      labels: ["slice", "model_version"]
+      update_interval: 60s
+    
+    - name: "interview_early_stop_decision_total"
+      type: "counter"
+      help: "Early-stop decisions by slice and outcome"
+      labels: ["slice", "decision"]  # decision: pass, fail, no_stop
+      update_interval: 5s
+    
+    - name: "interview_confidence_score_bucket"
+      type: "histogram"
+      help: "Confidence score distribution"
+      labels: ["slice", "question_position"]
+      buckets: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+      update_interval: 5s
+    
+    - name: "interview_questions_per_session"
+      type: "histogram"
+      help: "Number of questions asked per session"
+      labels: ["slice", "early_stopped"]
+      buckets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
+      update_interval: 30s
+    
+    - name: "interview_metrics_last_update_timestamp"
+      type: "gauge"
+      help: "Unix timestamp of last metrics update"
+      labels: []
+      update_interval: 60s
+  
+  # Log-based metrics (for missing data detection)
+  log_patterns:
+    - name: "missing_prediction"
+      pattern: "ERROR.*prediction.*failed"
+      metric: "interview_prediction_errors_total"
+      labels: ["error_type", "slice"]
+    
+    - name: "api_timeout"
+      pattern: "WARN.*OpenAI.*timeout"
+      metric: "interview_api_timeouts_total"
+      labels: ["api_endpoint"]
+
+---
+# Dashboard Access & Permissions
+access_control:
+  viewers:  # Read-only dashboard access
+    - team: "ml_team"
+    - team: "product_managers"
+    - team: "executives"
+  
+  editors:  # Can modify dashboards
+    - team: "ml_engineers"
+    - role: "ml_lead"
+  
+  alert_receivers:  # PagerDuty/Slack notifications
+    critical:
+      - team: "ml_on_call"
+      - individual: "ml_lead"
+    warning:
+      - team: "ml_engineers"
+    info:
+      - channel: "#ml-metrics"

@@ -1,0 +1,17 @@
+# Python dependencies for AI Interview ML evaluation tools
+#
+# Install with: pip install -r requirements.txt
+
+# Database connectivity
+mysql-connector-python==8.0.33
+
+# Statistical analysis and scientific computing
+scipy==1.11.4
+numpy==1.24.3
+pandas==2.0.3
+
+# HTTP requests for E2E testing
+requests==2.31.0
+
+# JSON schema validation (future use)
+jsonschema==4.19.2
