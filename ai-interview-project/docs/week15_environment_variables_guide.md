@@ -395,6 +395,58 @@ Before deploying to each environment, validate configuration:
 - [ ] Redis points to localhost
 - [ ] All ML features enabled
 
+---
+
+## Appendix: Week 21 Early-Stopping Policy Variables
+
+Added in Week 21 to support the new slice-aware early-stopping policy (threshold=0.85, junior/mid/senior min_questions guardrails).
+
+### New Variables
+
+| Variable Name | Type | Default | Valid Range | Description |
+|---------------|------|---------|-------------|-------------|
+| `ML_EARLY_STOP_NEW_POLICY_ENABLED` | boolean | `false` | `true`/`false` | Enable the Week 21 updated early-stopping policy (threshold=0.85) |
+| `ML_EARLY_STOP_NEW_PASS_THRESHOLD` | float | `0.85` | 0.80 – 0.95 | Confidence threshold for early pass under the new policy |
+| `ML_EARLY_STOP_NEW_FAIL_THRESHOLD` | float | `0.10` | 0.01 – 0.20 | Confidence threshold for early fail under the new policy |
+| `ML_EARLY_STOP_NEW_MIN_QUESTIONS_JUNIOR` | integer | `4` | 3 – 8 | Minimum questions before early stopping for junior-slice sessions |
+| `ML_EARLY_STOP_NEW_MIN_QUESTIONS_MID` | integer | `5` | 4 – 10 | Minimum questions before early stopping for mid-level sessions |
+| `ML_EARLY_STOP_NEW_MIN_QUESTIONS_SENIOR` | integer | `6` | 5 – 12 | Minimum questions before early stopping for senior-slice sessions |
+
+### Migration from Week 15 Policy
+
+The Week 21 policy runs **alongside** the existing `ML_PREDICTION_EARLY_STOPPING_*` variables during ramp.
+Set `ML_EARLY_STOP_NEW_POLICY_ENABLED=false` (default) to keep using the original Week 15 thresholds.
+Flip to `true` only after Stage C ramp validation passes all guardrails.
+
+```bash
+# Week 21 policy — staging template
+ML_EARLY_STOP_NEW_POLICY_ENABLED=true
+ML_EARLY_STOP_NEW_PASS_THRESHOLD=0.85
+ML_EARLY_STOP_NEW_FAIL_THRESHOLD=0.10
+ML_EARLY_STOP_NEW_MIN_QUESTIONS_JUNIOR=4
+ML_EARLY_STOP_NEW_MIN_QUESTIONS_MID=5
+ML_EARLY_STOP_NEW_MIN_QUESTIONS_SENIOR=6
+```
+
+### Week 21 Preflight Validation
+
+Run `eval/preflight_check.py` before any Week 21 experiment execution to confirm the data path is unblocked:
+
+```bash
+python eval/preflight_check.py --env staging
+# Exit 0 = UNBLOCKED, Exit 1 = BLOCKED (see output for details)
+```
+
+Required env vars checked by the preflight script:
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENAI_API_KEY` | OpenAI key for eval scoring calls |
+| `DB_HOST`, `DB_PORT`, `DB_NAME` | Aiven MySQL connectivity |
+| `DB_USERNAME`, `DB_PASSWORD` | Database credentials |
+
+See `eval/README.md` for full preflight usage.
+
 ### Staging
 - [ ] ConfigMap created in Kubernetes/ECS
 - [ ] Secrets stored in secrets manager

@@ -470,6 +470,72 @@ fi
 
 **Scenario**: PagerDuty alert received for `junior_rmse_breach`.
 
+---
+
+## Week 21 Updates — Drill Validation and Alert Matrix Revision
+
+**Date**: 2026-04-24  
+**Drill conducted**: `docs/week21_monitoring_drill_report.md`
+
+### Week 21 Drill Outcome
+
+| Criterion | Result |
+|-----------|--------|
+| Go/hold/rollback call within 10 minutes | ✅ Decision at T+7 min |
+| All 5 alerts mapped to owner + action | ✅ 0 orphan alerts |
+| Rollback path exercised | ✅ T+10 min (Stage A ROLLBACK triggered) |
+| Root cause identified | ✅ Min-questions config not applied |
+
+**Verdict**: Monitoring system validated as decision-grade for Week 21 rollout. ✅
+
+---
+
+### Updated Alert-Action Matrix (Week 21 Revision)
+
+The following alert-action matrix supersedes the Week 20 version. Two additions from drill findings:
+
+| Alert Name | Condition | Severity | Owner | Action | Rollback Command |
+|------------|-----------|----------|-------|--------|-----------------|
+| `Junior RMSE exceeds guardrail` | `junior_rmse > 11.5 for 10m` | CRITICAL | Yukun | Immediate rollback | `export ML_EARLY_STOP_NEW_POLICY_ENABLED=false` |
+| `Premature stop rate too high` | `premature_stop_rate > 0.03 for 15m` | WARNING | Yukun | Hold deployment; check min_questions config | `export ML_EARLY_STOP_NEW_POLICY_ENABLED=false` |
+| `Confidence drift detected` | `\|P50 - 0.81\| > 0.10 for 20m` | WARNING | Yukun | Investigate OpenAI API changes | — |
+| `Efficiency degradation` | `avg_questions > baseline * 1.05 for 30m` | INFO | Yukun | Investigate; no immediate rollback | — |
+| `Metrics data missing` | `time_since_update > 600 for 5m` | CRITICAL | Yukun | Check metrics pipeline / data exporter | — |
+| **`Min-questions config drift`** *(new — drill finding)* | `min_questions_enforced != expected for 10m` | CRITICAL | Yukun | Verify `ML_EARLY_STOP_NEW_MIN_QUESTIONS_*` env vars; rerun preflight | `export ML_EARLY_STOP_NEW_POLICY_ENABLED=false` |
+| **`Preflight check failed`** *(new — drill finding)* | Startup assertion failure in preflight_check.py | CRITICAL | Yukun | Fix reported env var; block rollout until exit=0 | Block deploy |
+
+**Orphan alerts**: 0 — all alerts have owner, action, and rollback linkage.
+
+---
+
+### Rollback Linkage Update
+
+All rollback commands now reference the Week 21 feature flag:
+
+```bash
+# Standard rollback (any CRITICAL alert)
+export ML_EARLY_STOP_NEW_POLICY_ENABLED=false
+# Verify: confirm sessions revert to baseline policy (threshold=0.95)
+# Expected recovery time: < 5 minutes
+```
+
+**Related runbooks** (unchanged from Week 20):
+- `config/monitoring/rollback_runbooks.md#runbook-1` — Junior RMSE breach
+- `config/monitoring/rollback_runbooks.md#runbook-2` — Premature stop exceeded
+- `config/monitoring/rollback_runbooks.md#runbook-5` — Emergency rollback (any guardrail)
+
+---
+
+### Remediation Backlog Status
+
+Items from `docs/week21_monitoring_drill_report.md`:
+
+| # | Issue | Status | Action Taken |
+|---|-------|--------|-------------|
+| 1 | Junior `min_questions` env var not validated at startup | ✅ Fixed | Added `check_min_questions_config()` to `eval/preflight_check.py` |
+| 2 | No automated alert when slice-specific config differs from expected | 📋 Backlog | New alert `Min-questions config drift` added to matrix above |
+| 3 | Dashboard missing direct link to rollback runbook | 📋 Backlog | Tracked for next Grafana update sprint |
+
 **Steps**:
 ```bash
 # Step 1: Acknowledge alert (30 sec)

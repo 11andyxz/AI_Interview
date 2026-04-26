@@ -59,8 +59,32 @@ QUESTIONS = [
     "How does garbage collection work in Java?",
 ]
 
-# SQLite database setup
+# SQLite database setup (fallback when DB_HOST is not set)
 DB_PATH = Path(__file__).parent / "results" / "ab_experiment.db"
+
+# ---------------------------------------------------------------------------
+# DB connection factory: Aiven MySQL when DB_HOST is set, else SQLite
+# ---------------------------------------------------------------------------
+_USE_MYSQL = bool(os.getenv("DB_HOST"))
+# SQL placeholder: %s for MySQL, ? for SQLite
+PH = "%s" if _USE_MYSQL else "?"
+
+
+def _open_conn():
+    """Return an open DB connection (MySQL or SQLite depending on DB_HOST)."""
+    if _USE_MYSQL:
+        import mysql.connector  # noqa: PLC0415
+        return mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            port=int(os.getenv("DB_PORT", "22629")),
+            user=os.getenv("DB_USERNAME"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME", "ai_interview"),
+            connection_timeout=5,
+        )
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 def init_database():

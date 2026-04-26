@@ -204,6 +204,32 @@ cat results/eval_report_20251222_153045.md
 - Increase timeout in `call_backend_api()` method (currently 120s)
 - Check OpenAI API connectivity from backend
 
+## Preflight Check (Week 21+)
+
+Before running any experiment against a production-like environment, run the preflight check to validate DB connectivity, API key validity, and required env vars:
+
+```bash
+# Set required secrets (never hardcode — use .env or secrets manager)
+export DB_HOST=<aiven-mysql-host>
+export DB_PORT=22629
+export DB_NAME=ai_interview
+export DB_USERNAME=<username>
+export DB_PASSWORD=<password>
+export OPENAI_API_KEY=<key>
+
+python preflight_check.py --env staging
+# Exit 0 = UNBLOCKED (safe to proceed)
+# Exit 1 = BLOCKED (fix reported failures first)
+```
+
+Checks performed:
+- All required env vars present
+- Aiven MySQL reachable (5s timeout)
+- OpenAI API key valid
+- No SQLite fallback path active
+
+See `docs/week21_production_unblock_report.md` for the full gate checklist.
+
 ## Next Steps
 
 1. **Add LLM-as-Judge**: Implement automated quality scoring

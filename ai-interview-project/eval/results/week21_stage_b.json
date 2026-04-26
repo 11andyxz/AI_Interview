@@ -1,0 +1,45 @@
+{
+  "run_timestamp": "2026-04-24T15:35:43.257859Z",
+  "policy": {
+    "pass_threshold": 0.85,
+    "fail_threshold": 0.1,
+    "min_questions": {
+      "junior": 4,
+      "mid": 5,
+      "senior": 6
+    }
+  },
+  "guardrails": {
+    "avg_questions_delta_pct_max": 0.0,
+    "rmse_max": 15.0,
+    "premature_stop_rate_max": 0.03,
+    "p95_latency_ms_max": 3000
+  },
+  "stages": [
+    {
+      "stage": "B",
+      "traffic_pct": 50,
+      "timestamp": "2026-04-24T15:35:43.256859Z",
+      "metrics": {
+        "n_control": 60,
+        "n_treatment": 30,
+        "avg_questions_control": 6.65,
+        "avg_questions_treatment": 6.27,
+        "avg_questions_delta": -0.38,
+        "avg_questions_delta_pct": -5.8,
+        "t_stat": 1.106,
+        "p_value": 0.2723,
+        "cohens_d": -0.229,
+        "premature_stop_rate": 0.0,
+        "p50_latency_ms": 1569.0,
+        "p95_latency_ms": 1983.0,
+        "rmse": null
+      },
+      "decision": "GO",
+      "rationale": [
+        "All guardrails within tolerance"
+      ]
+    }
+  ],
+  "final_decision": "GO"
+}
