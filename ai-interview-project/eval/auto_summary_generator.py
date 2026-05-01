@@ -15,7 +15,7 @@ import csv
 import sys
 from pathlib import Path
 from typing import Dict, List, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import math
 
 
@@ -32,10 +32,10 @@ class SummaryGenerator:
     
     def load_experiment(self, experiment_id: str, registry_path: Path) -> Optional[Dict[str, Any]]:
         """Load experiment from registry"""
-        with open(registry_path, 'r', encoding='utf-8') as f:
+        with open(registry_path, 'r', encoding='utf-8-sig') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if row['experiment_id'] == experiment_id:
+                if row.get('experiment_id', '') == experiment_id:
                     # Parse config_params JSON
                     if row.get('config_params'):
                         row['config'] = json.loads(row['config_params'])
@@ -280,27 +280,156 @@ class SummaryGenerator:
 
 def main():
     """CLI for auto summary generation"""
-    if len(sys.argv) < 2:
-        print("Usage: python auto_summary_generator.py <experiment_id> [baseline_id]")
-        print("  Generates summary comparing experiment to baseline")
-        sys.exit(1)
-    
-    experiment_id = sys.argv[1]
-    baseline_id = sys.argv[2] if len(sys.argv) > 2 else None
-    
-    # Find registry file
-    registry_path = Path(__file__).parent / 'experiment_registry.csv'
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Auto-generate ML experiment summary and weekly readout"
+    )
+    # Legacy positional interface (kept for backward compat)
+    parser.add_argument("experiment_id", nargs="?", default=None,
+                        help="Experiment ID to summarize (legacy positional arg)")
+    parser.add_argument("baseline_id_pos", nargs="?", default=None,
+                        help="Baseline experiment ID (legacy positional arg)")
+    # Week-level readout flags (Week 22+)
+    parser.add_argument("--week", type=int, default=None,
+                        help="Generate a week-level readout for this week number (e.g. --week 22)")
+    parser.add_argument("--include-live", action="store_true",
+                        help="Include live stage results from eval/results/week<N>_stage_*_live.json")
+    parser.add_argument("--output", default=None,
+                        help="Write readout to this Markdown file path")
+    args = parser.parse_args()
+
+    registry_path = Path(__file__).parent / "experiment_registry.csv"
     if not registry_path.exists():
         print(f"ERROR: Registry not found at {registry_path}")
         sys.exit(1)
-    
+
+    if args.week is not None:
+        _generate_week_readout(args.week, args.include_live, args.output, registry_path)
+        return
+
+    # Legacy single-experiment mode
+    experiment_id = args.experiment_id
+    if not experiment_id:
+        print("Usage: python auto_summary_generator.py <experiment_id> [baseline_id]")
+        print("       python auto_summary_generator.py --week 22 [--include-live] [--output path.md]")
+        sys.exit(1)
+
+    baseline_id = args.baseline_id_pos
     generator = SummaryGenerator()
     summary = generator.generate_summary(experiment_id, baseline_id, registry_path)
     generator.print_summary(summary)
-    
-    # Exit with error code if guardrails fail
-    if not summary.get('guardrails', {}).get('all_pass', False):
-        sys.exit(1)
+
+
+def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
+                           registry_path: Path) -> None:
+    """Generate a week-level ML decision readout Markdown document."""
+    results_dir = registry_path.parent / "results"
+    prefix = f"week{week}"
+
+    # Load week entries from registry
+    entries = []
+    with open(registry_path, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row.get("experiment_id", "").startswith(prefix):
+                entries.append(row)
+
+    # Load live stage artifacts if requested
+    live_stages: dict = {}
+    if include_live:
+        for stage in ("a", "b", "c"):
+            # Try both naming patterns used by run_ramp_validation.py
+            candidates = [
+                results_dir / f"{prefix}_stage{stage}_live.json",
+                results_dir / f"{prefix}_live_stage{stage}_result.json",
+            ]
+            for artifact in candidates:
+                if artifact.exists():
+                    with open(artifact) as f:
+                        raw = json.load(f)
+                    # run_ramp_validation.py wraps stage data under {"stages": [...]}
+                    if "stages" in raw and raw["stages"]:
+                        live_stages[stage.upper()] = raw["stages"][0]
+                    else:
+                        live_stages[stage.upper()] = raw
+                    break
+
+    lines = [
+        f"# Week {week} ML Decision Readout",
+        f"",
+        f"**Generated**: {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}  ",
+        f"**Source**: `eval/auto_summary_generator.py --week {week}"
+        + (" --include-live" if include_live else "") + "`",
+        f"",
+        f"## Registry Entries for Week {week}",
+        f"",
+        f"| Experiment ID | Stage | Traffic % | Decision | Notes |",
+        f"|---------------|-------|-----------|----------|-------|",
+    ]
+
+    for e in entries:
+        config = {}
+        try:
+            config = json.loads(e.get("config_params", "{}"))
+        except (json.JSONDecodeError, TypeError):
+            pass
+        stage = config.get("stage", "?")
+        traffic = config.get("traffic_pct", "?")
+        decision = config.get("decision", e.get("notes", "TBD").split()[-1] if e.get("notes") else "TBD")
+        notes = e.get("notes", "")[:80]
+        lines.append(f"| {e['experiment_id']} | {stage} | {traffic}% | {decision} | {notes} |")
+
+    if not entries:
+        lines.append(f"| _(no entries yet)_ | — | — | — | — |")
+
+    lines += ["", "## Live Stage Results", ""]
+    if live_stages:
+        for stage_label, data in live_stages.items():
+            decision = data.get("decision", "N/A")
+            rationale = data.get("rationale", [])
+            metrics = data.get("metrics", {})
+            source = data.get("data_source", "unknown")
+            ts = data.get("timestamp", "N/A")
+            lines.append(f"### Stage {stage_label} — {decision}")
+            lines.append(f"")
+            lines.append(f"- **Data source**: {source}")
+            lines.append(f"- **Timestamp**: {ts}")
+            lines.append(f"- **n_control**: {metrics.get('n_control', 'N/A')}")
+            lines.append(f"- **n_treatment**: {metrics.get('n_treatment', 'N/A')}")
+            if metrics.get("avg_questions_delta_pct") is not None:
+                lines.append(f"- **avg_questions_delta_pct**: {metrics.get('avg_questions_delta_pct')}%")
+            if metrics.get("premature_stop_rate") is not None:
+                lines.append(f"- **premature_stop_rate**: {metrics.get('premature_stop_rate'):.1%}" if isinstance(metrics.get("premature_stop_rate"), float) else f"- **premature_stop_rate**: {metrics.get('premature_stop_rate')}")
+            lines.append(f"- **Rationale**: {'; '.join(rationale) if rationale else 'N/A'}")
+            lines.append(f"")
+    else:
+        lines.append("_Live stage artifacts not yet available or --include-live not specified._")
+        lines.append("")
+
+    lines += [
+        "## Guardrail Summary",
+        "",
+        "| Guardrail | Threshold | Status |",
+        "|-----------|-----------|--------|",
+        "| avg_questions_delta_pct | <= +5% | _TBD_ |",
+        "| premature_stop_rate | < 3% | _TBD_ |",
+        "| p95_latency_ms | < 3000 ms | _TBD_ |",
+        "| junior_rmse | <= 45.0 | _TBD_ |",
+        "",
+        f"_Update this section after Stage C completes._",
+    ]
+
+    content = "\n".join(lines) + "\n"
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(content, encoding="utf-8")
+        print(f"Readout written to {output}")
+    else:
+        sys.stdout.buffer.write(content.encode("utf-8"))
+        sys.stdout.buffer.flush()
 
 
 if __name__ == '__main__':

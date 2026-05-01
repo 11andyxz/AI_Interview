@@ -19,7 +19,7 @@ import os
 import sys
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 # --- Checklist item result ---
 PASS = "PASS"
@@ -148,14 +148,98 @@ def check_openai() -> dict:
 
 
 def check_no_sqlite_fallback() -> dict:
-    """Confirm experiment scripts are not defaulting to SQLite."""
-    import pathlib
+    """Confirm the Spring Boot backend is not defaulting to SQLite.
+
+    Note: eval scripts (run_ramp_validation.py) read from SQLite ab_experiment.db
+    for metric computation. This is separate from the backend data path.
+    Live ramp execution requires the backend to be running with DB_HOST set so
+    that session data is written to MySQL, not a local SQLite file.
+    """
     db_host = os.environ.get("DB_HOST", "")
     if not db_host:
         return {"check": "SQLite:fallback_guard", "status": FAIL,
-                "detail": "DB_HOST not set; scripts will fall back to SQLite — blocked for prod-like runs"}
+                "detail": "DB_HOST not set; backend will fall back to SQLite — blocked for prod-like runs"}
     return {"check": "SQLite:fallback_guard", "status": PASS,
-            "detail": "DB_HOST present; MySQL path will be used"}
+            "detail": "DB_HOST present; backend MySQL path active. Note: eval metric scripts read SQLite ab_experiment.db independently."}
+
+
+def check_feature_cache_freshness() -> list[dict]:
+    """Check that ML feature caches in MySQL are populated before live ramp.
+
+    Empty caches cause cold-start prediction fallback during live sessions.
+    Run this check after MySQL connectivity is confirmed.
+    """
+    host = os.environ.get("DB_HOST", "")
+    if not host:
+        return [{"check": "FeatureCache:skipped", "status": WARN,
+                 "detail": "DB_HOST not set; skipping feature cache checks"}]
+
+    try:
+        import mysql.connector
+    except ImportError:
+        return [{"check": "FeatureCache:skipped", "status": WARN,
+                 "detail": "mysql-connector-python not installed; skipping feature cache checks"}]
+
+    port = int(os.environ.get("DB_PORT", "3306"))
+    name = os.environ.get("DB_NAME", "")
+    user = os.environ.get("DB_USERNAME", "")
+    pwd  = os.environ.get("DB_PASSWORD", "")
+
+    if not all([name, user, pwd]):
+        return [{"check": "FeatureCache:skipped", "status": WARN,
+                 "detail": "DB credentials incomplete; skipping feature cache checks"}]
+
+    try:
+        conn = mysql.connector.connect(
+            host=host, port=port, database=name,
+            user=user, password=pwd,
+            connection_timeout=5, ssl_disabled=False
+        )
+        cursor = conn.cursor()
+        results = []
+
+        # Check 1: response_feature_cache completeness (>= 50% of interview count)
+        cursor.execute("SELECT COUNT(*) FROM response_feature_cache")
+        cache_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM interview")
+        interview_count = cursor.fetchone()[0]
+        coverage = (cache_count / interview_count * 100) if interview_count > 0 else 0.0
+        if cache_count == 0:
+            results.append({"check": "FeatureCache:response_feature_cache", "status": FAIL,
+                            "detail": f"0 rows — predictions will use cold-start fallback. Populate before ramp."})
+        elif coverage < 50.0:
+            results.append({"check": "FeatureCache:response_feature_cache", "status": WARN,
+                            "detail": f"{cache_count} rows / {interview_count} interviews ({coverage:.0f}% coverage) — below 50% threshold"})
+        else:
+            results.append({"check": "FeatureCache:response_feature_cache", "status": PASS,
+                            "detail": f"{cache_count} rows ({coverage:.0f}% coverage)"})
+
+        # Check 2: question_embedding availability
+        cursor.execute("SELECT COUNT(*) FROM question_embedding")
+        emb_count = cursor.fetchone()[0]
+        if emb_count == 0:
+            results.append({"check": "FeatureCache:question_embedding", "status": FAIL,
+                            "detail": "0 rows — embedding similarity features unavailable. Run embedding refresh job."})
+        else:
+            results.append({"check": "FeatureCache:question_embedding", "status": PASS,
+                            "detail": f"{emb_count} embeddings available"})
+
+        # Check 3: topic_coverage freshness
+        cursor.execute("SELECT COUNT(*) FROM topic_coverage")
+        topic_count = cursor.fetchone()[0]
+        if topic_count == 0:
+            results.append({"check": "FeatureCache:topic_coverage", "status": WARN,
+                            "detail": "0 rows — topic diversity not tracked. Run topic coverage refresh."})
+        else:
+            results.append({"check": "FeatureCache:topic_coverage", "status": PASS,
+                            "detail": f"{topic_count} topics tracked"})
+
+        conn.close()
+        return results
+
+    except Exception as e:
+        return [{"check": "FeatureCache:error", "status": WARN,
+                 "detail": f"Could not query feature cache tables: {e}"}]
 
 
 def run_preflight(env: str = "local") -> dict:
@@ -167,6 +251,7 @@ def run_preflight(env: str = "local") -> dict:
     results.append(check_mysql())
     results.append(check_openai())
     results.append(check_no_sqlite_fallback())
+    results.extend(check_feature_cache_freshness())
 
     pass_count  = sum(1 for r in results if r["status"] == PASS)
     fail_count  = sum(1 for r in results if r["status"] == FAIL)
@@ -181,7 +266,7 @@ def run_preflight(env: str = "local") -> dict:
     print(f"\nResult: {overall}  (pass={pass_count}, warn={warn_count}, fail={fail_count})")
 
     return {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "env": env,
         "overall": overall,
         "pass": pass_count,

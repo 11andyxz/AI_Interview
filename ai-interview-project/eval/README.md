@@ -230,6 +230,70 @@ Checks performed:
 
 See `docs/week21_production_unblock_report.md` for the full gate checklist.
 
+## Week 22 Live Validation Command Sequence
+
+**Status**: Aiven MySQL is LIVE (879ms, verified 2026-04-27). OpenAI key rotation pending.
+
+### Pre-Ramp Preflight (run on May 4 before any stage execution)
+
+```bash
+# 1. Set required environment variables (never commit credentials)
+export DB_HOST=mysql-4c9be66-andyxiongzheng-9267.g.aivencloud.com
+export DB_PORT=22629
+export DB_NAME=ai_interview
+export DB_USERNAME=avnadmin
+export DB_PASSWORD=<from secrets manager>
+export OPENAI_API_KEY=<rotated key>
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_JUNIOR=4
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_MID=5
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_SENIOR=6
+
+# 2. Run preflight check — must exit 0 before any ramp stage
+python eval/preflight_check.py --env staging
+# Expected: Result: UNBLOCKED (pass=9, warn=3, fail=0)
+```
+
+### Stage A Live Ramp (May 5 — 10% traffic)
+
+```bash
+python eval/run_ramp_validation.py --stage A --live \
+  --output eval/results/week22_stage_a_live.json
+# Gate: avg_questions_delta_pct <= +5%, premature_stop_rate < 3%
+# Advance to Stage B only on GO decision
+```
+
+### Stage B Live Ramp (May 6 — 50% traffic, only if Stage A GO)
+
+```bash
+python eval/run_ramp_validation.py --stage B --live \
+  --output eval/results/week22_stage_b_live.json
+```
+
+### Stage C Decision (May 6 — 100%, only if Stage B GO)
+
+```bash
+python eval/run_ramp_validation.py --stage C --live \
+  --output eval/results/week22_stage_c_live.json
+```
+
+### Calibration Stability Check
+
+```bash
+python eval/calibration_stability.py --split odd_even \
+  --output eval/results/week22_calibration_stability.json
+```
+
+### Automated Weekly Readout
+
+```bash
+python eval/auto_summary_generator.py \
+  --week 22 \
+  --output docs/week22_ml_decision_readout.md
+```
+
+See `docs/week22_live_validation_unblock_report.md` for full gate status and live DB state.  
+See `docs/week22_live_ramp_readout.md` for stage-by-stage ramp decisions.
+
 ## Next Steps
 
 1. **Add LLM-as-Judge**: Implement automated quality scoring

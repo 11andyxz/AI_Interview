@@ -29,7 +29,7 @@ import os
 import random
 import sqlite3
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -41,7 +41,7 @@ REGISTRY_PATH = Path(__file__).parent / "experiment_registry.csv"
 
 # Guardrails (from Week 20 acceptance criteria)
 GUARDRAILS = {
-    "avg_questions_delta_pct_max": 0.0,   # treatment must reduce or hold
+    "avg_questions_delta_pct_max": 5.0,   # treatment must not increase questions by more than 5%
     "rmse_max": 15.0,
     "premature_stop_rate_max": 0.03,       # < 3%
     "p95_latency_ms_max": 3000,
@@ -90,6 +90,104 @@ def load_questions_for_sessions(session_ids: list[int]) -> list[dict]:
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return rows
+
+
+def _infer_slice_from_title(title: str) -> str:
+    """Infer experience-level slice from interview title."""
+    t = (title or "").lower()
+    if "junior" in t:
+        return "junior"
+    if "senior" in t or "lead" in t or "staff" in t or "principal" in t:
+        return "senior"
+    return "mid"
+
+
+def load_live_sessions_from_mysql() -> tuple[list[dict], list[dict]]:
+    """Load sessions from MySQL and split into control / treatment.
+
+    Control  = completed sessions created before 2026-04-01 (historical baseline).
+    Treatment = completed sessions created 2026-04-01+ (live ramp candidates).
+
+    Each session dict matches the format expected by compute_metrics():
+        {num_questions, early_stopped, avg_latency_ms, slice, experiment_id}
+
+    Sessions with no messages AND no duration data are excluded (stubs).
+    """
+    try:
+        import mysql.connector
+    except ImportError:
+        raise RuntimeError("mysql-connector-python not installed; run: pip install mysql-connector-python")
+
+    host = os.environ.get("DB_HOST", "")
+    port = int(os.environ.get("DB_PORT", "3306"))
+    name = os.environ.get("DB_NAME", "")
+    user = os.environ.get("DB_USERNAME", "")
+    pwd  = os.environ.get("DB_PASSWORD", "")
+
+    if not all([host, name, user, pwd]):
+        raise RuntimeError("DB env vars incomplete — set DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD")
+
+    conn = mysql.connector.connect(
+        host=host, port=port, database=name,
+        user=user, password=pwd,
+        connection_timeout=10, ssl_disabled=False
+    )
+    cur = conn.cursor(dictionary=True)
+
+    # Get completed (or any started/ended) interviews
+    cur.execute("""
+        SELECT
+            i.id            AS interview_id,
+            i.title,
+            i.status,
+            i.duration_seconds,
+            i.created_at,
+            COUNT(m.id)     AS num_messages,
+            AVG(m.evaluation_score) AS avg_eval_score
+        FROM interview i
+        LEFT JOIN interview_message m ON m.interview_id = i.id
+        WHERE i.status IN ('Completed', 'completed')
+        GROUP BY i.id, i.title, i.status, i.duration_seconds, i.created_at
+    """)
+    rows = cur.fetchall()
+    conn.close()
+
+    CUTOFF = datetime(2026, 4, 1)
+    control, treatment = [], []
+
+    for r in rows:
+        num_q = r["num_messages"] or 0
+        duration = r["duration_seconds"] or 0
+        slice_label = _infer_slice_from_title(r["title"])
+        min_q = TREATMENT_POLICY["min_questions"].get(slice_label, 5)
+
+        # Exclude sessions with zero messages and zero duration (pure stubs)
+        if num_q == 0 and duration == 0:
+            continue
+
+        # Latency: average ms per message-turn
+        avg_lat = (duration * 1000 / max(num_q, 1)) if duration > 0 else None
+
+        # Premature-stop heuristic: ended too quickly relative to slice minimum
+        early_stopped = 1 if (num_q < min_q and duration < min_q * 90) else 0
+
+        session = {
+            "id": r["interview_id"],
+            "experiment_id": "week22_live",
+            "slice": slice_label,
+            "num_questions": num_q if num_q > 0 else 1,  # floor at 1 to avoid division errors
+            "early_stopped": early_stopped,
+            "avg_latency_ms": avg_lat,
+            "eval_score": r["avg_eval_score"],
+        }
+
+        created = r["created_at"]
+        if created < CUTOFF:
+            control.append(session)
+        else:
+            treatment.append(session)
+
+    return control, treatment
 
 
 # ---------------------------------------------------------------------------
@@ -156,8 +254,8 @@ def evaluate_gate(metrics: dict) -> tuple[str, list[str]]:
     decision = "GO"
 
     delta_pct = metrics.get("avg_questions_delta_pct", 0)
-    if delta_pct > 5.0:
-        reasons.append(f"avg_questions_delta_pct={delta_pct}% > 5% — treatment increases questions (ROLLBACK)")
+    if delta_pct > GUARDRAILS["avg_questions_delta_pct_max"]:
+        reasons.append(f"avg_questions_delta_pct={delta_pct}% > {GUARDRAILS['avg_questions_delta_pct_max']}% \u2014 treatment increases questions (ROLLBACK)")
         decision = "ROLLBACK"
 
     premature = metrics.get("premature_stop_rate", 0)
@@ -189,31 +287,68 @@ def evaluate_gate(metrics: dict) -> tuple[str, list[str]]:
 # Stage runner
 # ---------------------------------------------------------------------------
 
-def run_stage(stage: str, dry_run: bool = True) -> dict:
-    """Run a single ramp stage using existing experiment data as proxy traffic."""
+def run_stage(stage: str, dry_run: bool = True, live: bool = False) -> dict:
+    """Run a single ramp stage.
+
+    When live=True: reads completed sessions from MySQL (requires DB env vars).
+    When live=False (default): reads SQLite Week 20 replay data as proxy traffic.
+    """
     print(f"\n{'='*60}")
-    print(f"Stage {stage} ({int(STAGE_SAMPLE_SIZES[stage]*100)}% ramp)")
+    print(f"Stage {stage} ({int(STAGE_SAMPLE_SIZES[stage]*100)}% ramp)"
+          + (" [LIVE / MySQL]" if live else " [DRY-RUN / SQLite]"))
     print(f"{'='*60}")
 
-    # Load base Week 20 sessions as the data source
-    all_sessions = load_sessions(["week20_control_real", "week20_treatment_real"])
-    control   = [s for s in all_sessions if s["experiment_id"] == "week20_control_real"]
-    treatment = [s for s in all_sessions if s["experiment_id"] == "week20_treatment_real"]
+    if live:
+        try:
+            control, treatment = load_live_sessions_from_mysql()
+        except Exception as exc:
+            return {"stage": stage, "traffic_pct": int(STAGE_SAMPLE_SIZES[stage] * 100),
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                    "metrics": {}, "decision": "HOLD",
+                    "rationale": [f"MySQL load failed: {exc}"]}
 
-    if not control or not treatment:
-        return {"stage": stage, "traffic_pct": int(STAGE_SAMPLE_SIZES.get(stage, 0.1) * 100),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-                "metrics": {}, "decision": "HOLD",
-                "rationale": ["No base experiment data found. Run Week 20 experiment first."]}
+        # Minimum sample size gate — refuse to evaluate guardrails on tiny samples
+        MIN_N_TREATMENT = 20
+        if len(treatment) < MIN_N_TREATMENT:
+            print(f"  n_control={len(control)}, n_treatment={len(treatment)}")
+            print(f"  HOLD: insufficient live treatment sessions (need >= {MIN_N_TREATMENT})")
+            return {
+                "stage": stage,
+                "traffic_pct": int(STAGE_SAMPLE_SIZES[stage] * 100),
+                "data_source": "mysql_live",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                "metrics": {"n_control": len(control), "n_treatment": len(treatment)},
+                "decision": "HOLD",
+                "rationale": [
+                    f"n_treatment={len(treatment)} < {MIN_N_TREATMENT} required for guardrail evaluation",
+                    "Continue collecting live sessions. Re-run Stage A when n_treatment >= 20.",
+                ],
+            }
 
-    # Sample proportionally for this ramp stage
-    frac = STAGE_SAMPLE_SIZES[stage]
-    n_ctrl = max(1, int(len(control) * frac))
-    n_trt  = max(1, int(len(treatment) * frac))
+        frac = STAGE_SAMPLE_SIZES[stage]
+        n_trt = max(1, int(len(treatment) * frac))
+        random.seed(42 + ord(stage))
+        sampled_control   = control
+        sampled_treatment = random.sample(treatment, min(n_trt, len(treatment)))
+    else:
+        # Load base Week 20 sessions as the data source
+        all_sessions = load_sessions(["week20_control_real", "week20_treatment_real"])
+        control   = [s for s in all_sessions if s["experiment_id"] == "week20_control_real"]
+        treatment = [s for s in all_sessions if s["experiment_id"] == "week20_treatment_real"]
 
-    random.seed(42 + ord(stage))
-    sampled_control   = random.sample(control,   min(n_ctrl, len(control)))
-    sampled_treatment = random.sample(treatment, min(n_trt,  len(treatment)))
+        if not control or not treatment:
+            return {"stage": stage, "traffic_pct": int(STAGE_SAMPLE_SIZES.get(stage, 0.1) * 100),
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                    "metrics": {}, "decision": "HOLD",
+                    "rationale": ["No base experiment data found. Run Week 20 experiment first."]}
+
+        frac = STAGE_SAMPLE_SIZES[stage]
+        n_ctrl = max(1, int(len(control) * frac))
+        n_trt  = max(1, int(len(treatment) * frac))
+
+        random.seed(42 + ord(stage))
+        sampled_control   = random.sample(control,   min(n_ctrl, len(control)))
+        sampled_treatment = random.sample(treatment, min(n_trt,  len(treatment)))
 
     metrics  = compute_metrics(sampled_control, sampled_treatment)
     decision, reasons = evaluate_gate(metrics)
@@ -231,7 +366,8 @@ def run_stage(stage: str, dry_run: bool = True) -> dict:
     return {
         "stage": stage,
         "traffic_pct": int(frac * 100),
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "data_source": "mysql_live" if live else "sqlite_replay",
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "metrics": metrics,
         "decision": decision,
         "rationale": reasons,
@@ -243,7 +379,10 @@ def append_to_registry(stage_result: dict):
     import csv
     stage = stage_result["stage"]
     m = stage_result.get("metrics", {})
-    exp_id = "week21_ramp_stage" + stage.lower() + "_" + datetime.utcnow().strftime("%Y%m%d")
+    source = stage_result.get("data_source", "unknown")
+    exp_id = "week22_live_stage" + stage.lower() + "_" + datetime.now(timezone.utc).strftime("%Y%m%d") \
+             if source == "mysql_live" \
+             else "week21_ramp_stage" + stage.lower() + "_" + datetime.now(timezone.utc).strftime("%Y%m%d")
 
     import json as _json
     config_params = _json.dumps({
@@ -253,10 +392,12 @@ def append_to_registry(stage_result: dict):
         "stage": stage,
         "traffic_pct": stage_result["traffic_pct"],
         "decision": stage_result["decision"],
+        "data_source": source,
     })
 
-    note = ("Week 21 Stage " + stage + " ramp - " + stage_result["decision"] + ": "
-            + (stage_result["rationale"][0] if stage_result["rationale"] else ""))
+    note = ("Week 22 Live Stage " if source == "mysql_live" else "Week 21 Stage ") \
+           + stage + " ramp - " + stage_result["decision"] + ": " \
+           + (stage_result["rationale"][0] if stage_result["rationale"] else "")
 
     fields = [
         exp_id,
@@ -288,22 +429,22 @@ def append_to_registry(stage_result: dict):
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Week 21 controlled ramp validation")
+    parser = argparse.ArgumentParser(description="Week 22 controlled ramp validation")
     parser.add_argument("--stage", default="all", choices=["A", "B", "C", "all"])
     parser.add_argument("--live", action="store_true",
-                        help="Run live sessions (requires OPENAI_API_KEY and MySQL)")
+                        help="Read from MySQL (requires DB_HOST/DB_PORT/DB_NAME/DB_USERNAME/DB_PASSWORD env vars)")
     parser.add_argument("--output", help="Write JSON report to this path")
     args = parser.parse_args()
 
     if args.live:
-        print("Live mode: requires preflight_check.py to pass first.")
-        print("Run: python preflight_check.py --env staging")
+        print("Live mode: reading from MySQL. Ensure DB env vars are set.")
+        print("Run preflight first: python preflight_check.py --env staging")
 
     stages = ["A", "B", "C"] if args.stage == "all" else [args.stage]
     results = []
 
     for stage in stages:
-        result = run_stage(stage, dry_run=not args.live)
+        result = run_stage(stage, dry_run=not args.live, live=args.live)
         results.append(result)
         append_to_registry(result)
 
@@ -313,7 +454,7 @@ def main():
             break
 
     summary = {
-        "run_timestamp": datetime.utcnow().isoformat() + "Z",
+        "run_timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "policy": TREATMENT_POLICY,
         "guardrails": GUARDRAILS,
         "stages": results,
