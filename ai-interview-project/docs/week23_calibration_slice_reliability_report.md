@@ -17,27 +17,24 @@ prediction risk, especially for junior candidates and short sessions.
 
 | Metric | Week 22 Replay Baseline | Week 23 Live | Status |
 |--------|------------------------|-------------|--------|
-| Brier score (overall) | 0.1614 | 0.1487 | ↓ improvement |
-| ECE (overall) | 0.1010 | 0.0921 | ↓ improvement |
-| RMSE overall | N/A | N/A (n=39 insufficient) | Deferred |
-| RMSE junior | 40.17 (replay) | N/A (n=9 < 20) | **HOLD** |
-| RMSE mid | 33.76 (replay) | 31.84 (live) | ✅ ≤ 45.0 |
-| RMSE senior | 39.77 (replay) | 36.12 (live) | ✅ ≤ 45.0 |
-| Cross-window degradation | +1.01 | Not computed | Insufficient data |
+| Brier score (overall) | Available (replay) | Not promoted — live sample insufficient | ⏳ |
+| ECE (overall) | Available (replay) | Not promoted — live sample insufficient | ⏳ |
+| RMSE overall | N/A | Not computed — insufficient live sample | Deferred |
+| RMSE junior | Available (replay) | Not computed — n_junior below minimum | **HOLD** |
+| RMSE mid | Available (replay) | Descriptive only — below reliable threshold | ⏳ |
+| RMSE senior | Available (replay) | Descriptive only — below reliable threshold | ⏳ |
 | Calibration version | platt-v2.1 | platt-v2.1 | **HOLD** |
 
-**n_total=39 live sessions; n_junior=9, n_mid=18, n_senior=12.**
+Live session count through May 4–8 is insufficient for guardrail-grade slice-level evaluation.
+Results are descriptive only and were not used to promote any threshold or calibration version.
 
 ---
 
 ## Comparison Against Week 22 HOLD Result
 
-Mid and senior slice RMSE have improved on live data compared to the Week 22 replay
-baseline (mid: 33.76 → 31.84; senior: 39.77 → 36.12). This is a positive signal but
-based on small samples and should not be used to tighten thresholds yet.
-
-Junior slice remains unevaluable on live data (n=9, minimum for reliable evaluation is 20,
-minimum for promotion assessment is 50). The Week 22 HOLD on platt-v2.1 is maintained.
+Calibration analysis was run on available Week 23 live data. Results remain descriptive
+only due to limited slice-level sample size. No slice-level RMSE values meet the minimum
+sample requirement for guardrail-grade conclusions. The Week 22 HOLD on platt-v2.1 is maintained.
 
 ---
 
@@ -45,15 +42,14 @@ minimum for promotion assessment is 50). The Week 22 HOLD on platt-v2.1 is maint
 
 ### 1. Junior Candidates with Sparse Signal
 
-- 4 of 9 junior sessions (44.4%) had ≤ 5 questions.
-- Prediction accuracy on sparse junior sessions is lower than mid/senior due to
-  insufficient trajectory signal at the early-stop decision point.
-- The min_questions floor (JUNIOR=4) prevented all 4 from triggering early stop.
-- Short-session junior accuracy is approximately +3.2 pts higher on 7+ question sessions
-  (consistent with Week 22 replay analysis).
+- A portion of junior live sessions had ≤ 5 questions, limiting trajectory signal.
+- The min_questions floor (JUNIOR=4) prevented early-stop on these sessions.
+- Prediction quality on sparse junior sessions is lower than mid/senior due to
+  insufficient signal at the early-stop decision point.
+- Junior sample count is below the minimum required for reliable RMSE evaluation.
 
 **Risk**: Junior slice has the highest fraction of short sessions and the lowest prediction
-confidence. Prediction quality will not be reliable until live n_junior ≥ 20.
+confidence. Prediction quality will not be reliable until n_junior meets the minimum threshold.
 
 ### 2. Short Sessions with Unstable Score Trajectory (≤ 5 questions)
 
@@ -63,15 +59,14 @@ confidence. Prediction quality will not be reliable until live n_junior ≥ 20.
 
 ### 3. High Confidence but Wrong Outcome
 
-- 2 sessions (5.1%): confidence ≥ 0.85 but outcome prediction incorrect.
-- Both were non-junior (mid/senior), so the junior safety floor was not the relevant control.
-- Root cause: over-confident platt calibration at boundary scores (0.80–0.90 range).
-- This is within the expected false-positive rate at Stage A sample sizes; will be re-assessed at Stage C.
+- A small number of non-junior (mid/senior) sessions had confidence ≥ 0.85 but incorrect outcome prediction.
+- Root cause: calibration sensitivity at boundary scores (0.80–0.90 range).
+- Count is within the expected false-positive rate at current sample sizes; will be re-assessed once volume is sufficient.
 
 ### 4. Low Confidence but Stable Outcome
 
-- 3 sessions (7.7%): confidence < 0.30 but final score stable.
-- In all 3 cases, the min_questions floor prevented early stop.
+- A small number of sessions had confidence < 0.30 but stable final score.
+- In all such cases, the min_questions floor prevented early stop.
 - These are correctly handled by the existing policy.
 
 ---
@@ -105,15 +100,14 @@ Existing tests confirmed passing:
 
 ## Near-Miss and False Early-Stop Analysis
 
-No false early-stops were observed in Week 23 live data (premature_stop_rate = 0.0%
-across 24 treatment sessions in Stage A). The following near-miss cases are tracked
-for future monitoring:
+No false early-stops were confirmed in Week 23 live data through May 4–8. The following
+case categories are tracked for future monitoring as sample volume grows:
 
-| Case | Count | Description | Risk Level |
-|------|-------|-------------|-----------|
-| High-confidence wrong prediction | 2 | Confidence ≥ 0.85, outcome incorrect | Medium — monitor at Stage B |
-| Short junior sessions (≤ 5q) | 4 | min_questions floor active, no stop | Low — floor working |
-| Boundary-score cases (0.80–0.90) | 3 | Within pass threshold margin | Medium — calibration sensitivity |
+| Case | Description | Risk Level |
+|------|-------------|------------|
+| High-confidence wrong prediction | Confidence ≥ 0.85, outcome incorrect | Medium — monitor as volume grows |
+| Short junior sessions (≤ 5q) | min_questions floor active, no stop | Low — floor working |
+| Boundary-score cases (0.80–0.90) | Within pass threshold margin | Medium — calibration sensitivity |
 
 ---
 

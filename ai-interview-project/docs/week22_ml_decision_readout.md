@@ -15,7 +15,8 @@
 | ⚠️ | Stage A live 10% ramp — **HOLD** (n_treatment=2 < 20 minimum, May 5) |
 | ⛔ | Stage B live 50% ramp — BLOCKED (awaiting Stage A GO) |
 | ⛔ | Stage C live 100% ramp — BLOCKED (awaiting Stage A GO) |
-| ✅ | Feature caches populated May 4 (response_feature_cache, question_embedding, topic_coverage) |
+| ❌ | response_feature_cache — 0 rows (unpopulated) |
+| ❌ | question_embedding — 0 rows (unpopulated) |
 
 ---
 
@@ -65,7 +66,7 @@
 | RMSE overall | < 15.0 | N/A | _TBD_ |
 | junior_rmse | ≤ 45.0 | 40.17 (replay) | _TBD_ |
 | OpenAI error rate | < 5% | N/A | _TBD_ |
-| response_feature_cache coverage | ≥ 50% | ✅ Populated May 4 | N/A (Stage A HOLD; re-check Week 23) |
+| response_feature_cache coverage | ≥ 50% | ❌ 0 rows | ❌ FAIL — blocks ramp; populate before Week 23 Stage A re-run |
 
 ---
 
@@ -73,10 +74,10 @@
 
 | Feature | Status | Action Required |
 |---------|--------|----------------|
-| response_feature_cache | ✅ Populated May 4 | Monitor freshness in Week 23 |
-| question_embedding | ✅ Populated May 4 | Monitor freshness in Week 23 |
-| topic_coverage | ✅ Populated May 4 | Monitor freshness in Week 23 |
-| candidate_skill_profile | 🔄 Not checked | Verify freshness Week 23 Task 4 |
+| response_feature_cache | ❌ 0 rows | Populate before Stage A re-run (Week 23 P0) |
+| question_embedding | ❌ 0 rows | Run embedding refresh job before Stage A |
+| topic_coverage | ❌ 0 rows | Run topic coverage refresh |
+| candidate_skill_profile | ❌ 0 rows | Verify and populate Week 23 Task 4 |
 
 ---
 
@@ -85,8 +86,8 @@
 **Current recommendation (as of 2026-05-07)**: **HOLD — Stage A re-run in Week 23**
 
 Stage A executed May 5 with n_treatment=2 (< 20 minimum). Guardrail evaluation not triggered.
-All feature caches populated May 4. Slice-aware MIN_QUESTIONS env vars confirmed active.
-Stage B and Stage C remain blocked until Stage A collects sufficient treatment traffic.
+Feature cache tables (response_feature_cache, question_embedding, topic_coverage) remain unpopulated (0 rows).
+Stage B and Stage C remain blocked until preflight passes and Stage A collects sufficient treatment traffic.
 
 **Week 23 Task 1 (P0)**: Monitor live n_treatment accumulation; re-run Stage A once n_treatment ≥ 20.
 Prepare Stage B recommendation only after Stage A passes all guardrails.
@@ -137,7 +138,7 @@ python eval/auto_summary_generator.py --week 22 --include-live \
 | Stage A live ramp | **HOLD** — n_treatment=2 < 20 | Task 1 (P0): re-run May 11 |
 | Stage B / Stage C | **BLOCKED** | Blocked until Stage A GO |
 | platt-v2.1 calibration | **HOLD** — insufficient live data | Task 3 (P1): re-evaluate after ≥ 50 junior sessions |
-| Feature caches | ⚠️ Populated May 4 | Task 4 (P1): monitor freshness |
+| Feature caches | ❌ Unpopulated (0 rows) | Task 4 (P1): populate response_feature_cache and question_embedding |
 | Eval pipeline reproducibility | 🔄 Audit in progress | Task 2 (P0): harden and standardize May 13 |
 
 **Week 23 plan owner**: Zheng Xiong (Andy). **Start**: May 11, 2026.

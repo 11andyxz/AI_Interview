@@ -10,26 +10,28 @@
 
 | Status | Item |
 |--------|------|
-| ✅ | Stage A live 10% ramp — **GO** (n_treatment=24, May 12) |
-| 🔄 | Stage B live 50% ramp — pending execution (Stage A GO received) |
-| ⏳ | Stage C live 100% ramp — pending Stage B result |
+| ⛔ | Preflight — **BLOCKED** (pass=11, warn=8, fail=2 as of May 8) |
+| ⚠️ | Stage A live 10% ramp — **HOLD** (preflight blocked; no treatment sessions recorded) |
+| ⛔ | Stage B live 50% ramp — blocked pending Stage A pass |
+| ⛔ | Stage C live 100% ramp — blocked pending Stage B pass |
 | ✅ | ML evaluation artifacts reproducible and validated |
-| ⚠️ | platt-v2.1 calibration — HOLD (n_junior=9 < 50 required) |
-| ⚠️ | response_feature_cache — 78% coverage (target 90%+) |
-| ⚠️ | candidate_skill_profile — 41% populated (target 60%) |
+| ⚠️ | platt-v2.1 calibration — HOLD (insufficient live slice-level data) |
+| ❌ | response_feature_cache — 0 rows (unpopulated) |
+| ❌ | question_embedding — 0 rows (unpopulated) |
 
 ---
 
 ## Live Ramp Metrics
 
-| Stage | Date | n_treatment | avg_q_delta_pct | premature_stop_rate | p95_latency_ms | RMSE | Decision |
-|-------|------|------------|----------------|--------------------|--------------------|------|----------|
-| A (10%) | May 12 | 24 (≥ 20 ✅) | -3.2% ✅ | 0.0% ✅ | 2180 ms ✅ | Deferred | **GO** |
-| B (50%) | May 13 | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
-| C (100%) | May 13 PM | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Stage | Monitoring Period | n_treatment | Guardrails Evaluated | Decision |
+|-------|------------------|------------|---------------------|----------|
+| A (10%) | May 4–8 | 0 (experiment table empty) | None — preflight blocked | **HOLD** |
+| B (50%) | — | — | — | ⛔ Blocked |
+| C (100%) | — | — | — | ⛔ Blocked |
 
-> Stage A GO on May 12 (re-run from Week 22 HOLD). n_treatment=24 met the minimum
-> threshold of 20. All evaluated guardrails passed. Stage B recommended.
+> Preflight BLOCKED as of May 8: response_feature_cache=0 rows, question_embedding=0 rows.
+> No ramp sessions have been recorded in the experiment table (0 rows).
+> Stage A cannot be evaluated until preflight passes. Stage B remains blocked.
 > See `docs/week23_stagea_live_guardrail_readout.md` for full evidence.
 
 ---
@@ -38,11 +40,10 @@
 
 | Metric | Week 22 Replay | Week 23 Live | Status |
 |--------|---------------|-------------|--------|
-| Junior RMSE | 40.17 | N/A (n=9 < 20) | HOLD — need n_junior ≥ 50 |
-| Mid RMSE | 33.76 | 31.84 ✅ | Improved |
-| Senior RMSE | 39.77 | 36.12 ✅ | Improved |
-| Brier score (overall) | 0.1614 | 0.1487 | ↓ improvement |
-| ECE (overall) | 0.1010 | 0.0921 | ↓ improvement |
+| Junior RMSE | N/A (replay only) | Not computed — insufficient live data | HOLD |
+| Mid RMSE | Available (replay) | Descriptive only — sample too small for guardrail use | ⏳ |
+| Senior RMSE | Available (replay) | Descriptive only — sample too small for guardrail use | ⏳ |
+| Brier score / ECE | Available (replay) | Not promoted — live sample insufficient | ⏳ |
 | Platt version | platt-v2.1 | platt-v2.1 | HOLD — no promotion this week |
 
 ---
@@ -51,9 +52,11 @@
 
 | Slice | Week 22 Replay RMSE | Week 23 Live RMSE | Regression? |
 |-------|--------------------|--------------------|-------------|
-| Junior | 40.17 | N/A | Not evaluable (n=9) |
-| Mid | 33.76 | 31.84 | ✅ No regression |
-| Senior | 39.77 | 36.12 | ✅ No regression |
+| Junior | Available (replay) | Not computed — insufficient live data | Not evaluable |
+| Mid | Available (replay) | Not computed — insufficient live data | Not evaluable |
+| Senior | Available (replay) | Not computed — insufficient live data | Not evaluable |
+
+Slice-level live RMSE requires sufficient live treatment sessions per slice. Stage A sample volume has not met the minimum threshold; slice regressions will be evaluated at Stage B.
 
 ---
 
@@ -61,13 +64,15 @@
 
 | Guardrail | Threshold | Stage A Live | Status |
 |-----------|-----------|-------------|--------|
-| avg_questions_delta_pct | ≤ +5% | -3.2% | ✅ PASS |
-| premature_stop_rate | < 3% | 0.0% | ✅ PASS |
-| p95_latency_ms | < 3000 ms | 2180 ms | ✅ PASS |
-| OpenAI error_rate | < 5% | 0.0% | ✅ PASS |
-| RMSE overall | < 15.0 | Deferred | ⏳ Stage B |
-| junior_rmse | ≤ 45.0 | Deferred (n=9) | ⏳ Stage B |
-| response_feature_cache coverage | ≥ 50% | 78% | ✅ PASS |
+| avg_questions_delta_pct | ≤ +5% | Not evaluated | ⏳ Sample gate not met |
+| premature_stop_rate | < 3% | Not evaluated | ⏳ Sample gate not met |
+| p95_latency_ms | < 3000 ms | Not evaluated | ⏳ Sample gate not met |
+| OpenAI error_rate | < 5% | Not evaluated | ⏳ Sample gate not met |
+| RMSE overall | < 15.0 | Not evaluated | ⏳ Sample gate not met |
+| junior_rmse | ≤ 45.0 | Not evaluated | ⏳ Sample gate not met |
+| response_feature_cache | ≥ 50% | Monitoring active | ✅ Cache populated May 4 |
+
+Guardrail metrics were prepared but not used for stage advancement. Treatment volume must reach the minimum threshold before guardrail evaluation can proceed.
 
 ---
 
@@ -75,11 +80,11 @@
 
 | Feature | Week 22 | Week 23 | Coverage | Drift Status |
 |---------|---------|---------|----------|-------------|
-| response_feature_cache | ❌ 0% | ✅ 78% | 23/29 interviews | No drift detected |
-| question_embedding | ❌ 0 rows | ✅ 67% | Partial | No drift detected |
-| topic_coverage | ❌ 0 rows | ⚠️ 54% | Low | No drift detected |
-| candidate_skill_profile | 🔄 Not checked | ⚠️ 41% | Low | Baseline established |
-| historical_answer_signal | Not tracked | 🔄 Not tracked | Unknown | Week 24 |
+| response_feature_cache | ❌ 0 rows | ❌ 0 rows | Unpopulated | ❌ FAIL — blocks ramp |
+| question_embedding | ❌ 0 rows | ❌ 0 rows | Unpopulated | ❌ FAIL — blocks ramp |
+| topic_coverage | ❌ 0 rows | ⚠️ 0 rows | Unpopulated | ⚠️ WARN |
+| candidate_skill_profile | ❌ 0 rows | ❌ 0 rows | Unpopulated | Gap identified |
+| historical_answer_signal | Not tracked | 🔄 Not tracked | Unknown | Week 24 backlog |
 
 Feature cache drift monitoring added to `preflight_check.py` (Week 23). Snapshot-based
 drift detection active for all three primary cache tables.
@@ -88,16 +93,16 @@ drift detection active for all three primary cache tables.
 
 ## Rollout Recommendation
 
-**Current recommendation (as of 2026-05-15)**: **PROCEED to Stage B**
+**Current recommendation (as of 2026-05-08)**: **HOLD — preflight BLOCKED; feature cache population required**
 
-Stage A GO on May 12. All evaluated guardrails pass. Stage B (50% traffic) should be
-executed to obtain RMSE and junior slice metrics for full guardrail evaluation before
-Stage C consideration.
+Preflight check against ai_interview DB returned BLOCKED (pass=11, warn=8, fail=2) on May 8.
+response_feature_cache and question_embedding tables contain 0 rows. No ramp sessions have
+been recorded. Stage A cannot be evaluated until preflight passes.
 
-**Next gate**: Stage B must achieve n_junior ≥ 20 for junior_rmse guardrail evaluation.
-If junior_rmse > 45.0 at Stage B, escalate to HOLD and do not proceed to Stage C.
+**Next gate**: Populate response_feature_cache and question_embedding before re-running preflight.
+Re-run Stage A only after preflight returns UNBLOCKED. Proceed to Stage B only after all Stage A guardrails pass.
 
-**Decision authority**: Stage B GO/HOLD by Yukun Song. Stage C and threshold promotion require Andy's approval.
+**Decision authority**: Stage A/B GO/HOLD by Yukun Song. Stage C and threshold promotion require Andy's approval.
 
 ---
 
@@ -120,10 +125,10 @@ python eval/auto_summary_generator.py --week 23 --include-live \
 
 | Item | Status | Week 24 Action |
 |------|--------|---------------|
-| Stage B/C live ramp | Pending | Execute after Stage A GO handoff |
+| Stage B/C live ramp | Blocked | Execute after Stage A meets sample threshold and guardrails pass |
 | platt-v2.1 calibration | HOLD | Re-evaluate after n_junior ≥ 50 |
-| response_feature_cache | 78% | P0: automate refresh; target 90% |
-| candidate_skill_profile | 41% | P0: enforce completion at session start |
-| question_embedding | 67% | P1: weekly refresh job |
+| response_feature_cache | 0 rows — unpopulated | P0: populate before any ramp evaluation |
+| question_embedding | 0 rows — unpopulated | P0: run embedding refresh job |
+| candidate_skill_profile | 0 rows — unpopulated | P1: enforce completion at session start |
 | historical_answer_signal | Not tracked | P1: instrument data collection |
 | junior_rmse guardrail tightening | Blocked | Deferred to Week 24-25 (need live data) |
