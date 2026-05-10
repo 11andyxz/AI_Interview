@@ -12,10 +12,10 @@
 |--------|------|
 | ✅ | Aiven MySQL DB connected live (961ms) |
 | ✅ | OpenAI API key validated live (1042ms) |
-| 🗓 | Stage A live 10% ramp scheduled May 5 |
-| 🗓 | Stage B live 50% ramp scheduled May 6 AM |
-| 🗓 | Stage C live 100% decision scheduled May 6 PM |
-| ⚠️ | All ML feature caches empty — must populate before ramp |
+| ⚠️ | Stage A live 10% ramp — **HOLD** (n_treatment=2 < 20 minimum, May 5) |
+| ⛔ | Stage B live 50% ramp — BLOCKED (awaiting Stage A GO) |
+| ⛔ | Stage C live 100% ramp — BLOCKED (awaiting Stage A GO) |
+| ✅ | Feature caches populated May 4 (response_feature_cache, question_embedding, topic_coverage) |
 
 ---
 
@@ -23,9 +23,13 @@
 
 | Stage | Date | n_treatment | avg_q_delta_pct | premature_stop_rate | p95_latency_ms | RMSE | Decision |
 |-------|------|------------|----------------|--------------------|--------------------|------|----------|
-| A (10%) | May 5 | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
-| B (50%) | May 6 | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
-| C (100%) | May 6 | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| A (10%) | May 5 | 2 (< 20 min) | — | — | — | — | **HOLD** |
+| B (50%) | May 6 | — | — | — | — | — | BLOCKED |
+| C (100%) | May 6 | — | — | — | — | — | BLOCKED |
+
+> **Stage A HOLD (May 5)**: n_treatment=2 is below the minimum threshold of 20 required for guardrail
+> evaluation. No guardrail metrics were computed. Stage B and Stage C are blocked.
+> Stage A re-run is Week 23 Task 1 (P0), scheduled May 11.
 
 ---
 
@@ -61,7 +65,7 @@
 | RMSE overall | < 15.0 | N/A | _TBD_ |
 | junior_rmse | ≤ 45.0 | 40.17 (replay) | _TBD_ |
 | OpenAI error rate | < 5% | N/A | _TBD_ |
-| response_feature_cache coverage | ≥ 50% | ❌ 0% | Blocker before ramp |
+| response_feature_cache coverage | ≥ 50% | ✅ Populated May 4 | N/A (Stage A HOLD; re-check Week 23) |
 
 ---
 
@@ -69,21 +73,23 @@
 
 | Feature | Status | Action Required |
 |---------|--------|----------------|
-| response_feature_cache | ❌ Empty (0 rows) | Populate before Stage A ramp (May 4) |
-| question_embedding | ❌ Empty (0 rows) | Run embedding refresh job (May 4) |
-| topic_coverage | ❌ Empty (0 rows) | Run topic refresh job (May 4) |
-| candidate_skill_profile | 🔄 Not checked | Verify before ramp |
+| response_feature_cache | ✅ Populated May 4 | Monitor freshness in Week 23 |
+| question_embedding | ✅ Populated May 4 | Monitor freshness in Week 23 |
+| topic_coverage | ✅ Populated May 4 | Monitor freshness in Week 23 |
+| candidate_skill_profile | 🔄 Not checked | Verify freshness Week 23 Task 4 |
 
 ---
 
 ## Rollout Recommendation
 
-**Current recommendation (as of 2026-04-27)**: **PROCEED to Stage A on May 5** pending:
-1. Feature caches populated (`response_feature_cache` ≥ 50% of 29 interviews)
-2. Slice-aware min_questions env vars set: junior=4, mid=5, senior=6
-3. `preflight_check.py` re-confirmed in CI environment
+**Current recommendation (as of 2026-05-07)**: **HOLD — Stage A re-run in Week 23**
 
-**If preflight passes on May 4**: Proceed to Stage A on May 5 with n_treatment ≥ 20 minimum before guardrail evaluation.
+Stage A executed May 5 with n_treatment=2 (< 20 minimum). Guardrail evaluation not triggered.
+All feature caches populated May 4. Slice-aware MIN_QUESTIONS env vars confirmed active.
+Stage B and Stage C remain blocked until Stage A collects sufficient treatment traffic.
+
+**Week 23 Task 1 (P0)**: Monitor live n_treatment accumulation; re-run Stage A once n_treatment ≥ 20.
+Prepare Stage B recommendation only after Stage A passes all guardrails.
 
 **Decision authority**: Stage A/B GO/HOLD by Yukun Song. Stage C and threshold promotion require Andy's approval.
 
@@ -116,6 +122,22 @@ python eval/auto_summary_generator.py --week 22 --include-live \
 > - DB: ✅ Aiven MySQL live (961ms)  
 > - OpenAI key: ✅ Validated live  
 > - Feature caches: ❌ Empty — must populate before ramp  
-> - Stage A: 📅 May 5 (preflight UNBLOCKED locally)  
-> - Calibration: HOLD platt-v2.1; junior RMSE 40.17 (replay); live check May 7  
-> - Blockers: [1] Feature cache population, [2] CI secrets config  
+> - Stage A: ⚠️ HOLD — n_treatment=2 < 20 minimum (May 5); re-run queued Week 23 May 11
+> - Stage B/C: ⛔ BLOCKED — awaiting Stage A GO
+> - Calibration: HOLD platt-v2.1; junior RMSE 40.17 (replay); re-evaluate after ≥ 50 live junior sessions
+
+---
+
+## Week 23 Handoff
+
+**Status as of 2026-05-08 (Week 22 close-out)**
+
+| Item | Status | Week 23 Action |
+|------|--------|---------------|
+| Stage A live ramp | **HOLD** — n_treatment=2 < 20 | Task 1 (P0): re-run May 11 |
+| Stage B / Stage C | **BLOCKED** | Blocked until Stage A GO |
+| platt-v2.1 calibration | **HOLD** — insufficient live data | Task 3 (P1): re-evaluate after ≥ 50 junior sessions |
+| Feature caches | ⚠️ Populated May 4 | Task 4 (P1): monitor freshness |
+| Eval pipeline reproducibility | 🔄 Audit in progress | Task 2 (P0): harden and standardize May 13 |
+
+**Week 23 plan owner**: Zheng Xiong (Andy). **Start**: May 11, 2026.

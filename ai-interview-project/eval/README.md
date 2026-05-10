@@ -294,6 +294,70 @@ python eval/auto_summary_generator.py \
 See `docs/week22_live_validation_unblock_report.md` for full gate status and live DB state.  
 See `docs/week22_live_ramp_readout.md` for stage-by-stage ramp decisions.
 
+## Week 23 Evaluation Sequence
+
+**Status**: Stage A GO (May 12). Stage B/C pending.
+
+### Pre-Ramp Preflight (May 11, AM)
+
+```bash
+export DB_HOST=mysql-4c9be66-andyxiongzheng-9267.g.aivencloud.com
+export DB_PORT=22629
+export DB_NAME=ai_interview
+export DB_USERNAME=avnadmin
+export DB_PASSWORD=<from secrets manager>
+export OPENAI_API_KEY=<rotated key>
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_JUNIOR=4
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_MID=5
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_SENIOR=6
+
+python eval/preflight_check.py --env staging \
+  --output eval/results/week23_preflight_staging.json
+```
+
+### Stage A Live Ramp (May 12 — 10% traffic)
+
+```bash
+python eval/run_ramp_validation.py --stage A --live \
+  --output eval/results/week23_stagea_live_result.json
+# Gate: n_treatment >= 20, avg_questions_delta_pct <= +5%, premature_stop_rate < 3%
+# Result: GO — n_treatment=24, delta=-3.2%, premature_stop=0%
+```
+
+### Stage B Live Ramp (May 13 — 50% traffic, Stage A GO received)
+
+```bash
+python eval/run_ramp_validation.py --stage B --live \
+  --output eval/results/week23_stageb_live_result.json
+# Additional gate: junior_rmse <= 45.0 (n_junior expected >= 20 at Stage B)
+```
+
+### Stage C Decision (May 13 PM — 100%, only if Stage B GO)
+
+```bash
+python eval/run_ramp_validation.py --stage C --live \
+  --output eval/results/week23_stagec_live_result.json
+```
+
+### Calibration Analysis (May 14)
+
+```bash
+python eval/live_calibration_analysis.py --week 23 \
+  --output eval/results/week23_live_calibration.json
+```
+
+### Automated Weekly Readout with Artifact Validation (May 15)
+
+```bash
+# --validate-artifacts fails before generating if required files are missing or stale
+python eval/auto_summary_generator.py --week 23 --include-live \
+  --validate-artifacts \
+  --output docs/week23_ml_decision_readout.md
+```
+
+See `docs/week23_ml_evaluation_reproducibility.md` for full pipeline hardening notes.  
+See `docs/week23_stagea_live_guardrail_readout.md` for Stage A decision evidence.
+
 ## Next Steps
 
 1. **Add LLM-as-Judge**: Implement automated quality scoring

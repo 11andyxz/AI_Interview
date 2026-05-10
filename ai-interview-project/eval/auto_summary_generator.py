@@ -297,6 +297,8 @@ def main():
                         help="Include live stage results from eval/results/week<N>_stage_*_live.json")
     parser.add_argument("--output", default=None,
                         help="Write readout to this Markdown file path")
+    parser.add_argument("--validate-artifacts", action="store_true",
+                        help="Fail before generating readout if required artifacts are missing or stale")
     args = parser.parse_args()
 
     registry_path = Path(__file__).parent / "experiment_registry.csv"
@@ -305,7 +307,8 @@ def main():
         sys.exit(1)
 
     if args.week is not None:
-        _generate_week_readout(args.week, args.include_live, args.output, registry_path)
+        _generate_week_readout(args.week, args.include_live, args.output, registry_path,
+                               validate=args.validate_artifacts)
         return
 
     # Legacy single-experiment mode
@@ -321,11 +324,63 @@ def main():
     generator.print_summary(summary)
 
 
+def _validate_week_artifacts(week: int, results_dir: Path) -> list:
+    """Validate that required artifacts exist and are not stale before generating readout.
+
+    Returns a list of error strings. Empty list means all checks passed.
+    Artifacts older than 14 days relative to the most recent required file are flagged as stale.
+    """
+    import time as _time
+
+    prefix = f"week{week}"
+    required_fields = {"experiment_id", "data_source", "timestamp", "model_version", "decision"}
+    errors = []
+
+    # Stage A result is always required once the week has a live ramp entry
+    stage_a_path = results_dir / f"{prefix}_stagea_live_result.json"
+    if not stage_a_path.exists():
+        errors.append(
+            f"MISSING ARTIFACT: {stage_a_path.name} — Stage A result required before generating readout."
+        )
+    else:
+        # Check required fields
+        try:
+            with open(stage_a_path, encoding="utf-8") as f:
+                data = json.load(f)
+            missing = required_fields - set(data.keys())
+            if missing:
+                errors.append(
+                    f"INCOMPLETE ARTIFACT: {stage_a_path.name} missing fields: {sorted(missing)}"
+                )
+            # Check staleness: mtime older than 14 days from now
+            age_days = (_time.time() - stage_a_path.stat().st_mtime) / 86400
+            if age_days > 14:
+                errors.append(
+                    f"STALE ARTIFACT: {stage_a_path.name} last modified {age_days:.0f} days ago (threshold: 14 days)"
+                )
+        except (json.JSONDecodeError, OSError) as e:
+            errors.append(f"UNREADABLE ARTIFACT: {stage_a_path.name} — {e}")
+
+    return errors
+
+
 def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
-                           registry_path: Path) -> None:
+                           registry_path: Path, validate: bool = False) -> None:
     """Generate a week-level ML decision readout Markdown document."""
     results_dir = registry_path.parent / "results"
     prefix = f"week{week}"
+
+    # Fail early if artifact validation is requested and errors are found
+    if validate:
+        errors = _validate_week_artifacts(week, results_dir)
+        if errors:
+            for err in errors:
+                print(f"ARTIFACT VALIDATION ERROR: {err}", file=sys.stderr)
+            print(
+                f"\nArtifact validation failed for week {week}. Fix errors above before generating readout.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     # Load week entries from registry
     entries = []

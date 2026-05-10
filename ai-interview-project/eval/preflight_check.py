@@ -242,6 +242,96 @@ def check_feature_cache_freshness() -> list[dict]:
                  "detail": f"Could not query feature cache tables: {e}"}]
 
 
+def check_feature_cache_drift(snapshot_path: str = "eval/results/feature_cache_snapshot.json") -> list[dict]:
+    """Detect feature cache population drift by comparing current row counts against a saved snapshot.
+
+    A drift of > 15% drop in any cache table triggers a WARN so that cache refresh
+    failures are caught before they silently degrade prediction quality.
+    The snapshot is written by run_preflight after a successful cache check; if no
+    snapshot exists, this check is skipped with a WARN.
+    """
+    import pathlib
+
+    snapshot_file = pathlib.Path(snapshot_path)
+    if not snapshot_file.exists():
+        return [{"check": "FeatureCache:drift", "status": WARN,
+                 "detail": f"No snapshot found at {snapshot_path}; skipping drift check. "
+                            "Snapshot will be written after first successful preflight."}]
+
+    try:
+        with open(snapshot_file, encoding="utf-8") as f:
+            snapshot = json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        return [{"check": "FeatureCache:drift", "status": WARN,
+                 "detail": f"Could not read snapshot at {snapshot_path}: {e}"}]
+
+    host = os.environ.get("DB_HOST", "")
+    if not host:
+        return [{"check": "FeatureCache:drift", "status": WARN,
+                 "detail": "DB_HOST not set; skipping drift check"}]
+
+    try:
+        import mysql.connector
+    except ImportError:
+        return [{"check": "FeatureCache:drift", "status": WARN,
+                 "detail": "mysql-connector-python not installed; skipping drift check"}]
+
+    port = int(os.environ.get("DB_PORT", "3306"))
+    name = os.environ.get("DB_NAME", "")
+    user = os.environ.get("DB_USERNAME", "")
+    pwd  = os.environ.get("DB_PASSWORD", "")
+
+    if not all([name, user, pwd]):
+        return [{"check": "FeatureCache:drift", "status": WARN,
+                 "detail": "DB credentials incomplete; skipping drift check"}]
+
+    try:
+        conn = mysql.connector.connect(
+            host=host, port=port, database=name,
+            user=user, password=pwd,
+            connection_timeout=5, ssl_disabled=False
+        )
+        cursor = conn.cursor()
+        results = []
+        tables = ["response_feature_cache", "question_embedding", "topic_coverage"]
+        drift_threshold = 0.15  # 15% drop triggers WARN
+
+        for table in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            current_count = cursor.fetchone()[0]
+            snapshot_count = snapshot.get(table, 0)
+
+            if snapshot_count == 0:
+                # No baseline to compare; skip this table
+                continue
+
+            drop_pct = (snapshot_count - current_count) / snapshot_count
+            if drop_pct > drift_threshold:
+                results.append({
+                    "check": f"FeatureCache:drift:{table}",
+                    "status": WARN,
+                    "detail": (
+                        f"Coverage dropped {drop_pct:.0%} from snapshot "
+                        f"({snapshot_count} rows -> {current_count} rows). "
+                        "Run cache refresh job and investigate."
+                    )
+                })
+            else:
+                results.append({
+                    "check": f"FeatureCache:drift:{table}",
+                    "status": PASS,
+                    "detail": f"{current_count} rows (snapshot: {snapshot_count}; drift: {drop_pct:+.0%})"
+                })
+
+        conn.close()
+        return results if results else [{"check": "FeatureCache:drift", "status": PASS,
+                                         "detail": "No drift detected in tracked cache tables"}]
+
+    except Exception as e:
+        return [{"check": "FeatureCache:drift", "status": WARN,
+                 "detail": f"Could not check drift: {e}"}]
+
+
 def run_preflight(env: str = "local") -> dict:
     print(f"\n=== Week 21 Preflight Check (env={env}) ===\n")
     results = []
@@ -251,7 +341,9 @@ def run_preflight(env: str = "local") -> dict:
     results.append(check_mysql())
     results.append(check_openai())
     results.append(check_no_sqlite_fallback())
-    results.extend(check_feature_cache_freshness())
+    cache_results = check_feature_cache_freshness()
+    results.extend(cache_results)
+    results.extend(check_feature_cache_drift())
 
     pass_count  = sum(1 for r in results if r["status"] == PASS)
     fail_count  = sum(1 for r in results if r["status"] == FAIL)
@@ -265,7 +357,7 @@ def run_preflight(env: str = "local") -> dict:
 
     print(f"\nResult: {overall}  (pass={pass_count}, warn={warn_count}, fail={fail_count})")
 
-    return {
+    report = {
         "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "env": env,
         "overall": overall,
@@ -274,6 +366,40 @@ def run_preflight(env: str = "local") -> dict:
         "fail": fail_count,
         "checks": results,
     }
+
+    # Write feature cache snapshot on successful preflight so drift checks have a baseline
+    if overall == "UNBLOCKED":
+        _write_feature_cache_snapshot(cache_results)
+
+    return report
+
+
+def _write_feature_cache_snapshot(cache_results: list[dict],
+                                   snapshot_path: str = "eval/results/feature_cache_snapshot.json") -> None:
+    """Persist current feature cache row counts as a baseline for drift detection."""
+    import pathlib, re
+
+    snapshot: dict = {}
+    tables = ["response_feature_cache", "question_embedding", "topic_coverage"]
+    for result in cache_results:
+        check_name = result.get("check", "")
+        detail = result.get("detail", "")
+        for table in tables:
+            if table in check_name:
+                # Parse row count from detail string, e.g. "23 rows (78% coverage)"
+                match = re.search(r"(\d+)\s+rows?", detail)
+                if match:
+                    snapshot[table] = int(match.group(1))
+                break
+
+    if snapshot:
+        try:
+            out = pathlib.Path(snapshot_path)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            snapshot["written_at"] = datetime.now(timezone.utc).isoformat() + "Z"
+            out.write_text(json.dumps(snapshot, indent=2))
+        except OSError:
+            pass  # Snapshot write failure is non-fatal
 
 
 def main():
