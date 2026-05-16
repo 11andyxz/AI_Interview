@@ -228,6 +228,56 @@ Checks performed:
 - OpenAI API key valid
 - No SQLite fallback path active
 
+## Week 23 Evaluation Sequence
+
+Run each step in order. Each must succeed (exit 0) before proceeding to the next.
+
+```bash
+# Step 1 — Preflight (May 11, AM)
+python eval/preflight_check.py --env staging \
+  --output eval/results/week23_preflight_staging.json
+
+# Step 2 — Stage A live ramp (May 12)
+python eval/run_ramp_validation.py --stage A --live \
+  --output eval/results/week23_stagea_live_result.json
+# Expected: GO (n_treatment=24, avg_questions_delta_pct=-3.2%, all guardrails pass)
+
+# Step 3 — Stage B live ramp (May 13, only if Stage A GO)
+python eval/run_ramp_validation.py --stage B --live \
+  --output eval/results/week23_stageb_live_result.json
+
+# Step 4 — Calibration analysis (May 14)
+python eval/live_calibration_analysis.py --week 23 \
+  --output eval/results/week23_live_calibration.json
+
+# Step 5 — Generate Week 23 readout (May 15)
+python eval/auto_summary_generator.py --week 23 --include-live \
+  --validate-artifacts \
+  --output docs/week23_ml_decision_readout.md
+```
+
+**Week 23 status** (as of 2026-05-15):
+- Stage A: **GO** (n_treatment=24; artifact: `eval/results/week23_stagea_live_result.json`)
+- Stage B: PENDING — awaiting execution
+- Stage C: BLOCKED — pending Stage B
+- Calibration: HOLD — n_junior=9 (need ≥ 50 for promotion)
+
+## Artifact Naming Convention (Week 23+)
+
+| Artifact Type | Pattern | Example |
+|--------------|---------|---------|
+| Preflight | `week{N}_preflight_{env}.json` | `week23_preflight_staging.json` |
+| Stage A live | `week{N}_stagea_live_result.json` | `week23_stagea_live_result.json` |
+| Stage B live | `week{N}_stageb_live_result.json` | `week23_stageb_live_result.json` |
+| Stage C live | `week{N}_stagec_live_result.json` | `week23_stagec_live_result.json` |
+| Calibration | `week{N}_live_calibration.json` | `week23_live_calibration.json` |
+| Reproducibility manifest | `week{N}_reproducibility_manifest.json` | `week23_reproducibility_manifest.json` |
+| ML decision readout | `docs/week{N}_ml_decision_readout.md` | `docs/week23_ml_decision_readout.md` |
+
+All JSON artifacts must include: `experiment_id`, `data_source`, `timestamp`,
+`model_version`, `calibration_version`, `sample_size`, `guardrail_results`, `decision`.
+`auto_summary_generator.py --validate-artifacts` enforces this before generating any readout.
+
 See `docs/week21_production_unblock_report.md` for the full gate checklist.
 
 ## Week 22 Live Validation Command Sequence

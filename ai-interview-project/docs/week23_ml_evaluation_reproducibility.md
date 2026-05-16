@@ -55,14 +55,14 @@ Every experiment result JSON must include:
 
 | Field | Description | Example |
 |-------|-------------|---------|
-| `experiment_id` | Registry-matching ID | `week23_live_stagea_20260512` |
+| `experiment_id` | Registry-matching ID | `week23_live_stagea_20260515` |
 | `data_source` | Where data came from | `mysql_live` |
-| `timestamp` | ISO 8601 UTC | `2026-05-12T15:44:00Z` |
+| `timestamp` | ISO 8601 UTC | `2026-05-15T00:37:53Z` |
 | `model_version` | Model + calibration | `prediction-v1.0+platt-v2.1` |
 | `calibration_version` | Calibration artifact | `platt-v2.1` |
-| `sample_size` | `{n_control, n_treatment}` | `{"n_control": 15, "n_treatment": 24}` |
+| `sample_size` | `{n_control, n_treatment}` | `{"n_control": 3, "n_treatment": 0}` |
 | `guardrail_results` | Per-guardrail pass/fail | see stage result JSON |
-| `decision` | GO / HOLD / ROLLBACK | `GO` |
+| `decision` | GO / HOLD / ROLLBACK | `HOLD` |
 
 Any artifact missing these fields causes `auto_summary_generator.py` to fail before
 generating the readout (validation gate added in Week 23).
@@ -126,8 +126,9 @@ python eval/auto_summary_generator.py --week 23 --include-live \
 
 | Experiment ID | Stage | Decision |
 |---------------|-------|----------|
-| `week23_live_stagea_20260512` | A | GO |
-| `week23_live_stageb_20260513` | B | TBD |
-| `week23_live_stagec_20260513` | C | TBD |
+| `week23_live_stagea_20260508` | A | HOLD |
+| `week23_live_stagea_20260515` | A | HOLD |
+| `week23_live_stageb_pending` | B | Blocked |
+| `week23_live_stagec_pending` | C | Blocked |
 
 See `eval/experiment_registry.csv` for full entries.

@@ -394,8 +394,10 @@ def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
     live_stages: dict = {}
     if include_live:
         for stage in ("a", "b", "c"):
-            # Try both naming patterns used by run_ramp_validation.py
+            # Try all naming patterns used across weeks
             candidates = [
+                results_dir / f"{prefix}_stage{stage}_live_result.json",
+                results_dir / f"{prefix}_stage{stage}live_result.json",
                 results_dir / f"{prefix}_stage{stage}_live.json",
                 results_dir / f"{prefix}_live_stage{stage}_result.json",
             ]
@@ -432,7 +434,7 @@ def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
         stage = config.get("stage", "?")
         traffic = config.get("traffic_pct", "?")
         decision = config.get("decision", e.get("notes", "TBD").split()[-1] if e.get("notes") else "TBD")
-        notes = e.get("notes", "")[:80]
+        notes = (e.get("notes") or "")[:80]
         lines.append(f"| {e['experiment_id']} | {stage} | {traffic}% | {decision} | {notes} |")
 
     if not entries:
@@ -444,14 +446,17 @@ def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
             decision = data.get("decision", "N/A")
             rationale = data.get("rationale", [])
             metrics = data.get("metrics", {})
+            sample = data.get("sample_size", {})
             source = data.get("data_source", "unknown")
             ts = data.get("timestamp", "N/A")
             lines.append(f"### Stage {stage_label} — {decision}")
             lines.append(f"")
             lines.append(f"- **Data source**: {source}")
             lines.append(f"- **Timestamp**: {ts}")
-            lines.append(f"- **n_control**: {metrics.get('n_control', 'N/A')}")
-            lines.append(f"- **n_treatment**: {metrics.get('n_treatment', 'N/A')}")
+            n_control = sample.get("n_control", metrics.get("n_control", "N/A"))
+            n_treatment = sample.get("n_treatment", metrics.get("n_treatment", "N/A"))
+            lines.append(f"- **n_control**: {n_control}")
+            lines.append(f"- **n_treatment**: {n_treatment}")
             if metrics.get("avg_questions_delta_pct") is not None:
                 lines.append(f"- **avg_questions_delta_pct**: {metrics.get('avg_questions_delta_pct')}%")
             if metrics.get("premature_stop_rate") is not None:

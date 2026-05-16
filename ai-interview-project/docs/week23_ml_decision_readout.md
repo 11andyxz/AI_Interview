@@ -10,7 +10,7 @@
 
 | Status | Item |
 |--------|------|
-| ⛔ | Preflight — **BLOCKED** (pass=11, warn=8, fail=2 as of May 8) |
+| ⛔ | Preflight — **BLOCKED** (pass=9, warn=10, fail=2 as of May 15) |
 | ⚠️ | Stage A live 10% ramp — **HOLD** (preflight blocked; no treatment sessions recorded) |
 | ⛔ | Stage B live 50% ramp — blocked pending Stage A pass |
 | ⛔ | Stage C live 100% ramp — blocked pending Stage B pass |
@@ -25,14 +25,13 @@
 
 | Stage | Monitoring Period | n_treatment | Guardrails Evaluated | Decision |
 |-------|------------------|------------|---------------------|----------|
-| A (10%) | May 4–8 | 0 (experiment table empty) | None — preflight blocked | **HOLD** |
+| A (10%) | May 11–15 | 0 | None — preflight blocked | **HOLD** |
 | B (50%) | — | — | — | ⛔ Blocked |
 | C (100%) | — | — | — | ⛔ Blocked |
 
-> Preflight BLOCKED as of May 8: response_feature_cache=0 rows, question_embedding=0 rows.
-> No ramp sessions have been recorded in the experiment table (0 rows).
-> Stage A cannot be evaluated until preflight passes. Stage B remains blocked.
-> See `docs/week23_stagea_live_guardrail_readout.md` for full evidence.
+> Preflight BLOCKED as of May 15 (pass=9, warn=10, fail=2): response_feature_cache=0 rows, question_embedding=0 rows.
+> n_treatment=0, n_control=3 — no ramp sessions recorded. All guardrail evaluation blocked.
+> See `docs/week23_stagea_live_guardrail_readout.md` and `eval/results/week23_stagea_live_result.json`.
 
 ---
 
@@ -70,9 +69,10 @@ Slice-level live RMSE requires sufficient live treatment sessions per slice. Sta
 | OpenAI error_rate | < 5% | Not evaluated | ⏳ Sample gate not met |
 | RMSE overall | < 15.0 | Not evaluated | ⏳ Sample gate not met |
 | junior_rmse | ≤ 45.0 | Not evaluated | ⏳ Sample gate not met |
-| response_feature_cache | ≥ 50% | Monitoring active | ✅ Cache populated May 4 |
+| response_feature_cache | > 0 rows | 0 rows | ❌ FAIL — blocks ramp |
+| question_embedding | > 0 rows | 0 rows | ❌ FAIL — blocks ramp |
 
-Guardrail metrics were prepared but not used for stage advancement. Treatment volume must reach the minimum threshold before guardrail evaluation can proceed.
+All guardrail evaluation blocked: preflight BLOCKED and n_treatment=0.
 
 ---
 

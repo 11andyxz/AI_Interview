@@ -3,72 +3,60 @@ package com.aiinterview.ml.prediction;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import org.junit.jupiter.api.Disabled;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Week 23 Task 3: Calibration regression tests for live slice RMSE results.
  *
  * Guards against:
- *   1. Mid slice live RMSE exceeding the <= 45.0 guardrail
- *   2. Senior slice live RMSE exceeding the <= 45.0 guardrail
- *   3. Accidental platt-v2.2 promotion before n_junior >= 50
- *   4. Cross-window degradation exceeding the <= 8.0 guardrail
+ *   1. Accidental platt-v2.2 promotion before n_junior >= 50
+ *
+ * HOLD — slice RMSE tests disabled: live calibration run (2026-05-15) found only 2 mid
+ * sessions and 0 junior/senior sessions. Slice-level RMSE is not computable until
+ * sufficient live treatment sessions accumulate (requires Stage A GO + n_treatment >= 20
+ * per slice). Re-enable tests and populate constants once live slice data is available.
  *
  * Threshold values are sourced from eval/results/week23_live_calibration.json.
- * Do NOT tighten these thresholds without slice-level evidence and a rollback note.
  */
 public class Week23CalibrationRegressionTest {
-
-    // Week 23 live observed RMSE values (from eval/results/week23_live_calibration.json)
-    private static final double WEEK23_MID_RMSE_LIVE = 31.84;
-    private static final double WEEK23_SENIOR_RMSE_LIVE = 36.12;
 
     // Guardrail thresholds (do not tighten without live evidence and rollback note)
     private static final double RMSE_GUARDRAIL_UPPER = 45.0;
 
-    // Week 22 replay baseline values for regression comparison
-    private static final double WEEK22_MID_RMSE_REPLAY = 33.76;
-    private static final double WEEK22_SENIOR_RMSE_REPLAY = 39.77;
-
-    // Maximum allowed regression vs Week 22 replay (10% tolerance)
-    private static final double REGRESSION_TOLERANCE_PCT = 10.0;
-
     @Test
+    @Disabled("HOLD — Week 23 live data has n_mid_sessions=2 only; slice RMSE not computable. "
+            + "Re-enable when Stage A GO and n_treatment >= 20 per slice.")
     @DisplayName("Week 23 mid slice live RMSE must be within <= 45.0 guardrail")
     public void testMidSliceLiveRmseWithinGuardrail() {
-        assertTrue(WEEK23_MID_RMSE_LIVE <= RMSE_GUARDRAIL_UPPER,
-            "Mid slice live RMSE " + WEEK23_MID_RMSE_LIVE
-            + " exceeds guardrail <= " + RMSE_GUARDRAIL_UPPER);
+        // TODO: populate WEEK23_MID_RMSE_LIVE from eval/results/week23_live_calibration.json
+        // when live slice data is available.
+        fail("No live mid slice RMSE available — insufficient sample size.");
     }
 
     @Test
+    @Disabled("HOLD — Week 23 live data has no senior sessions; slice RMSE not computable. "
+            + "Re-enable when Stage A GO and n_treatment >= 20 per slice.")
     @DisplayName("Week 23 senior slice live RMSE must be within <= 45.0 guardrail")
     public void testSeniorSliceLiveRmseWithinGuardrail() {
-        assertTrue(WEEK23_SENIOR_RMSE_LIVE <= RMSE_GUARDRAIL_UPPER,
-            "Senior slice live RMSE " + WEEK23_SENIOR_RMSE_LIVE
-            + " exceeds guardrail <= " + RMSE_GUARDRAIL_UPPER);
+        // TODO: populate WEEK23_SENIOR_RMSE_LIVE from eval/results/week23_live_calibration.json
+        // when live slice data is available.
+        fail("No live senior slice RMSE available — insufficient sample size.");
     }
 
     @Test
+    @Disabled("HOLD — no live mid slice RMSE; regression vs Week 22 replay not evaluable.")
     @DisplayName("Week 23 mid slice live RMSE must not regress more than 10% vs Week 22 replay")
     public void testMidSliceLiveRmseNoRegressionVsReplay() {
-        double regressionPct = ((WEEK23_MID_RMSE_LIVE - WEEK22_MID_RMSE_REPLAY) / WEEK22_MID_RMSE_REPLAY) * 100.0;
-        assertTrue(regressionPct <= REGRESSION_TOLERANCE_PCT,
-            "Mid slice RMSE regressed " + String.format("%.1f", regressionPct)
-            + "% vs Week 22 replay baseline " + WEEK22_MID_RMSE_REPLAY
-            + " (tolerance: +" + REGRESSION_TOLERANCE_PCT + "%). "
-            + "Do not promote or deploy without investigating regression.");
+        fail("No live mid slice RMSE available — insufficient sample size.");
     }
 
     @Test
+    @Disabled("HOLD — no live senior slice RMSE; regression vs Week 22 replay not evaluable.")
     @DisplayName("Week 23 senior slice live RMSE must not regress more than 10% vs Week 22 replay")
     public void testSeniorSliceLiveRmseNoRegressionVsReplay() {
-        double regressionPct = ((WEEK23_SENIOR_RMSE_LIVE - WEEK22_SENIOR_RMSE_REPLAY) / WEEK22_SENIOR_RMSE_REPLAY) * 100.0;
-        assertTrue(regressionPct <= REGRESSION_TOLERANCE_PCT,
-            "Senior slice RMSE regressed " + String.format("%.1f", regressionPct)
-            + "% vs Week 22 replay baseline " + WEEK22_SENIOR_RMSE_REPLAY
-            + " (tolerance: +" + REGRESSION_TOLERANCE_PCT + "%). "
-            + "Do not promote or deploy without investigating regression.");
+        fail("No live senior slice RMSE available — insufficient sample size.");
     }
 
     @Test

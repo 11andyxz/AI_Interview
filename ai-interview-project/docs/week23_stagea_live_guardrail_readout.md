@@ -3,7 +3,7 @@
 **Week**: 23  
 **Owner**: Yukun Song  
 **Decision authority**: Stage A/B GO/HOLD — Yukun Song; Stage C + threshold promotion — Andy (Zheng Xiong)  
-**Monitoring period**: May 4–8, 2026
+**Monitoring period**: May 11–15, 2026
 
 ---
 
@@ -12,33 +12,34 @@
 | Item | Value |
 |------|-------|
 | Stage A decision | **HOLD** |
-| Monitoring period | May 4–8, 2026 |
-| Preflight result | BLOCKED (pass=11, warn=8, fail=2) |
-| n_completed_interviews | 3 (all from March 2026, pre-ramp) |
-| experiment table rows | 0 — no ramp sessions recorded |
+| Monitoring period | May 11–15, 2026 |
+| Preflight result | BLOCKED (pass=9, warn=10, fail=2) |
+| n_treatment | 0 — no ramp sessions recorded |
+| n_control | 3 (all from March 2026, pre-ramp) |
 | response_feature_cache | 0 rows ❌ |
 | question_embedding | 0 rows ❌ |
-| Guardrails evaluated | None — feature cache gate not met |
+| Guardrails evaluated | None — n_treatment below minimum threshold |
 | Stage B | Blocked |
 
-**Decision: HOLD — preflight BLOCKED; feature caches unpopulated; no treatment sessions recorded.**
+**Decision: HOLD — n_treatment=0; preflight BLOCKED (pass=9, warn=10, fail=2); feature caches unpopulated.**
 
 ---
 
 ## Context: Week 22 → Week 23
 
-| Item | Week 22 Stage A | Week 23 Stage A (May 4–8) |
-|------|-----------------|---------------------------|
-| preflight result | UNBLOCKED (pass=9, warn=9, fail=2) | BLOCKED (pass=11, warn=8, fail=2) |
-| experiment rows | 0 | 0 |
+| Item | Week 22 Stage A | Week 23 Stage A (May 11–15) |
+|------|-----------------|-----------------------------|
+| preflight result | BLOCKED (pass=9, warn=9, fail=2) | BLOCKED (pass=9, warn=10, fail=2) |
+| n_treatment | 0 | 0 |
+| n_control | 3 | 3 |
 | response_feature_cache | 0 rows | 0 rows |
 | question_embedding | 0 rows | 0 rows |
 | Guardrails evaluated | None | None |
 | Decision | HOLD | **HOLD** |
 
-The preflight check now correctly connects to `ai_interview` database. Feature cache tables
-exist but remain unpopulated. No ramp treatment sessions have been recorded in the
-experiment table. Stage A HOLD continues from Week 22.
+No new ramp sessions accumulated through May 15. Feature cache tables remain unpopulated.
+Preflight continues to return BLOCKED on the same two failures (response_feature_cache,
+question_embedding). Stage A HOLD continues from Week 22 with updated preflight numbers.
 
 ---
 
@@ -56,7 +57,7 @@ experiment table. Stage A HOLD continues from Week 22.
 | RMSE overall | < 15.0 | ⏳ Not evaluated — preflight blocked |
 | junior_rmse | ≤ 45.0 | ⏳ Not evaluated — preflight blocked |
 
-Preflight result (2026-05-08, DB: ai_interview): **BLOCKED** — pass=11, warn=8, fail=2.
+Preflight result (2026-05-15, DB: ai_interview): **BLOCKED** — pass=9, warn=10, fail=2.
 Feature cache population is required before any ramp stage can be evaluated.
 
 ---
@@ -79,5 +80,6 @@ Feature cache population is required before any ramp stage can be evaluated.
 
 ## Registry Reference
 
-Experiment ID: `week23_live_stagea_20260508`  
-See `eval/experiment_registry.csv` for full entry.
+Experiment ID: `week23_live_stagea_20260515`  
+See `eval/experiment_registry.csv` for full entry.  
+Artifact: `eval/results/week23_stagea_live_result.json`

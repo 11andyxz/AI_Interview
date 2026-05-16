@@ -15,17 +15,19 @@ prediction risk, especially for junior candidates and short sessions.
 
 ## Week 23 Calibration Metrics (Live Data)
 
-| Metric | Week 22 Replay Baseline | Week 23 Live | Status |
-|--------|------------------------|-------------|--------|
-| Brier score (overall) | Available (replay) | Not promoted — live sample insufficient | ⏳ |
-| ECE (overall) | Available (replay) | Not promoted — live sample insufficient | ⏳ |
-| RMSE overall | N/A | Not computed — insufficient live sample | Deferred |
-| RMSE junior | Available (replay) | Not computed — n_junior below minimum | **HOLD** |
-| RMSE mid | Available (replay) | Descriptive only — below reliable threshold | ⏳ |
-| RMSE senior | Available (replay) | Descriptive only — below reliable threshold | ⏳ |
-| Calibration version | platt-v2.1 | platt-v2.1 | **HOLD** |
+| Metric | Week 23 Live (May 15) | Status |
+|--------|----------------------|--------|
+| Total scored sessions | 2 (mid slice only) | Insufficient |
+| Total scored messages | 3 | Insufficient |
+| Mid eval_score mean | 8.33 (range 7.5–9.0, n=3) | Descriptive only |
+| Junior slice | No scored data | HOLD |
+| Senior slice | No scored data | HOLD |
+| RMSE overall | Not computed — n_total too small | Deferred |
+| Brier score / ECE | Not computed — no outcome labels available | Deferred |
+| Calibration version | platt-v2.1 | **HOLD** |
 
-Live session count through May 4–8 is insufficient for guardrail-grade slice-level evaluation.
+Live session count through May 15: n_total_scored_messages=3, n_sessions=2 (both mid slice,
+both from March 2026). No junior or senior scored data. No treatment sessions recorded.
 Results are descriptive only and were not used to promote any threshold or calibration version.
 
 ---
