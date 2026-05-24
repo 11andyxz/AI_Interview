@@ -220,13 +220,22 @@ public class LlmGatewayController {
             @RequestParam(defaultValue = "backend_java") String roleId,
             @RequestParam(defaultValue = "mid") String level) {
 
+        // Experiment routing — must mirror POST /question-generate so streaming sessions
+        // are assigned to a variant and written to experiment_metric.
+        LlmRequest llmRequest = new LlmRequest("question-generate", sessionId);
+        llmRequest.setRoleId(roleId);
+        llmRequest.setLevel(level);
+        LlmRouteDecision route = experimentRouter.route(llmRequest);
+
         // Get session and history
         Optional<InterviewSession> sessionOpt = sessionService.getSession(sessionId);
         List<QAHistory> history = sessionOpt.map(InterviewSession::getHistory).orElse(List.of());
         Map<String, Object> candidateInfo = sessionOpt.map(InterviewSession::getCandidateInfo).orElse(null);
 
-        // Build prompts
-        String systemPrompt = promptService.buildSystemPrompt(roleId, level, candidateInfo);
+        // Build prompts — use experiment prompt template if provided
+        String systemPrompt = route.getPromptTemplate() != null
+                ? route.getPromptTemplate()
+                : promptService.buildSystemPrompt(roleId, level, candidateInfo);
         String userPrompt = promptService.buildConversationHistoryPrompt(history, maxHistoryMessages);
 
         List<OpenAiMessage> messages = List.of(
@@ -234,17 +243,33 @@ public class LlmGatewayController {
             new OpenAiMessage("user", userPrompt)
         );
 
-        // Stream response
+        long startTime = System.currentTimeMillis();
+        StringBuilder accumulated = new StringBuilder();
+
+        // Stream response; accumulate chunks to record metric on completion
         return openAiService.chatStream(messages)
-            .map(chunk -> ServerSentEvent.<String>builder()
-                .data(chunk)
-                .build())
+            .map(chunk -> {
+                accumulated.append(chunk);
+                return ServerSentEvent.<String>builder()
+                    .data(chunk)
+                    .build();
+            })
             .concatWith(Flux.just(ServerSentEvent.<String>builder()
                 .event("end")
                 .data("[DONE]")
                 .build()))
+            .doOnComplete(() -> {
+                if (route.isInExperiment()) {
+                    long latency = System.currentTimeMillis() - startTime;
+                    String fullResponse = accumulated.toString();
+                    experimentTracker.recordMetric(
+                            Long.parseLong(route.getExperimentId()), route.getVariant(),
+                            sessionId, estimateQuality(fullResponse), latency,
+                            estimateTokens(fullResponse));
+                }
+            })
             .onErrorResume(error -> {
-                System.err.println("Streaming error: " + error.getMessage());
+                logger.error("Streaming error: {}", error.getMessage());
                 return Flux.just(ServerSentEvent.<String>builder()
                     .event("error")
                     .data("Streaming failed: " + error.getMessage())

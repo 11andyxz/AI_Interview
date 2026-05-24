@@ -228,56 +228,6 @@ Checks performed:
 - OpenAI API key valid
 - No SQLite fallback path active
 
-## Week 23 Evaluation Sequence
-
-Run each step in order. Each must succeed (exit 0) before proceeding to the next.
-
-```bash
-# Step 1 — Preflight (May 11, AM)
-python eval/preflight_check.py --env staging \
-  --output eval/results/week23_preflight_staging.json
-
-# Step 2 — Stage A live ramp (May 12)
-python eval/run_ramp_validation.py --stage A --live \
-  --output eval/results/week23_stagea_live_result.json
-# Expected: GO (n_treatment=24, avg_questions_delta_pct=-3.2%, all guardrails pass)
-
-# Step 3 — Stage B live ramp (May 13, only if Stage A GO)
-python eval/run_ramp_validation.py --stage B --live \
-  --output eval/results/week23_stageb_live_result.json
-
-# Step 4 — Calibration analysis (May 14)
-python eval/live_calibration_analysis.py --week 23 \
-  --output eval/results/week23_live_calibration.json
-
-# Step 5 — Generate Week 23 readout (May 15)
-python eval/auto_summary_generator.py --week 23 --include-live \
-  --validate-artifacts \
-  --output docs/week23_ml_decision_readout.md
-```
-
-**Week 23 status** (as of 2026-05-15):
-- Stage A: **GO** (n_treatment=24; artifact: `eval/results/week23_stagea_live_result.json`)
-- Stage B: PENDING — awaiting execution
-- Stage C: BLOCKED — pending Stage B
-- Calibration: HOLD — n_junior=9 (need ≥ 50 for promotion)
-
-## Artifact Naming Convention (Week 23+)
-
-| Artifact Type | Pattern | Example |
-|--------------|---------|---------|
-| Preflight | `week{N}_preflight_{env}.json` | `week23_preflight_staging.json` |
-| Stage A live | `week{N}_stagea_live_result.json` | `week23_stagea_live_result.json` |
-| Stage B live | `week{N}_stageb_live_result.json` | `week23_stageb_live_result.json` |
-| Stage C live | `week{N}_stagec_live_result.json` | `week23_stagec_live_result.json` |
-| Calibration | `week{N}_live_calibration.json` | `week23_live_calibration.json` |
-| Reproducibility manifest | `week{N}_reproducibility_manifest.json` | `week23_reproducibility_manifest.json` |
-| ML decision readout | `docs/week{N}_ml_decision_readout.md` | `docs/week23_ml_decision_readout.md` |
-
-All JSON artifacts must include: `experiment_id`, `data_source`, `timestamp`,
-`model_version`, `calibration_version`, `sample_size`, `guardrail_results`, `decision`.
-`auto_summary_generator.py --validate-artifacts` enforces this before generating any readout.
-
 See `docs/week21_production_unblock_report.md` for the full gate checklist.
 
 ## Week 22 Live Validation Command Sequence
@@ -407,6 +357,81 @@ python eval/auto_summary_generator.py --week 23 --include-live \
 
 See `docs/week23_ml_evaluation_reproducibility.md` for full pipeline hardening notes.  
 See `docs/week23_stagea_live_guardrail_readout.md` for Stage A decision evidence.
+
+## Week 24 Live-Data Validation Sequence
+
+**Status (May 22, 2026)**: Stage A experiment seeded and routing active. Preflight **UNBLOCKED** (pass=10, warn=11, fail=0).  
+**question_embedding**: 5 rows (backfilled 2026-05-22). **response_feature_cache**: 3 rows (10% coverage; WARN, not FAIL).  
+**Remaining blocker**: n_treatment=0 — requires real user sessions. Last interview in DB: 2026-04-09.
+
+### Step 1 — Preflight (already run; re-run after any config change)
+
+```bash
+export DB_HOST=mysql-4c9be66-andyxiongzheng-9267.g.aivencloud.com
+export DB_PORT=22629
+export DB_NAME=ai_interview
+export DB_USERNAME=avnadmin
+export DB_PASSWORD=<from secrets manager>
+export OPENAI_API_KEY=<key>
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_JUNIOR=4
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_MID=5
+export ML_EARLY_STOP_NEW_MIN_QUESTIONS_SENIOR=6
+
+python eval/preflight_check.py --env local \
+  --output eval/results/week24_preflight_live.json
+# Must exit 0 (UNBLOCKED) before proceeding.
+# Current known failures: response_feature_cache=0 rows, question_embedding=0 rows
+```
+
+### Step 2 — Verify Experiment Routing (smoke test)
+
+After backend restart with experiment id=1 active:
+
+```bash
+# POST to question-generate and verify experimentId + variant in response
+# Then confirm experiment_metric row is written:
+mysql -u avnadmin -p -h <host> --port 22629 ai_interview \
+  -e "SELECT * FROM experiment_metric ORDER BY created_at DESC LIMIT 5;"
+```
+
+### Step 3 — Stage A Live Ramp (10% traffic, once n_treatment >= 20)
+
+```bash
+python eval/run_ramp_validation.py --stage A --live \
+  --output eval/results/week24_stagea_live_result.json
+# Gate: n_treatment >= 20, avg_questions_delta_pct <= +5%, premature_stop_rate < 3%
+```
+
+### Step 4 — Feature Population Snapshot
+
+```bash
+# After feature caches are populated:
+python eval/preflight_check.py --env local \
+  --output eval/results/week24_preflight_live.json
+# A successful UNBLOCKED run writes eval/results/feature_cache_snapshot.json automatically.
+```
+
+### Step 5 — Reproducibility Manifest
+
+```bash
+python eval/auto_summary_generator.py --week 24 --validate-artifacts \
+  --output docs/week24_ml_decision_readout.md
+```
+
+### Current Week 24 Live DB State (verified 2026-05-22)
+
+| Table | Row Count | Status |
+|-------|-----------|--------|
+| experiment | 1 (seeded) | ✅ stage_a_week24 running |
+| experiment_metric | 0 | ❌ No sessions since seed |
+| response_feature_cache | 0 | ❌ Blocks preflight |
+| question_embedding | 0 | ❌ Blocks preflight |
+| topic_coverage | 0 | ⚠️ Warn |
+| interview | 29 | Stale (last: 2026-04-09) |
+
+See `docs/week24_evaluation_tooling_parity.md` for full audit and tooling gap notes.  
+See `eval/results/week24_feature_population_snapshot.json` for per-table counts and unblock paths.  
+See `eval/results/week24_reproducibility_manifest.json` for Week 24 artifact status.
 
 ## Next Steps
 
