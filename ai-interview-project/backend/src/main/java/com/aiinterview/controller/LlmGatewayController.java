@@ -4,6 +4,10 @@ import com.aiinterview.ml.experiment.ExperimentTracker;
 import com.aiinterview.ml.gateway.ExperimentAwareLlmRouter;
 import com.aiinterview.ml.gateway.LlmRequest;
 import com.aiinterview.ml.gateway.LlmRouteDecision;
+import com.aiinterview.ml.embedding.service.TopicCoverageTracker;
+import com.aiinterview.ml.nlp.ResponseFeatureExtractor;
+import com.aiinterview.ml.prediction.entity.CandidateSkillProfile;
+import com.aiinterview.ml.prediction.repository.CandidateSkillProfileRepository;
 import com.aiinterview.model.openai.OpenAiMessage;
 import com.aiinterview.service.LlmEvaluationService;
 import com.aiinterview.service.OpenAiService;
@@ -22,7 +26,9 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,6 +57,27 @@ public class LlmGatewayController {
 
     @Autowired
     private ExperimentTracker experimentTracker;
+
+    // Optional beans — only active when ml.nlp.enabled / ml.embedding.enabled are true.
+    // Use required=false so the controller starts even when these feature flags are off.
+    @Autowired(required = false)
+    private ResponseFeatureExtractor featureExtractor;
+
+    @Autowired(required = false)
+    private TopicCoverageTracker coverageTracker;
+
+    @Autowired(required = false)
+    private CandidateSkillProfileRepository skillProfileRepository;
+
+    // Stable mapping from roleId string to numeric role_id used in ML tables
+    private static final Map<String, Long> ROLE_ID_MAP = Map.of(
+            "backend_java", 1L,
+            "frontend_react", 2L,
+            "fullstack", 3L,
+            "devops", 4L,
+            "data_engineer", 5L,
+            "ml_engineer", 6L
+    );
 
     @Value("${openai.max-history-messages:10}")
     private int maxHistoryMessages;
@@ -101,6 +128,19 @@ public class LlmGatewayController {
                     "sessionId", sessionId,
                     "questionNumber", history.size() + 1
                 ));
+
+                // Record topic coverage for this question if the tracker is active.
+                // Uses question number as a proxy question ID; the tracker returns early if
+                // no embedding is found for that ID (graceful no-op for LLM-generated questions).
+                if (coverageTracker != null && sessionId != null) {
+                    try {
+                        Long numericRoleId = ROLE_ID_MAP.getOrDefault(roleId, 1L);
+                        long questionNumber = (long) (history.size() + 1);
+                        coverageTracker.recordQuestionAsked(sessionId, numericRoleId, questionNumber);
+                    } catch (Exception e) {
+                        logger.warn("TopicCoverageTracker failed for session={}: {}", sessionId, e.getMessage());
+                    }
+                }
                 if (route.isInExperiment()) {
                     response.put("experimentId", route.getExperimentId());
                     response.put("variant", route.getVariant());
@@ -151,6 +191,28 @@ public class LlmGatewayController {
                     "improvements", result.getImprovements(),
                     "followUpQuestions", result.getFollowUpQuestions()
                 ));
+
+                // Extract and cache NLP features for this response (async-safe: runs in map()).
+                // Derives a stable question key from the question text hash to avoid storing
+                // the full question string in the cache key column.
+                if (featureExtractor != null && answer != null && !answer.isBlank()) {
+                    try {
+                        String questionId = "q-" + Integer.toHexString(question != null ? question.hashCode() : 0);
+                        featureExtractor.extractAndCache(sessionId, questionId, answer, result.getScore());
+                    } catch (Exception e) {
+                        logger.warn("ResponseFeatureExtractor failed for session={}: {}", sessionId, e.getMessage());
+                    }
+                }
+
+                // Update candidate skill profile with the latest score.
+                if (skillProfileRepository != null && result.getScore() != null) {
+                    try {
+                        updateSkillProfile(sessionId, roleId, result.getScore());
+                    } catch (Exception e) {
+                        logger.warn("CandidateSkillProfile update failed for session={}: {}", sessionId, e.getMessage());
+                    }
+                }
+
                 return ResponseEntity.ok((Object) response);
             })
             .onErrorResume(error -> {
@@ -298,6 +360,67 @@ public class LlmGatewayController {
 
     private int estimateTokens(String response) {
         return response != null ? response.length() / 4 : 0;
+    }
+
+    /**
+     * Upsert the candidate skill profile for a session after each answer evaluation.
+     * Maintains a rolling score trend (last 20 scores) and recomputes mean/std.
+     */
+    private void updateSkillProfile(String sessionId, String roleId, double score) {
+        CandidateSkillProfile profile = skillProfileRepository.findBySessionId(sessionId)
+                .orElseGet(() -> {
+                    CandidateSkillProfile p = new CandidateSkillProfile();
+                    p.setSessionId(sessionId);
+                    p.setRoleId(ROLE_ID_MAP.getOrDefault(roleId, 1L));
+                    p.setCumulativeScore(0.0);
+                    p.setQuestionCount(0);
+                    p.setScoreTrend("[]");
+                    p.setCreatedAt(LocalDateTime.now());
+                    return p;
+                });
+
+        // Update running totals
+        profile.setCumulativeScore(profile.getCumulativeScore() + score);
+        profile.setQuestionCount(profile.getQuestionCount() + 1);
+
+        // Maintain score trend as a JSON array (last 20 values)
+        List<Double> trend = parseTrend(profile.getScoreTrend());
+        trend.add(score);
+        if (trend.size() > 20) {
+            trend = trend.subList(trend.size() - 20, trend.size());
+        }
+        profile.setScoreTrend(serializeTrend(trend));
+
+        // Recompute mean and std
+        double mean = trend.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        profile.setScoreMean(mean);
+        if (trend.size() > 1) {
+            double variance = trend.stream().mapToDouble(v -> (v - mean) * (v - mean)).average().orElse(0.0);
+            profile.setScoreStd(Math.sqrt(variance));
+        }
+
+        profile.setUpdatedAt(LocalDateTime.now());
+        skillProfileRepository.save(profile);
+    }
+
+    private List<Double> parseTrend(String json) {
+        List<Double> result = new ArrayList<>();
+        if (json == null || json.isBlank() || json.equals("[]")) return result;
+        String inner = json.trim().replaceAll("[\\[\\]]", "");
+        for (String token : inner.split(",")) {
+            try { result.add(Double.parseDouble(token.trim())); } catch (NumberFormatException ignored) {}
+        }
+        return result;
+    }
+
+    private String serializeTrend(List<Double> trend) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < trend.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append(trend.get(i));
+        }
+        sb.append("]");
+        return sb.toString();
     }
 }
 

@@ -1,9 +1,14 @@
 package com.aiinterview.ml.nlp;
 
+import com.aiinterview.ml.nlp.entity.ResponseFeatureCache;
+import com.aiinterview.ml.nlp.repository.ResponseFeatureCacheRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -15,12 +20,17 @@ import java.util.regex.Pattern;
 @Component
 @ConditionalOnProperty(name = "ml.nlp.enabled", havingValue = "true", matchIfMissing = false)
 public class ResponseFeatureExtractor {
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(ResponseFeatureExtractor.class);
+
     @Autowired
     private TechnicalTermDictionary termDictionary;
-    
+
     @Autowired
     private TfIdfVectorizer tfidfVectorizer;
+
+    @Autowired
+    private ResponseFeatureCacheRepository featureCacheRepository;
     
     // Patterns for feature extraction
     private static final Pattern SENTENCE_PATTERN = Pattern.compile("[.!?]+");
@@ -380,6 +390,56 @@ public class ResponseFeatureExtractor {
         return Math.min(1.0, complexity);
     }
     
+    /**
+     * Extract features from a response and persist to response_feature_cache.
+     * Idempotent: skips write if a row for (sessionId, questionId) already exists.
+     *
+     * @param sessionId    Interview session identifier
+     * @param questionId   Question identifier (may be a hash-derived key for dynamic questions)
+     * @param responseText Candidate's response text
+     * @param llmScore     Ground-truth score from LLM evaluation (0–100)
+     */
+    public void extractAndCache(String sessionId, String questionId, String responseText, Double llmScore) {
+        // Idempotency guard: skip if entry already exists
+        if (featureCacheRepository.findBySessionIdAndQuestionId(sessionId, questionId).isPresent()) {
+            logger.debug("Feature cache hit for session={} question={}, skipping write", sessionId, questionId);
+            return;
+        }
+
+        long t0 = System.currentTimeMillis();
+        double[] features = extractFeatures(responseText, null);
+        int extractionMs = (int) (System.currentTimeMillis() - t0);
+
+        // Serialize feature vector to JSON array string
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < features.length; i++) {
+            if (i > 0) sb.append(',');
+            sb.append(features[i]);
+        }
+        sb.append("]");
+
+        ResponseFeatureCache entry = new ResponseFeatureCache();
+        entry.setSessionId(sessionId);
+        entry.setQuestionId(questionId);
+        entry.setResponseText(responseText);
+        entry.setFeatureVector(sb.toString());
+        entry.setLlmScore(llmScore);
+        entry.setFeatureExtractionTimeMs(extractionMs);
+        entry.setModelVersion("organic-v1.0");
+        entry.setCreatedAt(LocalDateTime.now());
+        entry.setUpdatedAt(LocalDateTime.now());
+
+        try {
+            featureCacheRepository.save(entry);
+            logger.debug("Cached features for session={} question={} llmScore={} extractionMs={}",
+                    sessionId, questionId, llmScore, extractionMs);
+        } catch (Exception e) {
+            // Non-fatal: log and continue — feature caching must not break the eval flow
+            logger.warn("Failed to cache response features for session={} question={}: {}",
+                    sessionId, questionId, e.getMessage());
+        }
+    }
+
     /**
      * Get feature count
      */
