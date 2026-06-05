@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-06-05T00:00:00Z",
+  "comparison": {
+    "heuristic_v1_0": {
+      "description": "3-bucket length heuristic used in Week 25",
+      "buckets": [
+        {"condition": "length < 20", "score": 30.0},
+        {"condition": "length > 200", "score": 80.0},
+        {"condition": "20 <= length <= 200", "score": 60.0}
+      ],
+      "distinct_values": 3,
+      "week25_treatment_scores": {"n": 10, "mean": 60.0, "std": 0.0},
+      "week25_baseline_scores": {"n": 20, "mean": 62.0, "std": 4.47}
+    },
+    "llm_v1_0": {
+      "description": "GPT-3.5-turbo scored 0-100 per question, temperature=0.0",
+      "criteria": ["specificity", "technical depth", "role relevance", "clarity", "non-repetitiveness"],
+      "fallback": "heuristic-v1.0 if LLM call fails",
+      "week26_treatment_scores": {
+        "n": 12,
+        "mean": 60.0,
+        "std": 0.0,
+        "note": "All sessions had no history; same generic question generated and scored consistently"
+      },
+      "week26_baseline_scores": {
+        "n": 24,
+        "mean": 60.0,
+        "std": 0.0,
+        "note": "Same no-history condition"
+      }
+    }
+  },
+  "combined_stats_all_rows": {
+    "treatment": {"n": 22, "mean": 60.0, "std": 0.0},
+    "baseline": {"n": 44, "mean": 60.91, "std": 4.17}
+  },
+  "metric_version_note": "Week 25 heuristic-v1.0 baseline had some 80.0 scores (longer questions), which raises the combined baseline mean and std slightly above Week 26 values. The two metric versions should not be compared directly for variance analysis.",
+  "expected_improvement": "When sessions include real conversation history and generate diverse questions, llm-v1.0 is expected to produce variance in [40, 90] reflecting actual question quality differences between treatment and baseline early-stopping policies."
+}

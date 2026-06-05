@@ -8,6 +8,7 @@ import com.aiinterview.ml.embedding.service.TopicCoverageTracker;
 import com.aiinterview.ml.nlp.ResponseFeatureExtractor;
 import com.aiinterview.ml.prediction.entity.CandidateSkillProfile;
 import com.aiinterview.ml.prediction.repository.CandidateSkillProfileRepository;
+import com.aiinterview.ml.quality.QuestionQualityScorer;
 import com.aiinterview.model.openai.OpenAiMessage;
 import com.aiinterview.service.LlmEvaluationService;
 import com.aiinterview.service.OpenAiService;
@@ -63,6 +64,10 @@ public class LlmGatewayController {
     @Autowired(required = false)
     private ResponseFeatureExtractor featureExtractor;
 
+    // Quality scorer — always active; falls back to heuristic if LLM call fails.
+    @Autowired(required = false)
+    private QuestionQualityScorer qualityScorer;
+
     @Autowired(required = false)
     private TopicCoverageTracker coverageTracker;
 
@@ -114,38 +119,46 @@ public class LlmGatewayController {
         long startTime = System.currentTimeMillis();
 
         return openAiService.chatWithConfig(messages, route.getModel(), route.getTemperature())
-            .map(question -> {
+            .flatMap(question -> {
                 long latency = System.currentTimeMillis() - startTime;
 
-                if (route.isInExperiment()) {
-                    experimentTracker.recordMetric(
-                            Long.parseLong(route.getExperimentId()), route.getVariant(),
-                            sessionId, estimateQuality(question), latency, estimateTokens(question));
-                }
+                // Score question quality using LLM (metric version: llm-v1.0).
+                // Falls back to heuristic-v1.0 if the scorer is unavailable or the call fails.
+                Mono<Double> qualityMono = qualityScorer != null
+                        ? qualityScorer.score(question, roleId, level)
+                        : Mono.just(QuestionQualityScorer.heuristicFallback(question));
 
-                Map<String, Object> response = new java.util.HashMap<>(Map.of(
-                    "question", question,
-                    "sessionId", sessionId,
-                    "questionNumber", history.size() + 1
-                ));
-
-                // Record topic coverage for this question if the tracker is active.
-                // Uses question number as a proxy question ID; the tracker returns early if
-                // no embedding is found for that ID (graceful no-op for LLM-generated questions).
-                if (coverageTracker != null && sessionId != null) {
-                    try {
-                        Long numericRoleId = ROLE_ID_MAP.getOrDefault(roleId, 1L);
-                        long questionNumber = (long) (history.size() + 1);
-                        coverageTracker.recordQuestionAsked(sessionId, numericRoleId, questionNumber);
-                    } catch (Exception e) {
-                        logger.warn("TopicCoverageTracker failed for session={}: {}", sessionId, e.getMessage());
+                return qualityMono.map(quality -> {
+                    if (route.isInExperiment()) {
+                        experimentTracker.recordMetric(
+                                Long.parseLong(route.getExperimentId()), route.getVariant(),
+                                sessionId, quality, latency, estimateTokens(question));
                     }
-                }
-                if (route.isInExperiment()) {
-                    response.put("experimentId", route.getExperimentId());
-                    response.put("variant", route.getVariant());
-                }
-                return ResponseEntity.ok((Object) response);
+
+                    Map<String, Object> response = new java.util.HashMap<>(Map.of(
+                        "question", question,
+                        "sessionId", sessionId,
+                        "questionNumber", history.size() + 1
+                    ));
+
+                    // Record topic coverage for this question if the tracker is active.
+                    // Uses question number as a proxy question ID; the tracker returns early if
+                    // no embedding is found for that ID (graceful no-op for LLM-generated questions).
+                    if (coverageTracker != null && sessionId != null) {
+                        try {
+                            Long numericRoleId = ROLE_ID_MAP.getOrDefault(roleId, 1L);
+                            long questionNumber = (long) (history.size() + 1);
+                            coverageTracker.recordQuestionAsked(sessionId, numericRoleId, questionNumber);
+                        } catch (Exception e) {
+                            logger.warn("TopicCoverageTracker failed for session={}: {}", sessionId, e.getMessage());
+                        }
+                    }
+                    if (route.isInExperiment()) {
+                        response.put("experimentId", route.getExperimentId());
+                        response.put("variant", route.getVariant());
+                    }
+                    return ResponseEntity.ok((Object) response);
+                });
             })
             .onErrorResume(error -> {
                 logger.error("Question generation error: {}", error.getMessage());

@@ -1,0 +1,76 @@
+{
+  "generated_at": "2026-06-05T13:37:15.497749+00:00",
+  "experiment_id": 1,
+  "metric_version_week25": "heuristic-v1.0",
+  "metric_version_week26": "llm-v1.0",
+  "sample_counts": {
+    "n_treatment": 22,
+    "n_baseline": 44,
+    "n_total": 66
+  },
+  "quality": {
+    "treatment_mean": 60.0,
+    "treatment_std": 0.0,
+    "baseline_mean": 60.91,
+    "baseline_std": 4.21,
+    "delta": -0.91,
+    "lift_pct": -1.49
+  },
+  "welch_t_test": {
+    "t": -1.431,
+    "df": 43.0,
+    "p": 0.4673,
+    "significant": false
+  },
+  "latency": {
+    "treatment_avg_ms": 649,
+    "baseline_avg_ms": 667
+  },
+  "feature_coverage": {
+    "response_feature_cache_backfill": 3,
+    "response_feature_cache_organic": 10,
+    "topic_coverage": 0,
+    "candidate_skill_profile": 41
+  },
+  "guardrails": {
+    "n_treatment_gte_20": {
+      "pass": true,
+      "value": 22,
+      "threshold": 20,
+      "detail": "n_treatment=22"
+    },
+    "quality_delta_gte_minus10": {
+      "pass": true,
+      "value": -0.91,
+      "threshold": -10.0,
+      "detail": "delta=-0.91"
+    },
+    "p_value_lt_0_05": {
+      "pass": false,
+      "value": 0.4673,
+      "threshold": 0.05,
+      "detail": "p=0.4673"
+    },
+    "latency_p50_lt_3000ms": {
+      "pass": true,
+      "value": {
+        "treatment_avg": 649,
+        "baseline_avg": 667
+      },
+      "threshold": 3000,
+      "detail": "t_avg=649ms b_avg=667ms"
+    },
+    "response_feature_cache_organic_gte_1": {
+      "pass": true,
+      "value": 10,
+      "threshold": 1,
+      "detail": "organic rows=10"
+    }
+  },
+  "guardrail_decision": "HOLD",
+  "stage_b_gate": {
+    "approved": false,
+    "blocker": "p-value not significant (p=0.4673 >= 0.05)"
+  },
+  "rollback_condition": "Roll back to baseline-only routing if treatment quality delta drops below -10 points at any sample size, or if OpenAI error rate exceeds 5% in treatment sessions."
+}
