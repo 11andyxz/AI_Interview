@@ -49,10 +49,27 @@ public class TopicCoverageTracker {
      */
     @Transactional
     public void recordQuestionAsked(String sessionId, Long roleId, Long questionId) {
+        // Delegate to the String-ID overload; Long IDs were the original question-bank format.
+        recordQuestionAsked(sessionId, roleId, String.valueOf(questionId));
+    }
+
+    /**
+     * Update coverage metrics after a question is asked, identified by its stable String ID.
+     *
+     * <p>Use this overload for LLM-generated questions whose IDs are produced by
+     * {@link GeneratedQuestionMapper} (e.g. {@code "gen-a3f8d21c0b94"}).  Numeric
+     * question-bank IDs can still be passed as strings when convenient.
+     *
+     * @param sessionId  Interview session ID
+     * @param roleId     Role ID
+     * @param questionId Stable question ID string (question-bank numeric or generated "gen-...")
+     */
+    @Transactional
+    public void recordQuestionAsked(String sessionId, Long roleId, String questionId) {
         logger.debug("Recording question {} for session {} role {}", questionId, sessionId, roleId);
-        
+
         // Get question's cluster
-        String questionIdStr = String.valueOf(questionId);
+        String questionIdStr = questionId;
         Optional<QuestionEmbedding> embeddingOpt = embeddingRepository.findByQuestionIdAndRoleId(questionIdStr, roleId);
         if (embeddingOpt.isEmpty() || embeddingOpt.get().getClusterId() == null) {
             logger.warn("Question {} has no cluster assignment, skipping coverage update", questionId);

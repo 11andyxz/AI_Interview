@@ -41,6 +41,7 @@ public class OpenAiService {
         request.setStream(false);
 
         return openAiWebClient.post()
+                .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
@@ -106,6 +107,7 @@ public class OpenAiService {
         request.setStream(true);
 
         return openAiWebClient.post()
+                .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .accept(MediaType.TEXT_EVENT_STREAM)
@@ -174,6 +176,7 @@ public class OpenAiService {
         request.setResponseFormat(java.util.Map.of("type", "json_object"));
 
         return openAiWebClient.post()
+                .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
@@ -204,6 +207,7 @@ public class OpenAiService {
         request.setStream(false);
 
         return openAiWebClient.post()
+                .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()

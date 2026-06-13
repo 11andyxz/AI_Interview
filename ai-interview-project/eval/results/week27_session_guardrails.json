@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-06-13T13:55:33.309163+00:00",
+  "real_prefixes": [
+    "w27r-",
+    "w27s-"
+  ],
+  "status": "PARTIAL",
+  "reason": "candidate_skill_profile rows exist, but seeded prior Q&A turns are not counted in question_count; this is not decision-grade for Stage B.",
+  "raw": [
+    {
+      "variant": "treatment",
+      "n": 18,
+      "avg_questions": 1.0,
+      "early_stops": 0.0,
+      "premature_stops": 0.0
+    },
+    {
+      "variant": "no_metric",
+      "n": 25,
+      "avg_questions": 1.0,
+      "early_stops": 0.0,
+      "premature_stops": 0.0
+    },
+    {
+      "variant": "baseline",
+      "n": 7,
+      "avg_questions": 1.0,
+      "early_stops": 0.0,
+      "premature_stops": 0.0
+    }
+  ],
+  "treatment": {
+    "variant": "treatment",
+    "n": 18,
+    "avg_questions": 1.0,
+    "early_stops": 0.0,
+    "premature_stops": 0.0
+  },
+  "baseline": {
+    "variant": "baseline",
+    "n": 7,
+    "avg_questions": 1.0,
+    "early_stops": 0.0,
+    "premature_stops": 0.0
+  },
+  "premature_stop_rate_observed": 0.0,
+  "early_stop_rate_observed": 0.0
+}

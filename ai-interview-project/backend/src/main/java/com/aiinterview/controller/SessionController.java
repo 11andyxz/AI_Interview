@@ -24,13 +24,14 @@ public class SessionController {
 
     @PostMapping
     public ResponseEntity<InterviewSession> create(@RequestBody Map<String, Object> body) {
+        String sessionId = (String) body.get("sessionId");
         String roleId = (String) body.getOrDefault("roleId", "backend_java");
         String level = (String) body.getOrDefault("level", "mid");
         Object skillsObj = body.get("skills");
         List<String> skills = (skillsObj instanceof List<?> list)
                 ? list.stream().map(String::valueOf).toList()
                 : List.of();
-        InterviewSession session = sessionService.createSession(roleId, level, skills);
+        InterviewSession session = sessionService.createSession(sessionId, roleId, level, skills);
         return ResponseEntity.ok(session);
     }
 

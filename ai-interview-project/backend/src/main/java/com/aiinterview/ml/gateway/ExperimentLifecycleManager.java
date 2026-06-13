@@ -8,6 +8,7 @@ import com.aiinterview.ml.experiment.repository.ExperimentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@ConditionalOnProperty(name = "ml.experiment.lifecycle.enabled", havingValue = "true", matchIfMissing = false)
 public class ExperimentLifecycleManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ExperimentLifecycleManager.class);

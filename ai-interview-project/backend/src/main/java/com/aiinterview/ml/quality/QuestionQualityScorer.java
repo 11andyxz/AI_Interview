@@ -5,6 +5,7 @@ import com.aiinterview.service.OpenAiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -35,6 +36,9 @@ public class QuestionQualityScorer {
     @Autowired
     private OpenAiService openAiService;
 
+    @Value("${openai.quality.model:${openai.model:gpt-4o-mini}}")
+    private String qualityModel;
+
     /**
      * Score a generated interview question on a 0-100 scale via a GPT evaluation call.
      * Falls back to the length heuristic if the LLM call fails.
@@ -52,7 +56,7 @@ public class QuestionQualityScorer {
         String prompt = buildScoringPrompt(question, roleId, level);
         List<OpenAiMessage> messages = List.of(new OpenAiMessage("user", prompt));
 
-        return openAiService.chatWithConfig(messages, "gpt-3.5-turbo", 0.0)
+        return openAiService.chatWithConfig(messages, qualityModel, 0.0)
                 .map(response -> parseScore(response, question))
                 .onErrorResume(e -> {
                     logger.warn("LLM quality scoring failed (heuristic fallback) for question='{}...': {}",

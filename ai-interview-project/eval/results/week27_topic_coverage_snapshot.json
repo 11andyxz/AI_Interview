@@ -1,0 +1,100 @@
+{
+  "generated_at": "2026-06-13T13:55:33.309163+00:00",
+  "status": "PASS",
+  "real_prefixes": [
+    "w27r-",
+    "w27s-"
+  ],
+  "feature_counts": {
+    "topic_coverage_total": 149,
+    "topic_coverage_real_prefixes": 149,
+    "gen_embeddings": 154,
+    "gen_clustered": 150,
+    "real_skill_profiles": 50,
+    "response_feature_cache_organic": 40
+  },
+  "recent_topic_coverage_rows": [
+    {
+      "session_id": "w27s-0023",
+      "role_id": 2,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0022",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0021",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0020",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0019",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0018",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0017",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0016",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0015",
+      "role_id": 2,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    },
+    {
+      "session_id": "w27s-0013",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0
+    }
+  ],
+  "mapping_behavior": "Generated questions use stable gen-<sha12> IDs. If no seeded bank cluster exists for a role, they receive a generated fallback cluster so coverage writes are non-fatal.",
+  "stage_b_scope": "Excluded from Stage B decisioning until fallback clusters are reviewed against seeded question-bank clusters."
+}

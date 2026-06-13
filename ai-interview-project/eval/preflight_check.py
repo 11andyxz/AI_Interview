@@ -224,15 +224,72 @@ def check_feature_cache_freshness() -> list[dict]:
             results.append({"check": "FeatureCache:question_embedding", "status": PASS,
                             "detail": f"{emb_count} embeddings available"})
 
-        # Check 3: topic_coverage freshness
+        # Check 3: topic_coverage freshness with three-tier diagnostic (added Week 27)
         cursor.execute("SELECT COUNT(*) FROM topic_coverage")
         topic_count = cursor.fetchone()[0]
         if topic_count == 0:
-            results.append({"check": "FeatureCache:topic_coverage", "status": WARN,
-                            "detail": "0 rows — topic diversity not tracked. Run topic coverage refresh."})
+            # Distinguish the three known failure modes so remediation steps are clear.
+            # Use the env var as the local proxy for the backend feature flag state.
+            embedding_enabled = os.environ.get("ML_EMBEDDING_ENABLED", "").lower() in ("true", "1")
+            cursor.execute(
+                "SELECT COUNT(*) FROM question_embedding WHERE question_id LIKE 'gen-%'"
+            )
+            gen_mapped = cursor.fetchone()[0]
+
+            if not embedding_enabled:
+                results.append({"check": "FeatureCache:topic_coverage", "status": WARN,
+                                "detail": (
+                                    "0 rows — ml.embedding.enabled is NOT set. "
+                                    "TopicCoverageTracker is inactive; no coverage rows will be written. "
+                                    "Set ml.embedding.enabled=true and restart the backend to enable."
+                                )})
+            elif gen_mapped == 0:
+                results.append({"check": "FeatureCache:topic_coverage", "status": WARN,
+                                "detail": (
+                                    "0 rows — ml.embedding.enabled is set but no generated-question "
+                                    "mappings exist (question_embedding has 0 gen-* rows). "
+                                    "GeneratedQuestionMapper has not yet processed any sessions. "
+                                    "Collect at least one history-rich session with the updated backend."
+                                )})
+            else:
+                results.append({"check": "FeatureCache:topic_coverage", "status": WARN,
+                                "detail": (
+                                    f"0 rows — {gen_mapped} gen-* embedding rows exist but no cluster "
+                                    "assignments have been written yet (async job pending or cluster_id=null). "
+                                    "Wait for the async embedding/cluster assignment job to complete."
+                                )})
         else:
             results.append({"check": "FeatureCache:topic_coverage", "status": PASS,
-                            "detail": f"{topic_count} topics tracked"})
+                            "detail": f"{topic_count} topic coverage rows"})
+
+        # Check 4: generated-question mapping readiness (added Week 27)
+        cursor.execute(
+            "SELECT COUNT(*), "
+            "SUM(CASE WHEN cluster_id IS NOT NULL THEN 1 ELSE 0 END) as with_cluster "
+            "FROM question_embedding WHERE question_id LIKE 'gen-%'"
+        )
+        row = cursor.fetchone()
+        gen_total = row[0] or 0
+        gen_clustered = row[1] or 0
+        if gen_total == 0:
+            results.append({"check": "GeneratedQuestionMapper:mapped_rows", "status": WARN,
+                            "detail": (
+                                "0 gen-* rows in question_embedding. "
+                                "GeneratedQuestionMapper has not processed any sessions yet."
+                            )})
+        elif gen_clustered == 0:
+            results.append({"check": "GeneratedQuestionMapper:mapped_rows", "status": WARN,
+                            "detail": (
+                                f"{gen_total} gen-* skeleton rows exist but none have cluster_id assigned. "
+                                "Async embedding job may still be running or question bank has no cluster candidates."
+                            )})
+        else:
+            pct = int(gen_clustered / gen_total * 100)
+            status = PASS if pct >= 80 else WARN
+            results.append({"check": "GeneratedQuestionMapper:mapped_rows", "status": status,
+                            "detail": (
+                                f"{gen_total} gen-* rows, {gen_clustered} with cluster assignment ({pct}%)."
+                            )})
 
         conn.close()
         return results
@@ -243,13 +300,7 @@ def check_feature_cache_freshness() -> list[dict]:
 
 
 def check_feature_cache_drift(snapshot_path: str = "eval/results/feature_cache_snapshot.json") -> list[dict]:
-    """Detect feature cache population drift by comparing current row counts against a saved snapshot.
-
-    A drift of > 15% drop in any cache table triggers a WARN so that cache refresh
-    failures are caught before they silently degrade prediction quality.
-    The snapshot is written by run_preflight after a successful cache check; if no
-    snapshot exists, this check is skipped with a WARN.
-    """
+    """Detect feature cache population drift against the last successful snapshot."""
     import pathlib
 
     snapshot_file = pathlib.Path(snapshot_path)
@@ -279,7 +330,7 @@ def check_feature_cache_drift(snapshot_path: str = "eval/results/feature_cache_s
     port = int(os.environ.get("DB_PORT", "3306"))
     name = os.environ.get("DB_NAME", "")
     user = os.environ.get("DB_USERNAME", "")
-    pwd  = os.environ.get("DB_PASSWORD", "")
+    pwd = os.environ.get("DB_PASSWORD", "")
 
     if not all([name, user, pwd]):
         return [{"check": "FeatureCache:drift", "status": WARN,
@@ -294,7 +345,7 @@ def check_feature_cache_drift(snapshot_path: str = "eval/results/feature_cache_s
         cursor = conn.cursor()
         results = []
         tables = ["response_feature_cache", "question_embedding", "topic_coverage"]
-        drift_threshold = 0.15  # 15% drop triggers WARN
+        drift_threshold = 0.15
 
         for table in tables:
             cursor.execute(f"SELECT COUNT(*) FROM {table}")
@@ -302,7 +353,6 @@ def check_feature_cache_drift(snapshot_path: str = "eval/results/feature_cache_s
             snapshot_count = snapshot.get(table, 0)
 
             if snapshot_count == 0:
-                # No baseline to compare; skip this table
                 continue
 
             drop_pct = (snapshot_count - current_count) / snapshot_count
@@ -320,7 +370,10 @@ def check_feature_cache_drift(snapshot_path: str = "eval/results/feature_cache_s
                 results.append({
                     "check": f"FeatureCache:drift:{table}",
                     "status": PASS,
-                    "detail": f"{current_count} rows (snapshot: {snapshot_count}; drift: {drop_pct:+.0%})"
+                    "detail": (
+                        f"{current_count} rows "
+                        f"(snapshot: {snapshot_count}; drift: {drop_pct:+.0%})"
+                    )
                 })
 
         conn.close()
@@ -352,7 +405,7 @@ def run_preflight(env: str = "local") -> dict:
     overall = "UNBLOCKED" if fail_count == 0 else "BLOCKED"
 
     for r in results:
-        icon = {"PASS": "✅", "FAIL": "❌", "WARN": "⚠️"}.get(r["status"], "?")
+        icon = {"PASS": "OK", "FAIL": "ERR", "WARN": "WARN"}.get(r["status"], "?")
         print(f"  {icon} [{r['status']}] {r['check']}: {r['detail']}")
 
     print(f"\nResult: {overall}  (pass={pass_count}, warn={warn_count}, fail={fail_count})")
@@ -367,7 +420,6 @@ def run_preflight(env: str = "local") -> dict:
         "checks": results,
     }
 
-    # Write feature cache snapshot on successful preflight so drift checks have a baseline
     if overall == "UNBLOCKED":
         _write_feature_cache_snapshot(cache_results)
 
@@ -375,9 +427,10 @@ def run_preflight(env: str = "local") -> dict:
 
 
 def _write_feature_cache_snapshot(cache_results: list[dict],
-                                   snapshot_path: str = "eval/results/feature_cache_snapshot.json") -> None:
-    """Persist current feature cache row counts as a baseline for drift detection."""
-    import pathlib, re
+                                  snapshot_path: str = "eval/results/feature_cache_snapshot.json") -> None:
+    """Persist current feature cache row counts as the drift baseline."""
+    import pathlib
+    import re
 
     snapshot: dict = {}
     tables = ["response_feature_cache", "question_embedding", "topic_coverage"]
@@ -386,8 +439,7 @@ def _write_feature_cache_snapshot(cache_results: list[dict],
         detail = result.get("detail", "")
         for table in tables:
             if table in check_name:
-                # Parse row count from detail string, e.g. "23 rows (78% coverage)"
-                match = re.search(r"(\d+)\s+rows?", detail)
+                match = re.search(r"(\d+)", detail)
                 if match:
                     snapshot[table] = int(match.group(1))
                 break
@@ -399,7 +451,7 @@ def _write_feature_cache_snapshot(cache_results: list[dict],
             snapshot["written_at"] = datetime.now(timezone.utc).isoformat() + "Z"
             out.write_text(json.dumps(snapshot, indent=2))
         except OSError:
-            pass  # Snapshot write failure is non-fatal
+            pass
 
 
 def main():

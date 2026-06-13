@@ -4,6 +4,7 @@ import com.aiinterview.ml.experiment.ExperimentTracker;
 import com.aiinterview.ml.gateway.ExperimentAwareLlmRouter;
 import com.aiinterview.ml.gateway.LlmRequest;
 import com.aiinterview.ml.gateway.LlmRouteDecision;
+import com.aiinterview.ml.embedding.service.GeneratedQuestionMapper;
 import com.aiinterview.ml.embedding.service.TopicCoverageTracker;
 import com.aiinterview.ml.nlp.ResponseFeatureExtractor;
 import com.aiinterview.ml.prediction.entity.CandidateSkillProfile;
@@ -70,6 +71,12 @@ public class LlmGatewayController {
 
     @Autowired(required = false)
     private TopicCoverageTracker coverageTracker;
+
+    // Maps LLM-generated question text to stable IDs and cluster assignments so that
+    // TopicCoverageTracker can write organic topic_coverage rows.
+    // Only active when ml.embedding.enabled=true.
+    @Autowired(required = false)
+    private GeneratedQuestionMapper generatedQuestionMapper;
 
     @Autowired(required = false)
     private CandidateSkillProfileRepository skillProfileRepository;
@@ -142,13 +149,20 @@ public class LlmGatewayController {
                     ));
 
                     // Record topic coverage for this question if the tracker is active.
-                    // Uses question number as a proxy question ID; the tracker returns early if
-                    // no embedding is found for that ID (graceful no-op for LLM-generated questions).
+                    // When GeneratedQuestionMapper is available (ml.embedding.enabled=true),
+                    // the generated question text is mapped to a stable ID with cluster assignment
+                    // so the tracker can write an organic topic_coverage row.
+                    // Falls back to the question-number proxy (graceful no-op) otherwise.
                     if (coverageTracker != null && sessionId != null) {
                         try {
                             Long numericRoleId = ROLE_ID_MAP.getOrDefault(roleId, 1L);
-                            long questionNumber = (long) (history.size() + 1);
-                            coverageTracker.recordQuestionAsked(sessionId, numericRoleId, questionNumber);
+                            if (generatedQuestionMapper != null) {
+                                generatedQuestionMapper.mapGeneratedQuestionAndRecordCoverage(
+                                        question, numericRoleId, sessionId, coverageTracker);
+                            } else {
+                                long questionNumber = (long) (history.size() + 1);
+                                coverageTracker.recordQuestionAsked(sessionId, numericRoleId, questionNumber);
+                            }
                         } catch (Exception e) {
                             logger.warn("TopicCoverageTracker failed for session={}: {}", sessionId, e.getMessage());
                         }

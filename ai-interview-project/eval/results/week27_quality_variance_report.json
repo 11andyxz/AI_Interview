@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-06-13T13:55:33.309163+00:00",
+  "metric_version": "llm-v1.0-history",
+  "real_prefixes": [
+    "w27r-",
+    "w27s-"
+  ],
+  "quality_stats": [
+    {
+      "variant": "baseline",
+      "n": 24,
+      "avg_quality": 84.58333333333333,
+      "std_quality": 1.9982631347136333,
+      "min_quality": 75.0,
+      "max_quality": 85.0,
+      "avg_latency_ms": 1373.5
+    },
+    {
+      "variant": "treatment",
+      "n": 52,
+      "avg_quality": 84.23076923076923,
+      "std_quality": 2.6646935501059654,
+      "min_quality": 75.0,
+      "max_quality": 85.0,
+      "avg_latency_ms": 1361.8462
+    }
+  ],
+  "quality_distribution": [
+    {
+      "variant": "baseline",
+      "quality_score": 75.0,
+      "n": 1
+    },
+    {
+      "variant": "baseline",
+      "quality_score": 85.0,
+      "n": 23
+    },
+    {
+      "variant": "treatment",
+      "quality_score": 75.0,
+      "n": 4
+    },
+    {
+      "variant": "treatment",
+      "quality_score": 85.0,
+      "n": 48
+    }
+  ],
+  "quality_delta_treatment_minus_baseline": -0.3525641025641022,
+  "variance_recovered": true,
+  "status": "PASS"
+}

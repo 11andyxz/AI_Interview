@@ -21,7 +21,7 @@ import math
 
 class SummaryGenerator:
     """Generates standardized experiment summaries"""
-    
+
     # Guardrail thresholds (from Week 20 acceptance criteria)
     GUARDRAILS = {
         'junior_rmse_max': 11.5,        # Junior RMSE ≤ 11.5
@@ -29,7 +29,103 @@ class SummaryGenerator:
         'min_questions_min': 3,         # At least 3 questions
         'rmse_degradation_max': 0.15,   # Max 15% RMSE increase
     }
+
+    # Session-level early-stop guardrail thresholds (added Week 27)
+    SESSION_GUARDRAILS = {
+        'n_treatment_min': 50,                # Minimum treatment sessions for decision
+        'quality_delta_min': -10.0,           # Treatment quality delta must not drop below -10
+        'premature_stop_rate_max': 0.03,      # Premature-stop rate < 3%
+        'avg_questions_delta_pct_max': 0.05,  # Avg questions increase capped at +5%
+        'latency_p95_max_ms': 3000,           # p95 latency < 3000 ms
+        'openai_error_rate_max': 0.05,        # OpenAI error rate < 5%
+        'session_completion_rate_min': 0.85,  # Session completion rate >= 85%
+    }
     
+    def load_session_guardrails(self, results_path: Path) -> Optional[Dict[str, Any]]:
+        """Load session-level guardrail data from week27_session_guardrails.json if available."""
+        if not results_path.exists():
+            return None
+        with open(results_path, encoding="utf-8") as f:
+            return json.load(f)
+
+    def check_session_guardrails(self, session_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Evaluate session-level early-stop guardrails against SESSION_GUARDRAILS thresholds.
+        Returns a dict with per-guardrail pass/fail and an overall all_pass flag.
+        """
+        results: Dict[str, Any] = {'all_pass': True, 'checks': []}
+
+        def _check(name: str, value, threshold, comparison: str = 'lte') -> None:
+            """comparison: 'lte' = value <= threshold, 'gte' = value >= threshold."""
+            if value is None:
+                results['checks'].append({
+                    'name': name, 'value': 'N/A',
+                    'threshold': threshold, 'passed': False,
+                    'note': 'data missing'
+                })
+                results['all_pass'] = False
+                return
+            passed = (value <= threshold) if comparison == 'lte' else (value >= threshold)
+            results['checks'].append({
+                'name': name, 'value': value,
+                'threshold': threshold, 'passed': passed
+            })
+            if not passed:
+                results['all_pass'] = False
+
+        treatment = session_data.get('treatment', {})
+        baseline = session_data.get('baseline', {})
+
+        _check(
+            'n_treatment >= 50',
+            session_data.get('n_treatment'),
+            self.SESSION_GUARDRAILS['n_treatment_min'],
+            comparison='gte'
+        )
+        _check(
+            'quality_delta >= -10',
+            session_data.get('quality_delta'),
+            self.SESSION_GUARDRAILS['quality_delta_min'],
+            comparison='gte'
+        )
+        _check(
+            'premature_stop_rate < 3%',
+            treatment.get('premature_stop_rate'),
+            self.SESSION_GUARDRAILS['premature_stop_rate_max'],
+            comparison='lte'
+        )
+        # avg_questions delta: positive delta means treatment asks MORE questions (bad for early-stop)
+        avg_q_t = treatment.get('avg_questions_per_session')
+        avg_q_b = baseline.get('avg_questions_per_session')
+        if avg_q_t is not None and avg_q_b is not None and avg_q_b > 0:
+            delta_pct = (avg_q_t - avg_q_b) / avg_q_b
+            _check(
+                'avg_questions_delta_pct <= +5%',
+                delta_pct,
+                self.SESSION_GUARDRAILS['avg_questions_delta_pct_max'],
+                comparison='lte'
+            )
+        _check(
+            'latency_p95 < 3000 ms',
+            treatment.get('latency_p95_ms'),
+            self.SESSION_GUARDRAILS['latency_p95_max_ms'],
+            comparison='lte'
+        )
+        _check(
+            'openai_error_rate < 5%',
+            session_data.get('openai_error_rate'),
+            self.SESSION_GUARDRAILS['openai_error_rate_max'],
+            comparison='lte'
+        )
+        _check(
+            'session_completion_rate >= 85%',
+            treatment.get('session_completion_rate'),
+            self.SESSION_GUARDRAILS['session_completion_rate_min'],
+            comparison='gte'
+        )
+
+        return results
+
     def load_experiment(self, experiment_id: str, registry_path: Path) -> Optional[Dict[str, Any]]:
         """Load experiment from registry"""
         with open(registry_path, 'r', encoding='utf-8-sig') as f:
@@ -325,41 +421,44 @@ def main():
 
 
 def _validate_week_artifacts(week: int, results_dir: Path) -> list:
-    """Validate that required artifacts exist and are not stale before generating readout.
-
-    Returns a list of error strings. Empty list means all checks passed.
-    Artifacts older than 14 days relative to the most recent required file are flagged as stale.
-    """
+    """Validate that required live-readout artifacts exist and are fresh enough."""
     import time as _time
 
     prefix = f"week{week}"
     required_fields = {"experiment_id", "data_source", "timestamp", "model_version", "decision"}
     errors = []
 
-    # Stage A result is always required once the week has a live ramp entry
-    stage_a_path = results_dir / f"{prefix}_stagea_live_result.json"
-    if not stage_a_path.exists():
+    stage_a_candidates = [
+        results_dir / f"{prefix}_stagea_live_result.json",
+        results_dir / f"{prefix}_stagea_live.json",
+        results_dir / f"{prefix}_live_stagea_result.json",
+    ]
+    stage_a_path = next((path for path in stage_a_candidates if path.exists()), None)
+    if stage_a_path is None:
+        names = ", ".join(path.name for path in stage_a_candidates)
         errors.append(
-            f"MISSING ARTIFACT: {stage_a_path.name} — Stage A result required before generating readout."
+            f"MISSING ARTIFACT: Stage A result required before generating readout. "
+            f"Checked: {names}"
         )
-    else:
-        # Check required fields
-        try:
-            with open(stage_a_path, encoding="utf-8") as f:
-                data = json.load(f)
-            missing = required_fields - set(data.keys())
-            if missing:
-                errors.append(
-                    f"INCOMPLETE ARTIFACT: {stage_a_path.name} missing fields: {sorted(missing)}"
-                )
-            # Check staleness: mtime older than 14 days from now
-            age_days = (_time.time() - stage_a_path.stat().st_mtime) / 86400
-            if age_days > 14:
-                errors.append(
-                    f"STALE ARTIFACT: {stage_a_path.name} last modified {age_days:.0f} days ago (threshold: 14 days)"
-                )
-        except (json.JSONDecodeError, OSError) as e:
-            errors.append(f"UNREADABLE ARTIFACT: {stage_a_path.name} — {e}")
+        return errors
+
+    try:
+        with open(stage_a_path, encoding="utf-8") as f:
+            raw = json.load(f)
+        data = raw["stages"][0] if "stages" in raw and raw["stages"] else raw
+        missing = required_fields - set(data.keys())
+        if missing:
+            errors.append(
+                f"INCOMPLETE ARTIFACT: {stage_a_path.name} missing fields: {sorted(missing)}"
+            )
+        age_days = (_time.time() - stage_a_path.stat().st_mtime) / 86400
+        if age_days > 14:
+            errors.append(
+                f"STALE ARTIFACT: {stage_a_path.name} last modified "
+                f"{age_days:.0f} days ago (threshold: 14 days)"
+            )
+    except (json.JSONDecodeError, OSError, KeyError, IndexError) as e:
+        errors.append(f"UNREADABLE ARTIFACT: {stage_a_path.name} - {e}")
 
     return errors
 
@@ -370,7 +469,6 @@ def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
     results_dir = registry_path.parent / "results"
     prefix = f"week{week}"
 
-    # Fail early if artifact validation is requested and errors are found
     if validate:
         errors = _validate_week_artifacts(week, results_dir)
         if errors:
@@ -394,7 +492,7 @@ def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
     live_stages: dict = {}
     if include_live:
         for stage in ("a", "b", "c"):
-            # Try all naming patterns used across weeks
+            # Try all naming patterns used across generated live artifacts.
             candidates = [
                 results_dir / f"{prefix}_stage{stage}_live_result.json",
                 results_dir / f"{prefix}_stage{stage}live_result.json",
@@ -467,18 +565,69 @@ def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
         lines.append("_Live stage artifacts not yet available or --include-live not specified._")
         lines.append("")
 
+    # Load session-level guardrail data if available for this week
+    session_guardrails_path = results_dir / f"{prefix}_session_guardrails.json"
+    session_gdata: Optional[Dict[str, Any]] = None
+    if session_guardrails_path.exists():
+        gen = SummaryGenerator()
+        session_gdata = gen.load_session_guardrails(session_guardrails_path)
+
     lines += [
         "## Guardrail Summary",
         "",
-        "| Guardrail | Threshold | Status |",
-        "|-----------|-----------|--------|",
-        "| avg_questions_delta_pct | <= +5% | _TBD_ |",
-        "| premature_stop_rate | < 3% | _TBD_ |",
-        "| p95_latency_ms | < 3000 ms | _TBD_ |",
-        "| junior_rmse | <= 45.0 | _TBD_ |",
-        "",
-        f"_Update this section after Stage C completes._",
     ]
+
+    if session_gdata:
+        gen = SummaryGenerator()
+        sg_result = gen.check_session_guardrails(session_gdata)
+        overall = "ALL PASS" if sg_result['all_pass'] else "FAILURES DETECTED"
+        lines.append(f"**Session-level guardrail status: {overall}**")
+        lines.append("")
+        lines.append("| Guardrail | Threshold | Observed | Result |")
+        lines.append("|-----------|-----------|----------|--------|")
+        for check in sg_result['checks']:
+            status = "PASS" if check['passed'] else "FAIL"
+            lines.append(
+                f"| {check['name']} | {check['threshold']} "
+                f"| {check['value']} | **{status}** |"
+            )
+        lines.append("")
+        # Session-level metrics table
+        t = session_gdata.get('treatment', {})
+        b = session_gdata.get('baseline', {})
+        lines += [
+            "### Session-Level Metrics",
+            "",
+            "| Metric | Treatment | Baseline |",
+            "|--------|-----------|----------|",
+            f"| avg_questions_per_session | {t.get('avg_questions_per_session', 'N/A')} "
+            f"| {b.get('avg_questions_per_session', 'N/A')} |",
+            f"| early_stop_rate | {t.get('early_stop_rate', 'N/A')} "
+            f"| {b.get('early_stop_rate', 'N/A')} |",
+            f"| premature_stop_rate | {t.get('premature_stop_rate', 'N/A')} "
+            f"| {b.get('premature_stop_rate', 'N/A')} |",
+            f"| session_completion_rate | {t.get('session_completion_rate', 'N/A')} "
+            f"| {b.get('session_completion_rate', 'N/A')} |",
+            f"| latency_p50_ms | {t.get('latency_p50_ms', 'N/A')} "
+            f"| {b.get('latency_p50_ms', 'N/A')} |",
+            f"| latency_p95_ms | {t.get('latency_p95_ms', 'N/A')} "
+            f"| {b.get('latency_p95_ms', 'N/A')} |",
+            "",
+        ]
+    else:
+        lines += [
+            "| Guardrail | Threshold | Status |",
+            "|-----------|-----------|--------|",
+            "| avg_questions_delta_pct | <= +5% | _TBD_ |",
+            "| premature_stop_rate | < 3% | _TBD_ |",
+            "| p95_latency_ms | < 3000 ms | _TBD_ |",
+            "| n_treatment >= 50 | 50 | _TBD_ |",
+            "",
+            f"_No session guardrail artifact found at {session_guardrails_path.name}._",
+            "",
+        ]
+
+    lines.append(f"_Auto-generated. Update manually after Stage B/C completes._")
 
     content = "\n".join(lines) + "\n"
 

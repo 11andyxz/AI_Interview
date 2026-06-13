@@ -25,8 +25,12 @@ public class SessionService {
     }
 
     public InterviewSession createSession(String roleId, String level, List<String> skills) {
+        return createSession(null, roleId, level, skills);
+    }
+
+    public InterviewSession createSession(String sessionId, String roleId, String level, List<String> skills) {
         InterviewSession session = new InterviewSession();
-        session.setId(UUID.randomUUID().toString());
+        session.setId(sessionId != null && !sessionId.isBlank() ? sessionId : UUID.randomUUID().toString());
         session.setRoleId(roleId);
         session.setLevel(level);
         session.setSkills(skills != null ? skills : new ArrayList<>());

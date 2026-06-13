@@ -1,0 +1,21 @@
+{
+  "experiment_id": 1,
+  "timestamp": "2026-06-13T13:55:33.309163+00:00",
+  "generated_at": "2026-06-13T13:55:33.309163+00:00",
+  "data_source": "live_aiven_mysql_real_openai_repaired_prefixes",
+  "model_version": "embedding-v1.0+prediction-v1.0+llm-v1.0-history",
+  "decision": "HOLD",
+  "stage_b_recommendation": "HOLD",
+  "reason": "Treatment sample size and topic coverage are unblocked, but session-level guardrails are only partial and baseline real-prefix sample size is 24.",
+  "metrics": {
+    "n_treatment_real": 52,
+    "n_baseline_real": 24,
+    "quality_delta_treatment_minus_baseline": -0.3525641025641022,
+    "treatment_std_quality": 2.6646935501059654,
+    "baseline_std_quality": 1.9982631347136333,
+    "topic_coverage_real_prefixes": 149,
+    "gen_embeddings": 154,
+    "gen_clustered": 150
+  },
+  "rollback": "Keep stage_a_week24 running only for controlled collection; do not advance Stage B until full session guardrails are decision-grade."
+}
