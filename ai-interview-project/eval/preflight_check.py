@@ -291,6 +291,28 @@ def check_feature_cache_freshness() -> list[dict]:
                                 f"{gen_total} gen-* rows, {gen_clustered} with cluster assignment ({pct}%)."
                             )})
 
+        # Check 5: generated-question fallback cluster rate (added Week 28)
+        cursor.execute(
+            "SELECT "
+            "SUM(CASE WHEN cluster_id IS NOT NULL THEN 1 ELSE 0 END) as clustered, "
+            "SUM(CASE WHEN cluster_label='Generated questions fallback cluster' THEN 1 ELSE 0 END) as fallback "
+            "FROM question_embedding WHERE question_id LIKE 'gen-%'"
+        )
+        row = cursor.fetchone()
+        clustered = row[0] or 0
+        fallback = row[1] or 0
+        if clustered == 0:
+            results.append({"check": "GeneratedQuestionMapper:fallback_clusters", "status": WARN,
+                            "detail": "0 clustered gen-* rows; fallback cluster rate cannot be evaluated yet."})
+        else:
+            fallback_rate = fallback / clustered
+            status = PASS if fallback_rate <= 0.20 else WARN
+            results.append({"check": "GeneratedQuestionMapper:fallback_clusters", "status": status,
+                            "detail": (
+                                f"{fallback}/{clustered} clustered gen-* rows use the generated fallback cluster "
+                                f"({fallback_rate:.1%}). Treat topic coverage as collection evidence only when high."
+                            )})
+
         conn.close()
         return results
 

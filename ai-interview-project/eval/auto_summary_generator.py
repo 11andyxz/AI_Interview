@@ -42,7 +42,7 @@ class SummaryGenerator:
     }
     
     def load_session_guardrails(self, results_path: Path) -> Optional[Dict[str, Any]]:
-        """Load session-level guardrail data from week27_session_guardrails.json if available."""
+        """Load session-level guardrail data when a week artifact is available."""
         if not results_path.exists():
             return None
         with open(results_path, encoding="utf-8") as f:
@@ -54,6 +54,27 @@ class SummaryGenerator:
         Returns a dict with per-guardrail pass/fail and an overall all_pass flag.
         """
         results: Dict[str, Any] = {'all_pass': True, 'checks': []}
+
+        artifact_status = session_data.get('status')
+        if artifact_status and artifact_status != 'PASS':
+            results['checks'].append({
+                'name': 'session artifact status',
+                'value': artifact_status,
+                'threshold': 'PASS',
+                'passed': False,
+                'note': 'session metrics are incomplete or not ready for a decision'
+            })
+            results['all_pass'] = False
+
+        if session_data.get('decision_grade') is False:
+            results['checks'].append({
+                'name': 'decision_grade session metrics',
+                'value': False,
+                'threshold': True,
+                'passed': False,
+                'note': 'per-session totals, completion status, or evaluation counts are incomplete'
+            })
+            results['all_pass'] = False
 
         def _check(name: str, value, threshold, comparison: str = 'lte') -> None:
             """comparison: 'lte' = value <= threshold, 'gte' = value >= threshold."""
@@ -555,8 +576,12 @@ def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
             n_treatment = sample.get("n_treatment", metrics.get("n_treatment", "N/A"))
             lines.append(f"- **n_control**: {n_control}")
             lines.append(f"- **n_treatment**: {n_treatment}")
-            if metrics.get("avg_questions_delta_pct") is not None:
-                lines.append(f"- **avg_questions_delta_pct**: {metrics.get('avg_questions_delta_pct')}%")
+            avg_questions_delta_pct = metrics.get("avg_questions_delta_pct")
+            if avg_questions_delta_pct is not None:
+                if isinstance(avg_questions_delta_pct, (int, float)):
+                    lines.append(f"- **avg_questions_delta_pct**: {avg_questions_delta_pct:.2%}")
+                else:
+                    lines.append(f"- **avg_questions_delta_pct**: {avg_questions_delta_pct}")
             if metrics.get("premature_stop_rate") is not None:
                 lines.append(f"- **premature_stop_rate**: {metrics.get('premature_stop_rate'):.1%}" if isinstance(metrics.get("premature_stop_rate"), float) else f"- **premature_stop_rate**: {metrics.get('premature_stop_rate')}")
             lines.append(f"- **Rationale**: {'; '.join(rationale) if rationale else 'N/A'}")

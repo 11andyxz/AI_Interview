@@ -1,0 +1,232 @@
+{
+  "generated_at": "2026-06-20T19:17:24.610725+00:00",
+  "prefix": "w28-",
+  "status": "READY_FOR_STAGE_B_GATE",
+  "topic_coverage_rows": 130,
+  "generated_question_dedup_rate": 0.0,
+  "fallback_cluster_rate": 0.0,
+  "nearest_seeded_cluster_match_rate": 1.0,
+  "cluster_totals": {
+    "gen_embeddings_total": 130,
+    "gen_clustered_total": 130.0,
+    "gen_fallback_total": 0.0,
+    "gen_seeded_match_total": 130.0
+  },
+  "by_role": [
+    {
+      "role_id": 1,
+      "gen_embeddings": 113,
+      "gen_clustered": 113.0,
+      "fallback_clustered": 0.0
+    },
+    {
+      "role_id": 2,
+      "gen_embeddings": 17,
+      "gen_clustered": 17.0,
+      "fallback_clustered": 0.0
+    }
+  ],
+  "previous_topic_reference": {
+    "artifact": "week27_topic_coverage_snapshot.json",
+    "generated_at": "2026-06-13T13:55:33.309163+00:00",
+    "status": "PASS",
+    "real_prefixes": [
+      "w27r-",
+      "w27s-"
+    ],
+    "feature_counts": {
+      "topic_coverage_total": 149,
+      "topic_coverage_real_prefixes": 149,
+      "gen_embeddings": 154,
+      "gen_clustered": 150,
+      "real_skill_profiles": 50,
+      "response_feature_cache_organic": 40
+    },
+    "mapping_behavior": "Generated questions use stable gen-<sha12> IDs. If no seeded bank cluster exists for a role, they receive a generated fallback cluster so coverage writes are non-fatal.",
+    "stage_b_scope": "Excluded from Stage B decisioning until fallback clusters are reviewed against seeded question-bank clusters.",
+    "rate_note": "The Week 27 artifact did not persist fallback or seeded-match rates; Week 28 rates are computed from the current w28- generated question IDs."
+  },
+  "recent_topic_coverage_rows": [
+    {
+      "session_id": "w28-00058",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:09:03.091108"
+    },
+    {
+      "session_id": "w28-00056",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:57.107544"
+    },
+    {
+      "session_id": "w28-00055",
+      "role_id": 2,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:48.650347"
+    },
+    {
+      "session_id": "w28-00054",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:44.115033"
+    },
+    {
+      "session_id": "w28-00053",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:35.707645"
+    },
+    {
+      "session_id": "w28-00052",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:29.359775"
+    },
+    {
+      "session_id": "w28-00051",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:22.002651"
+    },
+    {
+      "session_id": "w28-00050",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:15.933309"
+    },
+    {
+      "session_id": "w28-00049",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:09.187012"
+    },
+    {
+      "session_id": "w28-00048",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:08:02.141961"
+    },
+    {
+      "session_id": "w28-00663",
+      "role_id": 2,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:53.835177"
+    },
+    {
+      "session_id": "w28-00662",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:48.695469"
+    },
+    {
+      "session_id": "w28-00652",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:42.174827"
+    },
+    {
+      "session_id": "w28-00608",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:35.214593"
+    },
+    {
+      "session_id": "w28-00606",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:27.971520"
+    },
+    {
+      "session_id": "w28-00589",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:21.978536"
+    },
+    {
+      "session_id": "w28-00572",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:15.480237"
+    },
+    {
+      "session_id": "w28-00571",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:10.020606"
+    },
+    {
+      "session_id": "w28-00568",
+      "role_id": 2,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:07:02.625853"
+    },
+    {
+      "session_id": "w28-00562",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-20T19:06:57.738314"
+    }
+  ],
+  "stage_b_gating_recommendation": "Topic coverage can support Stage B gating."
+}
