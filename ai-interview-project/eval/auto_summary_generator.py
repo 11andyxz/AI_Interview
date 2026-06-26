@@ -126,9 +126,12 @@ class SummaryGenerator:
                 self.SESSION_GUARDRAILS['avg_questions_delta_pct_max'],
                 comparison='lte'
             )
+        latency_p95 = treatment.get('latency_p95_ms')
+        if latency_p95 is None:
+            latency_p95 = treatment.get('user_facing_latency_p95_ms')
         _check(
             'latency_p95 < 3000 ms',
-            treatment.get('latency_p95_ms'),
+            latency_p95,
             self.SESSION_GUARDRAILS['latency_p95_max_ms'],
             comparison='lte'
         )
@@ -635,8 +638,8 @@ def _generate_week_readout(week: int, include_live: bool, output: Optional[str],
             f"| {b.get('session_completion_rate', 'N/A')} |",
             f"| latency_p50_ms | {t.get('latency_p50_ms', 'N/A')} "
             f"| {b.get('latency_p50_ms', 'N/A')} |",
-            f"| latency_p95_ms | {t.get('latency_p95_ms', 'N/A')} "
-            f"| {b.get('latency_p95_ms', 'N/A')} |",
+            f"| latency_p95_ms | {t.get('latency_p95_ms', t.get('user_facing_latency_p95_ms', 'N/A'))} "
+            f"| {b.get('latency_p95_ms', b.get('user_facing_latency_p95_ms', 'N/A'))} |",
             "",
         ]
     else:

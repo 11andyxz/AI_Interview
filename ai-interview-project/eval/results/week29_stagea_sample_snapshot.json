@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-06-24T12:58:33.236393+00:00",
+  "experiment_id": 1,
+  "experiment_name": "stage_a_week24",
+  "experiment_status": "running",
+  "prefix": "w29-",
+  "traffic_source": "post-remediation controlled production-equivalent",
+  "model": "gpt-4o-mini",
+  "metric_version": "llm-v1.0-history-post-remediation",
+  "counts": {
+    "treatment": 80,
+    "baseline": 50
+  },
+  "target_counts": {
+    "treatment": 80,
+    "baseline": 50
+  },
+  "quality_stats": [
+    {
+      "variant": "baseline",
+      "n": 50,
+      "avg_quality": 80.3,
+      "std_quality": 14.744829602270757,
+      "min_quality": 20.0,
+      "max_quality": 85.0,
+      "avg_user_facing_latency_ms": 1467.38
+    },
+    {
+      "variant": "treatment",
+      "n": 80,
+      "avg_quality": 83.8125,
+      "std_quality": 4.126420210061014,
+      "min_quality": 60.0,
+      "max_quality": 85.0,
+      "avg_user_facing_latency_ms": 1677.6125
+    }
+  ],
+  "feature_counts": {
+    "response_feature_cache_rows": 0,
+    "topic_coverage_rows": 130,
+    "candidate_skill_profile_rows": 130
+  },
+  "slice_counts": {
+    "senior": {
+      "baseline": 20,
+      "treatment": 30
+    },
+    "junior": {
+      "baseline": 15,
+      "treatment": 25
+    },
+    "mid": {
+      "baseline": 15,
+      "treatment": 25
+    }
+  }
+}

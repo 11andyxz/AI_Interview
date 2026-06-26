@@ -3,6 +3,7 @@ package com.aiinterview.controller;
 import com.aiinterview.ml.experiment.ExperimentTracker;
 import com.aiinterview.ml.gateway.ExperimentAwareLlmRouter;
 import com.aiinterview.ml.gateway.LlmRouteDecision;
+import com.aiinterview.ml.quality.QuestionQualityScorer;
 import com.aiinterview.model.EvaluationResult;
 import com.aiinterview.model.openai.OpenAiMessage;
 import com.aiinterview.service.LlmEvaluationService;
@@ -55,6 +56,9 @@ class LlmGatewayControllerTest {
 
     @MockBean
     private ExperimentTracker experimentTracker;
+
+    @MockBean
+    private QuestionQualityScorer qualityScorer;
     
     @MockBean
     private com.aiinterview.config.WebMvcConfig webMvcConfig;
@@ -95,6 +99,36 @@ class LlmGatewayControllerTest {
                 .andExpect(jsonPath("$.sessionId").value(sessionId));
 
         verify(openAiService).chatWithConfig(anyList(), anyString(), anyDouble());
+    }
+
+    @Test
+    void testQuestionGenerate_DoesNotWaitForQualityScoring() throws Exception {
+        String sessionId = "session-latency";
+        InterviewSession session = new InterviewSession();
+        session.setHistory(new ArrayList<>());
+        when(sessionService.getSession(sessionId)).thenReturn(Optional.of(session));
+        when(openAiService.chatWithConfig(anyList(), anyString(), anyDouble()))
+                .thenReturn(Mono.just("What is a Java interface?"));
+
+        LlmRouteDecision experimentRoute = LlmRouteDecision.defaultRoute("gpt-4o-mini", 0.2);
+        experimentRoute.setExperimentId("1");
+        experimentRoute.setVariant("treatment");
+        when(experimentRouter.route(any())).thenReturn(experimentRoute);
+        when(qualityScorer.score(anyString(), anyString(), anyString())).thenReturn(Mono.never());
+
+        mockMvc.perform(post("/api/llm/question-generate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sessionId\":\"session-latency\",\"roleId\":\"backend_java\",\"level\":\"mid\"}"))
+                .andExpect(request().asyncStarted())
+                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.question").value("What is a Java interface?"))
+                .andExpect(jsonPath("$.questionGenerationLatencyMs").isNumber())
+                .andExpect(jsonPath("$.latencyDefinition").value("user_facing_question_generation_v1"))
+                .andExpect(jsonPath("$.postResponseAudit").value("scheduled"));
+
+        verify(qualityScorer).score("What is a Java interface?", "backend_java", "mid");
+        verify(experimentTracker, never()).recordMetric(anyLong(), anyString(), anyString(), anyDouble(), anyLong(), anyInt());
     }
     
     @Test

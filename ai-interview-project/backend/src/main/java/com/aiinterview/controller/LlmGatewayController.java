@@ -127,52 +127,36 @@ public class LlmGatewayController {
 
         return openAiService.chatWithConfig(messages, route.getModel(), route.getTemperature())
             .flatMap(question -> {
-                long latency = System.currentTimeMillis() - startTime;
+                long userFacingLatencyMs = System.currentTimeMillis() - startTime;
+                int questionNumber = history.size() + 1;
+                boolean auditScheduled = route.isInExperiment() || (coverageTracker != null && sessionId != null);
 
-                // Score question quality using LLM (metric version: llm-v1.0).
-                // Falls back to heuristic-v1.0 if the scorer is unavailable or the call fails.
-                Mono<Double> qualityMono = qualityScorer != null
-                        ? qualityScorer.score(question, roleId, level)
-                        : Mono.just(QuestionQualityScorer.heuristicFallback(question));
+                if (auditScheduled) {
+                    runPostResponseQuestionAudit(
+                            question,
+                            roleId,
+                            level,
+                            sessionId,
+                            route,
+                            userFacingLatencyMs,
+                            questionNumber
+                    );
+                }
 
-                return qualityMono.map(quality -> {
-                    if (route.isInExperiment()) {
-                        experimentTracker.recordMetric(
-                                Long.parseLong(route.getExperimentId()), route.getVariant(),
-                                sessionId, quality, latency, estimateTokens(question));
-                    }
+                Map<String, Object> response = new java.util.HashMap<>(Map.of(
+                    "question", question,
+                    "sessionId", sessionId,
+                    "questionNumber", questionNumber,
+                    "questionGenerationLatencyMs", userFacingLatencyMs,
+                    "latencyDefinition", "user_facing_question_generation_v1",
+                    "postResponseAudit", auditScheduled ? "scheduled" : "skipped"
+                ));
 
-                    Map<String, Object> response = new java.util.HashMap<>(Map.of(
-                        "question", question,
-                        "sessionId", sessionId,
-                        "questionNumber", history.size() + 1
-                    ));
-
-                    // Record topic coverage for this question if the tracker is active.
-                    // When GeneratedQuestionMapper is available (ml.embedding.enabled=true),
-                    // the generated question text is mapped to a stable ID with cluster assignment
-                    // so the tracker can write an organic topic_coverage row.
-                    // Falls back to the question-number proxy (graceful no-op) otherwise.
-                    if (coverageTracker != null && sessionId != null) {
-                        try {
-                            Long numericRoleId = ROLE_ID_MAP.getOrDefault(roleId, 1L);
-                            if (generatedQuestionMapper != null) {
-                                generatedQuestionMapper.mapGeneratedQuestionAndRecordCoverage(
-                                        question, numericRoleId, sessionId, coverageTracker);
-                            } else {
-                                long questionNumber = (long) (history.size() + 1);
-                                coverageTracker.recordQuestionAsked(sessionId, numericRoleId, questionNumber);
-                            }
-                        } catch (Exception e) {
-                            logger.warn("TopicCoverageTracker failed for session={}: {}", sessionId, e.getMessage());
-                        }
-                    }
-                    if (route.isInExperiment()) {
-                        response.put("experimentId", route.getExperimentId());
-                        response.put("variant", route.getVariant());
-                    }
-                    return ResponseEntity.ok((Object) response);
-                });
+                if (route.isInExperiment()) {
+                    response.put("experimentId", route.getExperimentId());
+                    response.put("variant", route.getVariant());
+                }
+                return Mono.just(ResponseEntity.ok((Object) response));
             })
             .onErrorResume(error -> {
                 logger.error("Question generation error: {}", error.getMessage());
@@ -181,6 +165,82 @@ public class LlmGatewayController {
                     "message", error.getMessage()
                 )));
             });
+    }
+
+    /**
+     * Run non-user-facing audit work after the question response is ready.
+     *
+     * The Stage B product latency guardrail uses questionGenerationLatencyMs from
+     * the response path. LLM question quality scoring, experiment_metric writes,
+     * and generated-question topic mapping remain auditable but no longer block
+     * the candidate-facing HTTP response.
+     */
+    private void runPostResponseQuestionAudit(
+            String question,
+            String roleId,
+            String level,
+            String sessionId,
+            LlmRouteDecision route,
+            long userFacingLatencyMs,
+            int questionNumber) {
+        boolean needsExperimentMetric = route.isInExperiment();
+        boolean needsTopicCoverage = coverageTracker != null && sessionId != null;
+        if (!needsExperimentMetric && !needsTopicCoverage) {
+            return;
+        }
+
+        Mono<Double> qualityMono = qualityScorer != null
+                ? qualityScorer.score(question, roleId, level)
+                : Mono.just(QuestionQualityScorer.heuristicFallback(question));
+
+        qualityMono
+                .defaultIfEmpty(QuestionQualityScorer.heuristicFallback(question))
+                .subscribe(quality -> {
+                    if (needsExperimentMetric) {
+                        try {
+                            experimentTracker.recordMetric(
+                                    Long.parseLong(route.getExperimentId()), route.getVariant(),
+                                    sessionId, quality, userFacingLatencyMs, estimateTokens(question));
+                        } catch (Exception e) {
+                            logger.warn("Experiment metric audit write failed for session={}: {}", sessionId, e.getMessage());
+                        }
+                    }
+                    recordGeneratedQuestionCoverage(question, roleId, sessionId, questionNumber);
+                }, error -> {
+                    logger.warn("Post-response question audit failed for session={}: {}", sessionId, error.getMessage());
+                    if (needsExperimentMetric) {
+                        try {
+                            experimentTracker.recordMetric(
+                                    Long.parseLong(route.getExperimentId()), route.getVariant(),
+                                    sessionId, QuestionQualityScorer.heuristicFallback(question),
+                                    userFacingLatencyMs, estimateTokens(question));
+                        } catch (Exception e) {
+                            logger.warn("Fallback experiment metric audit write failed for session={}: {}", sessionId, e.getMessage());
+                        }
+                    }
+                    recordGeneratedQuestionCoverage(question, roleId, sessionId, questionNumber);
+                });
+    }
+
+    private void recordGeneratedQuestionCoverage(
+            String question,
+            String roleId,
+            String sessionId,
+            int questionNumber) {
+        if (coverageTracker == null || sessionId == null) {
+            return;
+        }
+        try {
+            Long numericRoleId = ROLE_ID_MAP.getOrDefault(roleId, 1L);
+            if (generatedQuestionMapper != null) {
+                generatedQuestionMapper.mapGeneratedQuestionAndRecordCoverage(
+                        question, numericRoleId, sessionId, coverageTracker);
+            } else {
+                coverageTracker.recordQuestionAsked(sessionId, numericRoleId, (long) questionNumber);
+            }
+        } catch (Exception e) {
+            logger.warn("TopicCoverageTracker failed for session={}: {}", sessionId, e.getMessage());
+        }
     }
 
     /**

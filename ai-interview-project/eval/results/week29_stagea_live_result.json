@@ -1,0 +1,36 @@
+{
+  "experiment_id": 1,
+  "timestamp": "2026-06-24T12:58:33.236393+00:00",
+  "data_source": "live_aiven_mysql_real_openai_week29_post_remediation_prefix",
+  "model_version": "embedding-v1.0+prediction-v1.0+llm-v1.0-history-post-remediation",
+  "decision": "HOLD",
+  "stage_b_recommendation": "HOLD",
+  "metrics": {
+    "n_treatment": 80,
+    "n_baseline": 50,
+    "quality_delta_treatment_minus_baseline": 3.512500000000003,
+    "treatment_std_quality": 4.126420210061014,
+    "baseline_std_quality": 14.744829602270757,
+    "avg_questions_delta_pct": 0.025641025641025664,
+    "premature_stop_rate": 0.0,
+    "early_stop_rate": 0.0,
+    "user_facing_latency_p95_ms": 4111.799999999999,
+    "external_question_http_p95_ms": 4283.299999999999,
+    "topic_coverage_rows": 130,
+    "fallback_cluster_rate": 0.0,
+    "openai_error_rate": 0.0,
+    "calibration_ready": false
+  },
+  "blocking_gates": [
+    "user-facing latency p95 guardrail",
+    "calibration readiness"
+  ],
+  "rationale": [
+    "Post-remediation sample-size gate met: True (treatment=80, baseline=50).",
+    "Session-level metrics decision-grade: True.",
+    "User-facing latency p95 met: False; treatment p95=4111.799999999999.",
+    "Topic coverage supporting signal healthy: True.",
+    "Calibration ready: False; platt-v2.1 remains unchanged."
+  ],
+  "rollback": "Keep Stage A at 10%; do not expand to Stage B until user-facing latency p95 guardrail, calibration readiness are resolved."
+}

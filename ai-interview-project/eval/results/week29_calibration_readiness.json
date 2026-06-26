@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-06-24T12:58:33.236393+00:00",
+  "prefix": "w29-",
+  "status": "HOLD",
+  "active_version": "platt-v2.1",
+  "candidate_version": null,
+  "minimums": {
+    "treatment_per_slice": 25,
+    "baseline_per_slice": 15
+  },
+  "slices": {
+    "junior": {
+      "treatment": 25,
+      "baseline": 15,
+      "min_treatment": 25,
+      "min_baseline": 15,
+      "sample_gate_pass": true,
+      "metric_gate_pass": false,
+      "metric_gap": "No Brier/ECE/RMSE ground-truth calibration labels were produced by this collection path."
+    },
+    "mid": {
+      "treatment": 25,
+      "baseline": 15,
+      "min_treatment": 25,
+      "min_baseline": 15,
+      "sample_gate_pass": true,
+      "metric_gate_pass": false,
+      "metric_gap": "No Brier/ECE/RMSE ground-truth calibration labels were produced by this collection path."
+    },
+    "senior": {
+      "treatment": 30,
+      "baseline": 20,
+      "min_treatment": 25,
+      "min_baseline": 15,
+      "sample_gate_pass": true,
+      "metric_gate_pass": false,
+      "metric_gap": "No Brier/ECE/RMSE ground-truth calibration labels were produced by this collection path."
+    }
+  },
+  "recommendation": "Keep platt-v2.1 unchanged until Brier/ECE/RMSE labels and regression coverage exist for each slice."
+}

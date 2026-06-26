@@ -1,0 +1,198 @@
+{
+  "generated_at": "2026-06-24T12:58:33.235389+00:00",
+  "prefix": "w29-",
+  "status": "READY_AS_SUPPORTING_SIGNAL",
+  "topic_coverage_rows": 130,
+  "generated_question_dedup_rate": 0.0,
+  "fallback_cluster_rate": 0.0,
+  "nearest_seeded_cluster_match_rate": 1.0,
+  "cluster_totals": {
+    "gen_embeddings_total": 130,
+    "gen_clustered_total": 130.0,
+    "gen_fallback_total": 0.0,
+    "gen_seeded_match_total": 130.0
+  },
+  "recent_topic_coverage_rows": [
+    {
+      "session_id": "w29-00056",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:56:03.319290"
+    },
+    {
+      "session_id": "w29-00055",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:55:54.010373"
+    },
+    {
+      "session_id": "w29-00054",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:55:44.945024"
+    },
+    {
+      "session_id": "w29-00053",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:55:34.975556"
+    },
+    {
+      "session_id": "w29-00052",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:55:25.277660"
+    },
+    {
+      "session_id": "w29-00051",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:55:14.279950"
+    },
+    {
+      "session_id": "w29-00050",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:55:03.737115"
+    },
+    {
+      "session_id": "w29-00049",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:54:54.192290"
+    },
+    {
+      "session_id": "w29-00048",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:54:39.489404"
+    },
+    {
+      "session_id": "w29-00047",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:54:29.367042"
+    },
+    {
+      "session_id": "w29-01072",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:54:18.805649"
+    },
+    {
+      "session_id": "w29-01057",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:54:07.433844"
+    },
+    {
+      "session_id": "w29-01046",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:53:57.525309"
+    },
+    {
+      "session_id": "w29-01036",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:53:48.612243"
+    },
+    {
+      "session_id": "w29-01014",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:53:36.140372"
+    },
+    {
+      "session_id": "w29-01005",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:53:26.168975"
+    },
+    {
+      "session_id": "w29-00994",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:53:17.033683"
+    },
+    {
+      "session_id": "w29-00992",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:53:07.041634"
+    },
+    {
+      "session_id": "w29-00985",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:52:57.648806"
+    },
+    {
+      "session_id": "w29-00967",
+      "role_id": 1,
+      "total_questions": 1,
+      "clusters_covered": 1,
+      "total_clusters": 1,
+      "coverage_ratio": 1.0,
+      "updated_at": "2026-06-24T12:52:45.855938"
+    }
+  ],
+  "stage_b_gating_recommendation": "Use topic coverage as a supporting Stage B signal only while fallback rate remains within threshold."
+}
