@@ -1,0 +1,94 @@
+{
+  "collected_at": "2026-06-13T13:55:33.309163+00:00",
+  "experiment_id": 1,
+  "experiment_name": "stage_a_week24",
+  "experiment_status": "running",
+  "traffic_source": "history-rich",
+  "real_prefixes": [
+    "w27r-",
+    "w27s-"
+  ],
+  "metric_version": "llm-v1.0-history",
+  "openai_chat_model": "gpt-4o-mini",
+  "counts_after_real_prefixes": {
+    "baseline": 24,
+    "treatment": 52
+  },
+  "counts_after_all_experiment_metric": {
+    "baseline": 107,
+    "treatment": 104
+  },
+  "prefix_counts": [
+    {
+      "prefix": "w27r-",
+      "variant": "baseline",
+      "n": 2,
+      "avg_quality": 85.0,
+      "std_quality": 0.0
+    },
+    {
+      "prefix": "w27r-",
+      "variant": "treatment",
+      "n": 30,
+      "avg_quality": 84.66666666666667,
+      "std_quality": 1.795054935711501
+    },
+    {
+      "prefix": "w27s-",
+      "variant": "baseline",
+      "n": 22,
+      "avg_quality": 84.54545454545455,
+      "std_quality": 2.0829889522526543
+    },
+    {
+      "prefix": "w27s-",
+      "variant": "treatment",
+      "n": 22,
+      "avg_quality": 83.63636363636364,
+      "std_quality": 3.4317429251230678
+    }
+  ],
+  "sessions_by_variant": [
+    {
+      "variant": "baseline",
+      "sessions": 23
+    },
+    {
+      "variant": "treatment",
+      "sessions": 52
+    }
+  ],
+  "quality_stats_real_prefixes": [
+    {
+      "variant": "baseline",
+      "n": 24,
+      "avg_quality": 84.58333333333333,
+      "std_quality": 1.9982631347136333,
+      "min_quality": 75.0,
+      "max_quality": 85.0,
+      "avg_latency_ms": 1373.5
+    },
+    {
+      "variant": "treatment",
+      "n": 52,
+      "avg_quality": 84.23076923076923,
+      "std_quality": 2.6646935501059654,
+      "min_quality": 75.0,
+      "max_quality": 85.0,
+      "avg_latency_ms": 1361.8462
+    }
+  ],
+  "feature_counts": {
+    "topic_coverage_total": 149,
+    "topic_coverage_real_prefixes": 149,
+    "gen_embeddings": 154,
+    "gen_clustered": 150,
+    "real_skill_profiles": 50,
+    "response_feature_cache_organic": 40
+  },
+  "notes": [
+    "w27h-* rows are excluded from this readout because backend chat calls were falling back before /chat/completions was fixed.",
+    "w27r-* collection was interrupted for baseline metrics by automatic lifecycle promotion; treatment rows from that prefix are retained because they were collected after the OpenAI fix.",
+    "w27s-* collection ran after lifecycle auto-conclusion was disabled."
+  ]
+}

@@ -41,6 +41,7 @@ public class OpenAiService {
         request.setStream(false);
 
         return openAiWebClient.post()
+                .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
@@ -106,6 +107,7 @@ public class OpenAiService {
         request.setStream(true);
 
         return openAiWebClient.post()
+                .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .accept(MediaType.TEXT_EVENT_STREAM)
@@ -174,6 +176,7 @@ public class OpenAiService {
         request.setResponseFormat(java.util.Map.of("type", "json_object"));
 
         return openAiWebClient.post()
+                .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
@@ -196,14 +199,23 @@ public class OpenAiService {
      */
     public Mono<String> chatWithConfig(List<OpenAiMessage> messages, String modelOverride,
                                         Double temperatureOverride) {
+        return chatWithConfig(messages, modelOverride, temperatureOverride, null);
+    }
+
+    /**
+     * Call OpenAI with custom model, temperature, and max token overrides.
+     */
+    public Mono<String> chatWithConfig(List<OpenAiMessage> messages, String modelOverride,
+                                        Double temperatureOverride, Integer maxTokensOverride) {
         OpenAiRequest request = new OpenAiRequest();
         request.setModel(modelOverride != null ? modelOverride : model);
         request.setMessages(messages);
         request.setTemperature(temperatureOverride != null ? temperatureOverride : temperature);
-        request.setMaxTokens(maxTokens);
+        request.setMaxTokens(maxTokensOverride != null ? maxTokensOverride : maxTokens);
         request.setStream(false);
 
         return openAiWebClient.post()
+                .uri("/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()

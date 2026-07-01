@@ -1,0 +1,101 @@
+{
+  "timestamp": "2026-04-24T15:35:49.738577Z",
+  "split_method": "odd_even",
+  "n_total": 540,
+  "window_a_size": 270,
+  "window_b_size": 270,
+  "pass1_train_A_eval_B": {
+    "platt_params": {
+      "A": 35.63320398681872,
+      "B": -29.295217887476518
+    },
+    "train": {
+      "junior": {
+        "n": 114,
+        "rmse": 39.16,
+        "brier": 0.1533,
+        "ece": 0.0744
+      },
+      "mid": {
+        "n": 69,
+        "rmse": 39.18,
+        "brier": 0.1535,
+        "ece": 0.0776
+      },
+      "senior": {
+        "n": 87,
+        "rmse": 34.98,
+        "brier": 0.1223,
+        "ece": 0.103
+      }
+    },
+    "eval": {
+      "junior": {
+        "n": 102,
+        "rmse": 40.17,
+        "brier": 0.1614,
+        "ece": 0.101
+      },
+      "mid": {
+        "n": 93,
+        "rmse": 33.76,
+        "brier": 0.114,
+        "ece": 0.0524
+      },
+      "senior": {
+        "n": 75,
+        "rmse": 39.77,
+        "brier": 0.1581,
+        "ece": 0.1231
+      }
+    }
+  },
+  "pass2_train_B_eval_A": {
+    "platt_params": {
+      "A": 32.90635216439752,
+      "B": -26.77130822256461
+    },
+    "train": {
+      "junior": {
+        "n": 102,
+        "rmse": 39.15,
+        "brier": 0.1533,
+        "ece": 0.0872
+      },
+      "mid": {
+        "n": 93,
+        "rmse": 33.67,
+        "brier": 0.1134,
+        "ece": 0.0761
+      },
+      "senior": {
+        "n": 75,
+        "rmse": 39.38,
+        "brier": 0.1551,
+        "ece": 0.129
+      }
+    },
+    "eval": {
+      "junior": {
+        "n": 114,
+        "rmse": 38.89,
+        "brier": 0.1512,
+        "ece": 0.0753
+      },
+      "mid": {
+        "n": 69,
+        "rmse": 40.08,
+        "brier": 0.1607,
+        "ece": 0.1127
+      },
+      "senior": {
+        "n": 87,
+        "rmse": 36.46,
+        "brier": 0.1329,
+        "ece": 0.1538
+      }
+    }
+  },
+  "failures": [],
+  "overall": "STABLE"
+}

@@ -1,0 +1,47 @@
+{
+  "collected_at": "2026-06-05T13:31:00.117378Z",
+  "metric_version": "llm-v1.0",
+  "experiment_id": 1,
+  "counts_before": {
+    "baseline": 20,
+    "treatment": 10
+  },
+  "counts_after": {
+    "baseline": 44,
+    "treatment": 22
+  },
+  "n_treatment": 22,
+  "n_baseline": 44,
+  "treatment_threshold_met_20": true,
+  "stats_all_rows": {
+    "baseline": {
+      "n": 44,
+      "avg_quality": 60.90909090909091,
+      "std_quality": 4.165977904505308,
+      "avg_latency_ms": 666.5227
+    },
+    "treatment": {
+      "n": 22,
+      "avg_quality": 60.0,
+      "std_quality": 0.0,
+      "avg_latency_ms": 649.3636
+    }
+  },
+  "feature_rows_before": {
+    "response_feature_cache_organic": 0,
+    "topic_coverage": 0,
+    "candidate_skill_profile": 31
+  },
+  "feature_rows_after": {
+    "response_feature_cache_organic": 0,
+    "topic_coverage": 0,
+    "candidate_skill_profile": 37
+  },
+  "new_response_feature_cache_organic": 0,
+  "new_topic_coverage": 0,
+  "sessions_attempted": 36,
+  "sessions_success": 36,
+  "sessions_error": 0,
+  "eval_sessions_run": 6,
+  "errors": []
+}

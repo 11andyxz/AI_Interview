@@ -1,0 +1,124 @@
+{
+  "latency_definition": "user_facing_question_generation_v1",
+  "component_metrics": {
+    "backend_question_generation": {
+      "n": 130,
+      "p50_ms": 1320.5,
+      "p95_ms": 3060.5999999999995,
+      "avg_ms": 1596.753846153846
+    },
+    "external_question_http": {
+      "n": 130,
+      "p50_ms": 1487.0,
+      "p95_ms": 3226.7,
+      "avg_ms": 1764.3923076923077
+    },
+    "client_request_overhead": {
+      "n": 130,
+      "p50_ms": 168.0,
+      "p95_ms": 180.0,
+      "avg_ms": 167.63846153846154
+    },
+    "post_response_quality_audit_observed": {
+      "n": 130,
+      "p50_ms": 1559.5,
+      "p95_ms": 1748.3999999999999,
+      "avg_ms": 1668.7307692307693
+    },
+    "generated_question_topic_mapping_observed": {
+      "n": 130,
+      "p50_ms": 2587.5,
+      "p95_ms": 3674.75,
+      "avg_ms": 2919.607692307692
+    },
+    "answer_evaluation": {
+      "n": 130,
+      "p50_ms": 3674.0,
+      "p95_ms": 5790.5,
+      "avg_ms": 3886.5538461538463
+    }
+  },
+  "by_variant": {
+    "treatment": {
+      "backend_question_generation": {
+        "n": 80,
+        "p50_ms": 1353.5,
+        "p95_ms": 4111.799999999999,
+        "avg_ms": 1677.6125
+      },
+      "external_question_http": {
+        "n": 80,
+        "p50_ms": 1514.0,
+        "p95_ms": 4283.299999999999,
+        "avg_ms": 1845.3875
+      },
+      "client_request_overhead": {
+        "n": 80,
+        "p50_ms": 168.0,
+        "p95_ms": 180.05,
+        "avg_ms": 167.775
+      },
+      "post_response_quality_audit_observed": {
+        "n": 80,
+        "p50_ms": 1558.5,
+        "p95_ms": 1734.3999999999999,
+        "avg_ms": 1636.975
+      },
+      "generated_question_topic_mapping_observed": {
+        "n": 80,
+        "p50_ms": 2588.0,
+        "p95_ms": 3754.099999999997,
+        "avg_ms": 2929.8125
+      },
+      "answer_evaluation": {
+        "n": 80,
+        "p50_ms": 3655.5,
+        "p95_ms": 5962.249999999999,
+        "avg_ms": 3912.2375
+      }
+    },
+    "baseline": {
+      "backend_question_generation": {
+        "n": 50,
+        "p50_ms": 1297.5,
+        "p95_ms": 2364.35,
+        "avg_ms": 1467.38
+      },
+      "external_question_http": {
+        "n": 50,
+        "p50_ms": 1465.5,
+        "p95_ms": 2531.7,
+        "avg_ms": 1634.8
+      },
+      "client_request_overhead": {
+        "n": 50,
+        "p50_ms": 168.0,
+        "p95_ms": 174.84999999999997,
+        "avg_ms": 167.42
+      },
+      "post_response_quality_audit_observed": {
+        "n": 50,
+        "p50_ms": 1561.0,
+        "p95_ms": 2201.4999999999973,
+        "avg_ms": 1719.54
+      },
+      "generated_question_topic_mapping_observed": {
+        "n": 50,
+        "p50_ms": 2586.5,
+        "p95_ms": 3639.5499999999997,
+        "avg_ms": 2903.28
+      },
+      "answer_evaluation": {
+        "n": 50,
+        "p50_ms": 3674.0,
+        "p95_ms": 5042.9,
+        "avg_ms": 3845.46
+      }
+    }
+  },
+  "notes": [
+    "Stage B product latency uses backend_question_generation_latency_ms from the question-generate response.",
+    "Question quality scoring, experiment_metric writes, and topic mapping run after the response and are tracked separately.",
+    "answer_evaluation remains part of end-to-end interview-turn observability, not the user-facing question-generation guardrail."
+  ]
+}

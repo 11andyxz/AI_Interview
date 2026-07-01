@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-06-20T19:17:24.610725+00:00",
+  "prefix": "w28-",
+  "status": "HOLD",
+  "n_treatment": 80,
+  "n_baseline": 50,
+  "quality_delta": -4.037499999999994,
+  "avg_questions_delta_pct": 0.025641025641025664,
+  "openai_error_rate": 0.0,
+  "treatment": {
+    "n_sessions": 80,
+    "n_completed": 80,
+    "avg_questions_per_session": 3.2,
+    "avg_seeded_prior_count": 2.2,
+    "avg_generated_followup_count": 1,
+    "avg_evaluated_answer_count": 1,
+    "early_stop_rate": 0.0,
+    "premature_stop_rate": 0.0,
+    "session_completion_rate": 1.0,
+    "latency_p50_ms": 5845.0,
+    "latency_p95_ms": 7484.199999999998,
+    "final_score_avg": 47.4625
+  },
+  "baseline": {
+    "n_sessions": 50,
+    "n_completed": 50,
+    "avg_questions_per_session": 3.12,
+    "avg_seeded_prior_count": 2.12,
+    "avg_generated_followup_count": 1,
+    "avg_evaluated_answer_count": 1,
+    "early_stop_rate": 0.0,
+    "premature_stop_rate": 0.0,
+    "session_completion_rate": 1.0,
+    "latency_p50_ms": 6081.0,
+    "latency_p95_ms": 7548.799999999997,
+    "final_score_avg": 47.4
+  },
+  "manifest_sessions": 130,
+  "decision_grade": true,
+  "thresholds_pass": false,
+  "threshold_checks": {
+    "quality_delta": true,
+    "premature_stop_rate": true,
+    "avg_questions_delta_pct": true,
+    "latency_p95_ms": false,
+    "openai_error_rate": true,
+    "session_completion_rate": true
+  }
+}

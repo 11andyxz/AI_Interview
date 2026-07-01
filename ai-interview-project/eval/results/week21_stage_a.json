@@ -1,0 +1,45 @@
+{
+  "run_timestamp": "2026-04-24T15:35:42.520874Z",
+  "policy": {
+    "pass_threshold": 0.85,
+    "fail_threshold": 0.1,
+    "min_questions": {
+      "junior": 4,
+      "mid": 5,
+      "senior": 6
+    }
+  },
+  "guardrails": {
+    "avg_questions_delta_pct_max": 0.0,
+    "rmse_max": 15.0,
+    "premature_stop_rate_max": 0.03,
+    "p95_latency_ms_max": 3000
+  },
+  "stages": [
+    {
+      "stage": "A",
+      "traffic_pct": 10,
+      "timestamp": "2026-04-24T15:35:42.518871Z",
+      "metrics": {
+        "n_control": 12,
+        "n_treatment": 6,
+        "avg_questions_control": 6.08,
+        "avg_questions_treatment": 6.5,
+        "avg_questions_delta": 0.42,
+        "avg_questions_delta_pct": 6.8,
+        "t_stat": -0.601,
+        "p_value": 0.5654,
+        "cohens_d": 0.343,
+        "premature_stop_rate": 0.0,
+        "p50_latency_ms": 1600.0,
+        "p95_latency_ms": 1854.0,
+        "rmse": null
+      },
+      "decision": "ROLLBACK",
+      "rationale": [
+        "avg_questions_delta_pct=6.8% > 5% \u2014 treatment increases questions (ROLLBACK)"
+      ]
+    }
+  ],
+  "final_decision": "ROLLBACK"
+}

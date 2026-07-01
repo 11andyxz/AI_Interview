@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-06-20T19:17:24.610725+00:00",
+  "prefix": "w28-",
+  "metric_version": "llm-v1.0-history",
+  "quality_stats": [
+    {
+      "variant": "treatment",
+      "n": 80,
+      "avg_quality": 80.5625,
+      "std_quality": 14.448048094811975,
+      "min_quality": 20.0,
+      "max_quality": 90.0,
+      "avg_latency_ms": 1249.55
+    },
+    {
+      "variant": "baseline",
+      "n": 50,
+      "avg_quality": 84.6,
+      "std_quality": 1.9595917942265442,
+      "min_quality": 75.0,
+      "max_quality": 85.0,
+      "avg_latency_ms": 1346.48
+    }
+  ],
+  "quality_distribution": [
+    {
+      "variant": "baseline",
+      "quality_score": 75.0,
+      "n": 2
+    },
+    {
+      "variant": "baseline",
+      "quality_score": 85.0,
+      "n": 48
+    },
+    {
+      "variant": "treatment",
+      "quality_score": 20.0,
+      "n": 2
+    },
+    {
+      "variant": "treatment",
+      "quality_score": 30.0,
+      "n": 3
+    },
+    {
+      "variant": "treatment",
+      "quality_score": 70.0,
+      "n": 1
+    },
+    {
+      "variant": "treatment",
+      "quality_score": 75.0,
+      "n": 5
+    },
+    {
+      "variant": "treatment",
+      "quality_score": 85.0,
+      "n": 68
+    },
+    {
+      "variant": "treatment",
+      "quality_score": 90.0,
+      "n": 1
+    }
+  ],
+  "quality_delta_treatment_minus_baseline": -4.037499999999994,
+  "variance_recovered": true
+}

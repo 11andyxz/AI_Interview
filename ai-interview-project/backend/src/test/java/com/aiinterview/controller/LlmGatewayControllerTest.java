@@ -1,8 +1,11 @@
 package com.aiinterview.controller;
 
 import com.aiinterview.ml.experiment.ExperimentTracker;
+import com.aiinterview.ml.embedding.service.GeneratedQuestionMapper;
+import com.aiinterview.ml.embedding.service.TopicCoverageTracker;
 import com.aiinterview.ml.gateway.ExperimentAwareLlmRouter;
 import com.aiinterview.ml.gateway.LlmRouteDecision;
+import com.aiinterview.ml.quality.QuestionQualityScorer;
 import com.aiinterview.model.EvaluationResult;
 import com.aiinterview.model.openai.OpenAiMessage;
 import com.aiinterview.service.LlmEvaluationService;
@@ -24,7 +27,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -55,6 +61,15 @@ class LlmGatewayControllerTest {
 
     @MockBean
     private ExperimentTracker experimentTracker;
+
+    @MockBean
+    private QuestionQualityScorer qualityScorer;
+
+    @MockBean
+    private TopicCoverageTracker coverageTracker;
+
+    @MockBean
+    private GeneratedQuestionMapper generatedQuestionMapper;
     
     @MockBean
     private com.aiinterview.config.WebMvcConfig webMvcConfig;
@@ -69,7 +84,10 @@ class LlmGatewayControllerTest {
     void setUp() {
         when(promptService.buildSystemPrompt(anyString(), anyString(), any())).thenReturn("System prompt");
         when(promptService.buildConversationHistoryPrompt(anyList(), anyInt())).thenReturn("User prompt");
+        when(promptService.buildCompactConversationHistoryPrompt(anyList(), anyInt(), anyInt()))
+                .thenReturn("Compact user prompt");
         when(experimentRouter.route(any())).thenReturn(LlmRouteDecision.defaultRoute("gpt-3.5-turbo", 0.7));
+        when(qualityScorer.score(anyString(), anyString(), anyString())).thenReturn(Mono.just(60.0));
     }
     
     @Test
@@ -83,7 +101,8 @@ class LlmGatewayControllerTest {
         InterviewSession session = new InterviewSession();
         session.setHistory(new ArrayList<>());
         when(sessionService.getSession(sessionId)).thenReturn(Optional.of(session));
-        when(openAiService.chatWithConfig(anyList(), anyString(), anyDouble())).thenReturn(Mono.just("What is Java?"));
+        when(openAiService.chatWithConfig(anyList(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(Mono.just("What is Java?"));
 
         mockMvc.perform(post("/api/llm/question-generate")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -92,9 +111,80 @@ class LlmGatewayControllerTest {
                 .andDo(result -> mockMvc.perform(asyncDispatch(result)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.question").exists())
-                .andExpect(jsonPath("$.sessionId").value(sessionId));
+                .andExpect(jsonPath("$.sessionId").value(sessionId))
+                .andExpect(jsonPath("$.latencyDefinition").value("user_facing_question_generation_v1"))
+                .andExpect(jsonPath("$.promptHistoryMessagesUsed").value(0))
+                .andExpect(jsonPath("$.questionGenerationMaxTokens").value(240));
 
-        verify(openAiService).chatWithConfig(anyList(), anyString(), anyDouble());
+        verify(openAiService).chatWithConfig(anyList(), anyString(), anyDouble(), eq(240));
+    }
+
+    @Test
+    void testQuestionGenerate_DoesNotWaitForQualityScoring() throws Exception {
+        String sessionId = "session-latency";
+        InterviewSession session = new InterviewSession();
+        session.setHistory(new ArrayList<>());
+        when(sessionService.getSession(sessionId)).thenReturn(Optional.of(session));
+        when(openAiService.chatWithConfig(anyList(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(Mono.just("What is a Java interface?"));
+
+        LlmRouteDecision experimentRoute = LlmRouteDecision.defaultRoute("gpt-4o-mini", 0.2);
+        experimentRoute.setExperimentId("1");
+        experimentRoute.setVariant("treatment");
+        when(experimentRouter.route(any())).thenReturn(experimentRoute);
+        when(qualityScorer.score(anyString(), anyString(), anyString())).thenReturn(Mono.never());
+
+        mockMvc.perform(post("/api/llm/question-generate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sessionId\":\"session-latency\",\"roleId\":\"backend_java\",\"level\":\"mid\"}"))
+                .andExpect(request().asyncStarted())
+                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.question").value("What is a Java interface?"))
+                .andExpect(jsonPath("$.questionGenerationLatencyMs").isNumber())
+                .andExpect(jsonPath("$.latencyDefinition").value("user_facing_question_generation_v1"))
+                .andExpect(jsonPath("$.postResponseAudit").value("scheduled"));
+
+        verify(qualityScorer).score("What is a Java interface?", "backend_java", "mid");
+        verify(experimentTracker, never()).recordMetric(anyLong(), anyString(), anyString(), anyDouble(), anyLong(), anyInt());
+    }
+
+    @Test
+    void testQuestionGenerate_DoesNotWaitForMetricWriteOrTopicMapping() throws Exception {
+        String sessionId = "session-audit-block";
+        InterviewSession session = new InterviewSession();
+        session.setHistory(new ArrayList<>());
+        when(sessionService.getSession(sessionId)).thenReturn(Optional.of(session));
+        when(openAiService.chatWithConfig(anyList(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(Mono.just("How would you tune a slow database query?"));
+
+        LlmRouteDecision experimentRoute = LlmRouteDecision.defaultRoute("gpt-4o-mini", 0.7);
+        experimentRoute.setExperimentId("1");
+        experimentRoute.setVariant("treatment");
+        when(experimentRouter.route(any())).thenReturn(experimentRoute);
+
+        CountDownLatch releaseAudit = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            releaseAudit.await(5, TimeUnit.SECONDS);
+            return "gen-test";
+        }).when(generatedQuestionMapper).mapGeneratedQuestionAndRecordCoverage(
+                anyString(), anyLong(), anyString(), any(TopicCoverageTracker.class));
+
+        long start = System.currentTimeMillis();
+        mockMvc.perform(post("/api/llm/question-generate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"sessionId\":\"session-audit-block\",\"roleId\":\"backend_java\",\"level\":\"mid\"}"))
+                .andExpect(request().asyncStarted())
+                .andDo(result -> mockMvc.perform(asyncDispatch(result)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.question").value("How would you tune a slow database query?"))
+                .andExpect(jsonPath("$.postResponseAudit").value("scheduled"));
+
+        long elapsedMs = System.currentTimeMillis() - start;
+        releaseAudit.countDown();
+        assertTrue(elapsedMs < 2000, "question response waited for post-response audit work");
+
+        verify(openAiService).chatWithConfig(anyList(), anyString(), anyDouble(), eq(240));
     }
     
     @Test

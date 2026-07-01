@@ -1,30 +1,54 @@
-# Blockers and Risks - Week 3
+# Blockers and Risks — Week 22 (updated 2026-04-27)
 
-## Blockers
+## Active Blockers
 
-**Week 2 Tools PR Dependency**  
-- `llama_server.py` is in Week 2 PR (under review)
-- Mitigation: Eval harness works with any HTTP endpoint
+_No local/staging blockers remain as of 2026-04-27._  
+CI environment still needs `DB_*` and `OPENAI_API_KEY` secrets configured.
 
-## Risks
+## Resolved Blockers
 
-**1. OSS Model Latency (HIGH)**  
-- CPU: 47.8s avg (34x slower than GPT-4o-mini)
-- **GPU anomaly**: RTX 3060 with ctransformers[cuda] → 34-40s (slower than CPU!)
-- Possible causes: CUDA integration overhead, driver issues, or config problems
-- **Next step**: Test with vLLM or llama.cpp to isolate issue
-- Current decision: Continue with GPT-4o-mini in production
+### BLOCKER-01: OpenAI API Key ✅ RESOLVED (2026-04-27)
+- **Was**: `OPENAI_API_KEY` not set — OpenAI check failing in preflight
+- **Resolution**: Key validated locally — `OpenAI:api_key_valid` PASS, models endpoint 1042ms
+- **Remaining**: Set key in CI secrets for automated runs
 
-**2. Coherence Gap (MEDIUM)**  
-Llama-2: 68.7 vs GPT: 99.1 (-30pts).  
-→ Requires fine-tuning if OSS adoption considered.
+### BLOCKER-00: Aiven MySQL Connectivity ✅ RESOLVED (2026-04-27)
+- **Was**: DB credentials unavailable — all experiment runs fell back to SQLite
+- **Resolution**: Aiven MySQL confirmed live (879ms connection latency). `preflight_check.py` MySQL gate now passes.
+- **Live state**: 29 interviews, 0 experiments, 0 feature cache rows (see Task 4 monitoring gap)
 
-**3. Validation Coverage (LOW)**  
-Only ResumeAnalysisService validated.  
-→ Extend to other endpoints in future sprint.
+---
 
-## Next Steps
+## Active Risks
 
-1. Merge Week 2 PR
-2. Test vLLM/llama.cpp (better than ctransformers)
-3. Extend validation to interview/eval endpoints
+**1. Low Live Sample Size (HIGH)**
+- 29 interviews in DB, last active 2026-04-09. Stage A requires ≥ 20 treatment sessions for reliable guardrail evaluation.
+- Mitigation: Do not advance ramp stages below minimum sample thresholds; label low-power results explicitly.
+
+**2. Feature Cache Empty (HIGH)**
+- `response_feature_cache`, `question_embedding`, `topic_coverage` all have 0 rows.
+- Prediction quality relies on feature freshness; empty cache means fallback behavior on first live sessions.
+- Mitigation: Populate caches before Stage A; see Task 4 monitoring checks.
+
+**3. Junior Slice Regression (MEDIUM)**
+- Junior RMSE guardrail relaxed from 11.5 → 45.0 in Week 21. Path to re-tightening is undefined.
+- Mitigation: Task 3 (Week 22) to analyze live slice data and define staged tightening plan.
+
+**4. API Reliability (MEDIUM)**
+- OpenAI error/timeout rates not tracked alongside ML quality metrics.
+- Mitigation: Track error rate and timeout rate per ramp stage; include in ramp readout.
+
+**5. Stage A High-Variance Small Sample (MEDIUM)**
+- Week 21 Stage A triggered ROLLBACK at n=6 (avg_questions_delta=6.8% > 5%). Result was noise, not signal.
+- Mitigation: Enforce n_treatment ≥ 20 minimum before evaluating Stage A guardrails.
+
+---
+
+## Resolved / Historical Risks
+
+**OSS Model Latency (RESOLVED — Week 3)**
+- CPU: 47.8s avg; GPU anomaly on RTX 3060. Decision: use GPT-4o-mini in production.
+
+**Coherence Gap (RESOLVED — Week 3)**
+- Llama-2 68.7 vs GPT 99.1. Resolved by staying on OpenAI models.
+

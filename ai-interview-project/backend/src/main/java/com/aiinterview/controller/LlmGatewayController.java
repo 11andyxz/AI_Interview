@@ -4,6 +4,12 @@ import com.aiinterview.ml.experiment.ExperimentTracker;
 import com.aiinterview.ml.gateway.ExperimentAwareLlmRouter;
 import com.aiinterview.ml.gateway.LlmRequest;
 import com.aiinterview.ml.gateway.LlmRouteDecision;
+import com.aiinterview.ml.embedding.service.GeneratedQuestionMapper;
+import com.aiinterview.ml.embedding.service.TopicCoverageTracker;
+import com.aiinterview.ml.nlp.ResponseFeatureExtractor;
+import com.aiinterview.ml.prediction.entity.CandidateSkillProfile;
+import com.aiinterview.ml.prediction.repository.CandidateSkillProfileRepository;
+import com.aiinterview.ml.quality.QuestionQualityScorer;
 import com.aiinterview.model.openai.OpenAiMessage;
 import com.aiinterview.service.LlmEvaluationService;
 import com.aiinterview.service.OpenAiService;
@@ -21,8 +27,11 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,8 +61,48 @@ public class LlmGatewayController {
     @Autowired
     private ExperimentTracker experimentTracker;
 
+    // Optional beans — only active when ml.nlp.enabled / ml.embedding.enabled are true.
+    // Use required=false so the controller starts even when these feature flags are off.
+    @Autowired(required = false)
+    private ResponseFeatureExtractor featureExtractor;
+
+    // Quality scorer — always active; falls back to heuristic if LLM call fails.
+    @Autowired(required = false)
+    private QuestionQualityScorer qualityScorer;
+
+    @Autowired(required = false)
+    private TopicCoverageTracker coverageTracker;
+
+    // Maps LLM-generated question text to stable IDs and cluster assignments so that
+    // TopicCoverageTracker can write organic topic_coverage rows.
+    // Only active when ml.embedding.enabled=true.
+    @Autowired(required = false)
+    private GeneratedQuestionMapper generatedQuestionMapper;
+
+    @Autowired(required = false)
+    private CandidateSkillProfileRepository skillProfileRepository;
+
+    // Stable mapping from roleId string to numeric role_id used in ML tables
+    private static final Map<String, Long> ROLE_ID_MAP = Map.of(
+            "backend_java", 1L,
+            "frontend_react", 2L,
+            "fullstack", 3L,
+            "devops", 4L,
+            "data_engineer", 5L,
+            "ml_engineer", 6L
+    );
+
     @Value("${openai.max-history-messages:10}")
     private int maxHistoryMessages;
+
+    @Value("${openai.question-generation.max-history-messages:3}")
+    private int questionGenerationMaxHistoryMessages;
+
+    @Value("${openai.question-generation.max-answer-chars:360}")
+    private int questionGenerationMaxAnswerChars;
+
+    @Value("${openai.question-generation.max-tokens:240}")
+    private int questionGenerationMaxTokens;
 
     /**
      * Generate next interview question based on session history
@@ -77,35 +126,57 @@ public class LlmGatewayController {
         String systemPrompt = route.getPromptTemplate() != null
                 ? route.getPromptTemplate()
                 : promptService.buildSystemPrompt(roleId, level, candidateInfo);
-        String userPrompt = promptService.buildConversationHistoryPrompt(history, maxHistoryMessages);
+        int promptHistoryMessagesUsed = Math.min(history.size(), Math.max(1, questionGenerationMaxHistoryMessages));
+        String userPrompt = promptService.buildCompactConversationHistoryPrompt(
+                history,
+                questionGenerationMaxHistoryMessages,
+                questionGenerationMaxAnswerChars);
 
         List<OpenAiMessage> messages = List.of(
             new OpenAiMessage("system", systemPrompt),
             new OpenAiMessage("user", userPrompt)
         );
+        int promptInputChars = systemPrompt.length() + userPrompt.length();
 
         long startTime = System.currentTimeMillis();
 
-        return openAiService.chatWithConfig(messages, route.getModel(), route.getTemperature())
-            .map(question -> {
-                long latency = System.currentTimeMillis() - startTime;
+        return openAiService.chatWithConfig(messages, route.getModel(), route.getTemperature(), questionGenerationMaxTokens)
+            .flatMap(question -> {
+                long userFacingLatencyMs = System.currentTimeMillis() - startTime;
+                int questionNumber = history.size() + 1;
+                boolean auditScheduled = route.isInExperiment() || (coverageTracker != null && sessionId != null);
 
-                if (route.isInExperiment()) {
-                    experimentTracker.recordMetric(
-                            Long.parseLong(route.getExperimentId()), route.getVariant(),
-                            sessionId, estimateQuality(question), latency, estimateTokens(question));
+                if (auditScheduled) {
+                    runPostResponseQuestionAudit(
+                            question,
+                            roleId,
+                            level,
+                            sessionId,
+                            route,
+                            userFacingLatencyMs,
+                            questionNumber
+                    );
                 }
 
-                Map<String, Object> response = new java.util.HashMap<>(Map.of(
-                    "question", question,
-                    "sessionId", sessionId,
-                    "questionNumber", history.size() + 1
-                ));
+                Map<String, Object> response = new java.util.HashMap<>();
+                response.put("question", question);
+                response.put("sessionId", sessionId);
+                response.put("questionNumber", questionNumber);
+                response.put("questionGenerationLatencyMs", userFacingLatencyMs);
+                response.put("latencyDefinition", "user_facing_question_generation_v1");
+                response.put("postResponseAudit", auditScheduled ? "scheduled" : "skipped");
+                response.put("promptHistoryMessagesUsed", promptHistoryMessagesUsed);
+                response.put("promptHistoryTotalMessages", history.size());
+                response.put("promptInputChars", promptInputChars);
+                response.put("questionGenerationMaxTokens", questionGenerationMaxTokens);
+                response.put("routeModel", route.getModel());
+                response.put("routeTemperature", route.getTemperature());
+
                 if (route.isInExperiment()) {
                     response.put("experimentId", route.getExperimentId());
                     response.put("variant", route.getVariant());
                 }
-                return ResponseEntity.ok((Object) response);
+                return Mono.just(ResponseEntity.ok((Object) response));
             })
             .onErrorResume(error -> {
                 logger.error("Question generation error: {}", error.getMessage());
@@ -114,6 +185,81 @@ public class LlmGatewayController {
                     "message", error.getMessage()
                 )));
             });
+    }
+
+    /**
+     * Run non-user-facing audit work after the question response is ready.
+     *
+     * The Stage B product latency guardrail uses questionGenerationLatencyMs from
+     * the response path. LLM question quality scoring, experiment_metric writes,
+     * and generated-question topic mapping remain auditable but no longer block
+     * the candidate-facing HTTP response.
+     */
+    private void runPostResponseQuestionAudit(
+            String question,
+            String roleId,
+            String level,
+            String sessionId,
+            LlmRouteDecision route,
+            long userFacingLatencyMs,
+            int questionNumber) {
+        boolean needsExperimentMetric = route.isInExperiment();
+        boolean needsTopicCoverage = coverageTracker != null && sessionId != null;
+        if (!needsExperimentMetric && !needsTopicCoverage) {
+            return;
+        }
+
+        Mono.defer(() -> qualityScorer != null
+                        ? qualityScorer.score(question, roleId, level)
+                        : Mono.just(QuestionQualityScorer.heuristicFallback(question)))
+                .defaultIfEmpty(QuestionQualityScorer.heuristicFallback(question))
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe(quality -> {
+                    if (needsExperimentMetric) {
+                        try {
+                            experimentTracker.recordMetric(
+                                    Long.parseLong(route.getExperimentId()), route.getVariant(),
+                                    sessionId, quality, userFacingLatencyMs, estimateTokens(question));
+                        } catch (Exception e) {
+                            logger.warn("Experiment metric audit write failed for session={}: {}", sessionId, e.getMessage());
+                        }
+                    }
+                    recordGeneratedQuestionCoverage(question, roleId, sessionId, questionNumber);
+                }, error -> {
+                    logger.warn("Post-response question audit failed for session={}: {}", sessionId, error.getMessage());
+                    if (needsExperimentMetric) {
+                        try {
+                            experimentTracker.recordMetric(
+                                    Long.parseLong(route.getExperimentId()), route.getVariant(),
+                                    sessionId, QuestionQualityScorer.heuristicFallback(question),
+                                    userFacingLatencyMs, estimateTokens(question));
+                        } catch (Exception e) {
+                            logger.warn("Fallback experiment metric audit write failed for session={}: {}", sessionId, e.getMessage());
+                        }
+                    }
+                    recordGeneratedQuestionCoverage(question, roleId, sessionId, questionNumber);
+                });
+    }
+
+    private void recordGeneratedQuestionCoverage(
+            String question,
+            String roleId,
+            String sessionId,
+            int questionNumber) {
+        if (coverageTracker == null || sessionId == null) {
+            return;
+        }
+        try {
+            Long numericRoleId = ROLE_ID_MAP.getOrDefault(roleId, 1L);
+            if (generatedQuestionMapper != null) {
+                generatedQuestionMapper.mapGeneratedQuestionAndRecordCoverage(
+                        question, numericRoleId, sessionId, coverageTracker);
+            } else {
+                coverageTracker.recordQuestionAsked(sessionId, numericRoleId, (long) questionNumber);
+            }
+        } catch (Exception e) {
+            logger.warn("TopicCoverageTracker failed for session={}: {}", sessionId, e.getMessage());
+        }
     }
 
     /**
@@ -151,6 +297,28 @@ public class LlmGatewayController {
                     "improvements", result.getImprovements(),
                     "followUpQuestions", result.getFollowUpQuestions()
                 ));
+
+                // Extract and cache NLP features for this response (async-safe: runs in map()).
+                // Derives a stable question key from the question text hash to avoid storing
+                // the full question string in the cache key column.
+                if (featureExtractor != null && answer != null && !answer.isBlank()) {
+                    try {
+                        String questionId = "q-" + Integer.toHexString(question != null ? question.hashCode() : 0);
+                        featureExtractor.extractAndCache(sessionId, questionId, answer, result.getScore());
+                    } catch (Exception e) {
+                        logger.warn("ResponseFeatureExtractor failed for session={}: {}", sessionId, e.getMessage());
+                    }
+                }
+
+                // Update candidate skill profile with the latest score.
+                if (skillProfileRepository != null && result.getScore() != null) {
+                    try {
+                        updateSkillProfile(sessionId, roleId, result.getScore());
+                    } catch (Exception e) {
+                        logger.warn("CandidateSkillProfile update failed for session={}: {}", sessionId, e.getMessage());
+                    }
+                }
+
                 return ResponseEntity.ok((Object) response);
             })
             .onErrorResume(error -> {
@@ -220,13 +388,22 @@ public class LlmGatewayController {
             @RequestParam(defaultValue = "backend_java") String roleId,
             @RequestParam(defaultValue = "mid") String level) {
 
+        // Experiment routing — must mirror POST /question-generate so streaming sessions
+        // are assigned to a variant and written to experiment_metric.
+        LlmRequest llmRequest = new LlmRequest("question-generate", sessionId);
+        llmRequest.setRoleId(roleId);
+        llmRequest.setLevel(level);
+        LlmRouteDecision route = experimentRouter.route(llmRequest);
+
         // Get session and history
         Optional<InterviewSession> sessionOpt = sessionService.getSession(sessionId);
         List<QAHistory> history = sessionOpt.map(InterviewSession::getHistory).orElse(List.of());
         Map<String, Object> candidateInfo = sessionOpt.map(InterviewSession::getCandidateInfo).orElse(null);
 
-        // Build prompts
-        String systemPrompt = promptService.buildSystemPrompt(roleId, level, candidateInfo);
+        // Build prompts — use experiment prompt template if provided
+        String systemPrompt = route.getPromptTemplate() != null
+                ? route.getPromptTemplate()
+                : promptService.buildSystemPrompt(roleId, level, candidateInfo);
         String userPrompt = promptService.buildConversationHistoryPrompt(history, maxHistoryMessages);
 
         List<OpenAiMessage> messages = List.of(
@@ -234,17 +411,33 @@ public class LlmGatewayController {
             new OpenAiMessage("user", userPrompt)
         );
 
-        // Stream response
+        long startTime = System.currentTimeMillis();
+        StringBuilder accumulated = new StringBuilder();
+
+        // Stream response; accumulate chunks to record metric on completion
         return openAiService.chatStream(messages)
-            .map(chunk -> ServerSentEvent.<String>builder()
-                .data(chunk)
-                .build())
+            .map(chunk -> {
+                accumulated.append(chunk);
+                return ServerSentEvent.<String>builder()
+                    .data(chunk)
+                    .build();
+            })
             .concatWith(Flux.just(ServerSentEvent.<String>builder()
                 .event("end")
                 .data("[DONE]")
                 .build()))
+            .doOnComplete(() -> {
+                if (route.isInExperiment()) {
+                    long latency = System.currentTimeMillis() - startTime;
+                    String fullResponse = accumulated.toString();
+                    experimentTracker.recordMetric(
+                            Long.parseLong(route.getExperimentId()), route.getVariant(),
+                            sessionId, estimateQuality(fullResponse), latency,
+                            estimateTokens(fullResponse));
+                }
+            })
             .onErrorResume(error -> {
-                System.err.println("Streaming error: " + error.getMessage());
+                logger.error("Streaming error: {}", error.getMessage());
                 return Flux.just(ServerSentEvent.<String>builder()
                     .event("error")
                     .data("Streaming failed: " + error.getMessage())
@@ -273,6 +466,67 @@ public class LlmGatewayController {
 
     private int estimateTokens(String response) {
         return response != null ? response.length() / 4 : 0;
+    }
+
+    /**
+     * Upsert the candidate skill profile for a session after each answer evaluation.
+     * Maintains a rolling score trend (last 20 scores) and recomputes mean/std.
+     */
+    private void updateSkillProfile(String sessionId, String roleId, double score) {
+        CandidateSkillProfile profile = skillProfileRepository.findBySessionId(sessionId)
+                .orElseGet(() -> {
+                    CandidateSkillProfile p = new CandidateSkillProfile();
+                    p.setSessionId(sessionId);
+                    p.setRoleId(ROLE_ID_MAP.getOrDefault(roleId, 1L));
+                    p.setCumulativeScore(0.0);
+                    p.setQuestionCount(0);
+                    p.setScoreTrend("[]");
+                    p.setCreatedAt(LocalDateTime.now());
+                    return p;
+                });
+
+        // Update running totals
+        profile.setCumulativeScore(profile.getCumulativeScore() + score);
+        profile.setQuestionCount(profile.getQuestionCount() + 1);
+
+        // Maintain score trend as a JSON array (last 20 values)
+        List<Double> trend = parseTrend(profile.getScoreTrend());
+        trend.add(score);
+        if (trend.size() > 20) {
+            trend = trend.subList(trend.size() - 20, trend.size());
+        }
+        profile.setScoreTrend(serializeTrend(trend));
+
+        // Recompute mean and std
+        double mean = trend.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        profile.setScoreMean(mean);
+        if (trend.size() > 1) {
+            double variance = trend.stream().mapToDouble(v -> (v - mean) * (v - mean)).average().orElse(0.0);
+            profile.setScoreStd(Math.sqrt(variance));
+        }
+
+        profile.setUpdatedAt(LocalDateTime.now());
+        skillProfileRepository.save(profile);
+    }
+
+    private List<Double> parseTrend(String json) {
+        List<Double> result = new ArrayList<>();
+        if (json == null || json.isBlank() || json.equals("[]")) return result;
+        String inner = json.trim().replaceAll("[\\[\\]]", "");
+        for (String token : inner.split(",")) {
+            try { result.add(Double.parseDouble(token.trim())); } catch (NumberFormatException ignored) {}
+        }
+        return result;
+    }
+
+    private String serializeTrend(List<Double> trend) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < trend.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append(trend.get(i));
+        }
+        sb.append("]");
+        return sb.toString();
     }
 }
 

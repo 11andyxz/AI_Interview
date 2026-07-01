@@ -1,0 +1,87 @@
+{
+  "generated_at": "2026-07-01T01:10:18.784522+00:00",
+  "experiment_id": 1,
+  "experiment_name": "stage_a_week24",
+  "experiment_status": "running",
+  "prefix": "w30-",
+  "traffic_source": "week30 controlled production-equivalent",
+  "commit_sha": "7590c04",
+  "workspace_dirty": true,
+  "local_change_count": 28,
+  "code_version_note": "Week 30 collection ran from local uncommitted changes; commit pending per review workflow.",
+  "latency_definition": "user_facing_question_generation_v1",
+  "model": "gpt-4o-mini",
+  "metric_version": "llm-v1.0-history-week30-latency-remediation",
+  "experiment_config": {
+    "traffic_percentage": 10.0,
+    "baseline_config": {
+      "model": "gpt-4o-mini",
+      "temperature": 0.7,
+      "policy": "baseline",
+      "pass_threshold": 0.95,
+      "fail_threshold": 0.05,
+      "min_questions": "4/5/6"
+    },
+    "treatment_config": {
+      "model": "gpt-4o-mini",
+      "temperature": 0.7,
+      "policy": "new_policy",
+      "pass_threshold": 0.85,
+      "fail_threshold": 0.1,
+      "min_questions": "4/5/6"
+    }
+  },
+  "prompt_config": {
+    "question_generation_max_history_messages": 3,
+    "question_generation_max_answer_chars": 360,
+    "question_generation_max_tokens": 240,
+    "response_path_audit": "quality scoring, experiment metric writes, and topic mapping run off the user-facing response path"
+  },
+  "counts": {
+    "treatment": 80,
+    "baseline": 50
+  },
+  "target_counts": {
+    "treatment": 80,
+    "baseline": 50
+  },
+  "quality_stats": [
+    {
+      "variant": "baseline",
+      "n": 50,
+      "avg_quality": 74.3,
+      "std_quality": 21.954726142678258,
+      "min_quality": 20.0,
+      "max_quality": 85.0,
+      "avg_user_facing_latency_ms": 877.54
+    },
+    {
+      "variant": "treatment",
+      "n": 80,
+      "avg_quality": 76.375,
+      "std_quality": 18.940284448761588,
+      "min_quality": 30.0,
+      "max_quality": 90.0,
+      "avg_user_facing_latency_ms": 987.6875
+    }
+  ],
+  "feature_counts": {
+    "response_feature_cache_rows": 0,
+    "topic_coverage_rows": 130,
+    "candidate_skill_profile_rows": 130
+  },
+  "slice_counts": {
+    "senior": {
+      "baseline": 20,
+      "treatment": 30
+    },
+    "junior": {
+      "baseline": 15,
+      "treatment": 25
+    },
+    "mid": {
+      "baseline": 15,
+      "treatment": 25
+    }
+  }
+}

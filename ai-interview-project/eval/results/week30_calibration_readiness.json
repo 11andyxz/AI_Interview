@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-07-01T01:10:21.538344+00:00",
+  "prefix": "w30-",
+  "status": "HOLD",
+  "active_version": "platt-v2.1",
+  "candidate_version": null,
+  "label_policy": {
+    "source": "final_evaluation_score",
+    "pass_threshold": 60.0,
+    "human_reviewed": false,
+    "exclusion_rule": "Rows without a ground-truth label or DB prediction probability are excluded from Brier/ECE/RMSE."
+  },
+  "prediction_sources_allowed": [
+    "candidate_skill_profile.pass_probability",
+    "candidate_skill_profile.confidence",
+    "candidate_skill_profile.predicted_final_score"
+  ],
+  "minimums": {
+    "treatment_per_slice": 25,
+    "baseline_per_slice": 15
+  },
+  "slices": {
+    "junior": {
+      "treatment": 25,
+      "baseline": 15,
+      "label_count": 40,
+      "prediction_count": 0,
+      "usable_metric_count": 0,
+      "sample_gate_pass": true,
+      "metric_gate_pass": false,
+      "metrics": {
+        "brier_score": null,
+        "ece": null,
+        "rmse": null
+      },
+      "excluded_count": 40
+    },
+    "mid": {
+      "treatment": 25,
+      "baseline": 15,
+      "label_count": 40,
+      "prediction_count": 0,
+      "usable_metric_count": 0,
+      "sample_gate_pass": true,
+      "metric_gate_pass": false,
+      "metrics": {
+        "brier_score": null,
+        "ece": null,
+        "rmse": null
+      },
+      "excluded_count": 40
+    },
+    "senior": {
+      "treatment": 30,
+      "baseline": 20,
+      "label_count": 50,
+      "prediction_count": 0,
+      "usable_metric_count": 0,
+      "sample_gate_pass": true,
+      "metric_gate_pass": false,
+      "metrics": {
+        "brier_score": null,
+        "ece": null,
+        "rmse": null
+      },
+      "excluded_count": 50
+    }
+  },
+  "export": "results\\week30_calibration_export.json",
+  "recommendation": "Keep platt-v2.1 unchanged until every slice has labels, prediction probabilities, Brier/ECE/RMSE metrics, and regression coverage."
+}

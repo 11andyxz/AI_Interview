@@ -1,0 +1,453 @@
+# ML Monitoring Alert Policy
+# Week 20 Task 4: Decision-Aligned Alerting
+# Purpose: Map monitoring signals to clear actions + owners
+
+---
+# Alert Severity Levels
+severity_levels:
+  critical:
+    description: "Immediate action required - potential production incident"
+    response_time: "< 10 minutes"
+    escalation: "PagerDuty → On-call engineer"
+    examples:
+      - Junior RMSE > 11.5 for 10m
+      - Premature stop rate > 3% for 15m
+      - Metrics data missing > 30m
+  
+  warning:
+    description: "Investigation needed - trending toward degradation"
+    response_time: "< 30 minutes"
+    escalation: "Slack notification → Team channel"
+    examples:
+      - Confidence drift > 10% from baseline
+      - Data freshness > 10 minutes
+      - RMSE trending upward (but < threshold)
+  
+  info:
+    description: "Monitoring only - no immediate action"
+    response_time: "Review during business hours"
+    escalation: "Slack notification → Metrics channel"
+    examples:
+      - Efficiency improvement detected
+      - New experiment started
+      - Baseline metrics updated
+
+---
+# Critical Alert Policies
+
+## Policy 1: Junior RMSE Guardrail Breach
+alert_id: "junior_rmse_breach"
+severity: critical
+owner: "ML On-Call Engineer"
+
+trigger_condition:
+  metric: "interview_prediction_rmse{slice='junior'}"
+  operator: ">"
+  threshold: 11.5
+  duration: "10m"  # Sustained breach for 10 minutes
+
+business_impact:
+  - "Junior candidates may receive incorrect early-stop decisions"
+  - "Violates Week 20 acceptance criteria (Junior RMSE ≤ 11.5)"
+  - "Risk: Premature failures or false passes"
+
+decision_mapping:
+  action: "ROLLBACK"
+  urgency: "immediate"
+  approval_required: false  # Auto-rollback enabled
+  
+actions:
+  immediate:
+    - step: "Trigger feature flag rollback to baseline policy"
+      command: "kubectl set env deployment/ai-interview EARLY_STOP_POLICY=baseline"
+      owner: "ml_on_call"
+      timeout: "2 minutes"
+    
+    - step: "Post incident notification"
+      command: "slack_post #ml-alerts-critical 'ALERT: Junior RMSE breach, rolling back'"
+      owner: "automated"
+    
+  within_10_min:
+    - step: "Verify rollback completed"
+      validation: "Check RMSE returns to < 11.5 within 5 minutes"
+      owner: "ml_on_call"
+    
+    - step: "Create incident ticket"
+      details: "Capture alert timestamp, RMSE value, rollback timestamp"
+      owner: "ml_on_call"
+  
+  post_incident:
+    - step: "Root cause analysis"
+      runbook: "https://wiki/runbooks/junior_rmse_rca"
+      owner: "ml_team_lead"
+      deadline: "24 hours"
+    
+    - step: "Review model calibration"
+      action: "Re-fit Platt calibration on recent data"
+      owner: "ml_engineer"
+
+escalation_path:
+  - level_1: "ML On-Call Engineer (PagerDuty)"
+    timeout: "5 minutes"
+  - level_2: "ML Team Lead"
+    timeout: "10 minutes"
+  - level_3: "Engineering Manager"
+
+runbook_link: "https://wiki/runbooks/ml_rmse_breach"
+
+---
+## Policy 2: Premature Stop Rate Exceeded
+alert_id: "premature_stop_high"
+severity: critical
+owner: "ML On-Call Engineer"
+
+trigger_condition:
+  metric: |
+    rate(interview_early_stop_premature_total[15m]) / 
+    rate(interview_early_stop_total[15m])
+  operator: ">"
+  threshold: 0.03  # 3%
+  duration: "15m"
+
+business_impact:
+  - "Candidates stopped early despite low confidence"
+  - "Violates conservative guardrail (< 3% premature)"
+  - "Risk: Poor candidate experience, potential legal issues"
+
+decision_mapping:
+  action: "HOLD DEPLOYMENT"
+  urgency: "immediate"
+  approval_required: true  # Requires ML lead approval for rollback
+
+actions:
+  immediate:
+    - step: "Halt any ongoing rollouts"
+      command: "kubectl patch deployment ai-interview -p '{\"spec\":{\"replicas\":0}}'"
+      owner: "ml_on_call"
+      note: "Stop accepting new sessions on new policy"
+    
+    - step: "Alert stakeholders"
+      channels: ["#ml-alerts-critical", "#product-team"]
+      message: "HOLD: Premature stop rate {{value}}% > 3% threshold"
+  
+  within_30_min:
+    - step: "Investigate root cause"
+      checklist:
+        - "Check threshold configuration (should be 0.85)"
+        - "Validate min_questions enforcement (should be ≥3)"
+        - "Review confidence score distribution"
+        - "Check for data pipeline issues"
+      owner: "ml_on_call"
+    
+    - step: "Decide: Fix-forward or rollback"
+      decision_tree: |
+        if threshold_misconfigured:
+          fix_config and redeploy
+        elif data_quality_issue:
+          rollback and investigate offline
+        else:
+          rollback and schedule postmortem
+      owner: "ml_team_lead"
+
+escalation_path:
+  - level_1: "ML On-Call Engineer"
+  - level_2: "ML Team Lead (approval required)"
+  - level_3: "Product Manager + Engineering Manager"
+
+runbook_link: "https://wiki/runbooks/premature_stop_mitigation"
+
+---
+## Policy 3: Metrics Data Missing
+alert_id: "metrics_data_stale"
+severity: critical  # Blind spot in monitoring!
+owner: "Data Platform On-Call"
+
+trigger_condition:
+  metric: "time() - interview_metrics_last_update_timestamp"
+  operator: ">"
+  threshold: 1800  # 30 minutes
+  duration: "5m"
+
+business_impact:
+  - "Unable to monitor ML model quality"
+  - "Cannot make data-driven rollback decisions"
+  - "Risk: Silent degradation undetected"
+
+decision_mapping:
+  action: "INVESTIGATE + HOLD"
+  urgency: "immediate"
+  approval_required: false
+
+actions:
+  immediate:
+    - step: "Check metrics pipeline health"
+      command: "kubectl logs -l app=metrics-exporter --tail=100"
+      owner: "data_platform_on_call"
+    
+    - step: "Verify data sources"
+      checks:
+        - "Backend API responding? (health check)"
+        - "Database reachable? (connection test)"
+        - "Prometheus scraping? (check targets)"
+      owner: "data_platform_on_call"
+  
+  within_10_min:
+    - step: "Restore metrics pipeline"
+      actions:
+        - "Restart metrics exporter pod"
+        - "Clear Prometheus backlog"
+        - "Validate data flowing again"
+      owner: "data_platform_on_call"
+    
+    - step: "Backfill missing data"
+      query: "SELECT * FROM sessions WHERE timestamp > last_update"
+      owner: "data_platform_on_call"
+
+escalation_path:
+  - level_1: "Data Platform On-Call"
+  - level_2: "ML On-Call (if ML-specific issue)"
+  - level_3: "Site Reliability Engineer"
+
+runbook_link: "https://wiki/runbooks/metrics_pipeline_debug"
+
+---
+# Warning Alert Policies
+
+## Policy 4: Confidence Score Drift
+alert_id: "confidence_drift"
+severity: warning
+owner: "ML Engineer (on-duty)"
+
+trigger_condition:
+  metric: "abs(histogram_quantile(0.50, interview_confidence_score_bucket) - 0.81)"
+  operator: ">"
+  threshold: 0.10  # 10% drift from expected P50=0.81
+  duration: "20m"
+
+business_impact:
+  - "OpenAI model behavior may have changed"
+  - "Early-stop policy tuned for Beta(8,2) may be suboptimal"
+  - "Risk: Gradual efficiency loss or quality degradation"
+
+decision_mapping:
+  action: "INVESTIGATE"
+  urgency: "within 30 minutes"
+  approval_required: false
+
+actions:
+  within_30_min:
+    - step: "Check OpenAI API changelog"
+      url: "https://platform.openai.com/docs/changelog"
+      owner: "ml_engineer"
+    
+    - step: "Review recent prompt changes"
+      query: "git log --since='1 week ago' -- prompts/"
+      owner: "ml_engineer"
+    
+    - step: "Analyze confidence distribution"
+      script: "python eval/check_confidence_dist.py --window 7d"
+      owner: "ml_engineer"
+  
+  within_2_hours:
+    - step: "Decide: Recalibrate or accept drift"
+      decision_criteria:
+        - "If drift > 15% AND sustained > 3 days: Re-fit Platt calibration"
+        - "If drift < 15%: Monitor for 7 days before action"
+        - "If sudden spike: Check for API changes or bugs"
+      owner: "ml_team_lead"
+
+escalation_path:
+  - level_1: "ML Engineer (on-duty)"
+  - level_2: "ML Team Lead"
+
+runbook_link: "https://wiki/runbooks/confidence_drift"
+
+---
+## Policy 5: Efficiency Degradation
+alert_id: "efficiency_degradation"
+severity: warning
+owner: "ML Team Lead"
+
+trigger_condition:
+  metric: "avg(interview_questions_per_session) - avg(interview_questions_per_session offset 7d)"
+  operator: ">"
+  threshold: 0.5  # Asking 0.5 more questions than 7 days ago
+  duration: "30m"
+
+business_impact:
+  - "Early-stop policy not reducing questions as expected"
+  - "Increased interview length = higher costs"
+  - "May indicate threshold tuning needed"
+
+decision_mapping:
+  action: "MONITOR + REPORT"
+  urgency: "within 1 day"
+  approval_required: false
+
+actions:
+  within_1_day:
+    - step: "Generate efficiency report"
+      script: "python eval/analyze_efficiency_trend.py --lookback 14d"
+      owner: "ml_engineer"
+    
+    - step: "Review threshold configuration"
+      check: "Confirm threshold=0.85 (not reverted to 0.90)"
+      owner: "ml_engineer"
+    
+    - step: "Analyze slice-level metrics"
+      query: "Are all slices (junior/mid/senior) degraded equally?"
+      owner: "ml_team_lead"
+
+escalation_path:
+  - level_1: "ML Team Lead"
+  - level_2: "Product Manager (if impacting user experience)"
+
+runbook_link: "https://wiki/runbooks/efficiency_degradation"
+
+---
+# Info Alert Policies
+
+## Policy 6: Experiment Started
+alert_id: "experiment_started"
+severity: info
+owner: "ML Metrics Channel"
+
+trigger_condition:
+  event: "New experiment_id added to registry"
+  source: "experiment_registry.csv git commit"
+
+actions:
+  - step: "Post to #ml-metrics channel"
+    message: |
+      🧪 New experiment started: {{experiment_id}}
+      Model: {{model_version}}
+      Config: {{config_params}}
+      Slice: {{slice}}
+    owner: "automated"
+
+---
+# Alert-to-Runbook Mapping
+
+runbooks:
+  - id: "ml_rmse_breach"
+    title: "Junior RMSE Guardrail Breach Response"
+    url: "https://wiki/runbooks/ml_rmse_breach"
+    owner: "ML Team"
+    last_updated: "2026-04-18"
+    sections:
+      - "Immediate rollback procedure"
+      - "RMSE validation steps"
+      - "Model recalibration guide"
+      - "Postmortem template"
+  
+  - id: "premature_stop_mitigation"
+    title: "Premature Early-Stop Mitigation"
+    url: "https://wiki/runbooks/premature_stop_mitigation"
+    owner: "ML Team"
+    last_updated: "2026-04-18"
+    sections:
+      - "Threshold configuration validation"
+      - "Min questions enforcement check"
+      - "Confidence distribution analysis"
+      - "Fix-forward vs rollback decision tree"
+  
+  - id: "metrics_pipeline_debug"
+    title: "Metrics Pipeline Debugging Guide"
+    url: "https://wiki/runbooks/metrics_pipeline_debug"
+    owner: "Data Platform Team"
+    last_updated: "2026-04-18"
+    sections:
+      - "Pipeline health checks"
+      - "Common failure modes"
+      - "Data backfill procedure"
+      - "Prometheus troubleshooting"
+  
+  - id: "confidence_drift"
+    title: "Confidence Score Drift Investigation"
+    url: "https://wiki/runbooks/confidence_drift"
+    owner: "ML Team"
+    last_updated: "2026-04-18"
+    sections:
+      - "OpenAI API change detection"
+      - "Prompt stability review"
+      - "Distribution analysis tools"
+      - "Recalibration trigger criteria"
+
+---
+# On-Call Rotation & Ownership
+
+on_call_schedule:
+  ml_on_call:
+    rotation: "weekly"
+    timezone: "America/Los_Angeles"
+    primary: "ml_engineer_rotation"
+    secondary: "ml_team_lead"
+    coverage: "24/7"
+    
+    responsibilities:
+      - "Respond to critical ML alerts within 10 minutes"
+      - "Execute rollback procedures"
+      - "Create incident tickets"
+      - "Escalate to team lead if unsure"
+  
+  data_platform_on_call:
+    rotation: "weekly"
+    timezone: "America/Los_Angeles"
+    primary: "data_engineer_rotation"
+    secondary: "sre"
+    coverage: "24/7"
+    
+    responsibilities:
+      - "Maintain metrics pipeline health"
+      - "Restore data collection within 30 minutes"
+      - "Coordinate with ML team on data issues"
+
+escalation_contacts:
+  ml_team_lead:
+    slack: "@ml_lead"
+    phone: "+1-XXX-XXX-XXXX"
+    availability: "Mon-Fri 9am-6pm PT, emergency anytime"
+  
+  engineering_manager:
+    slack: "@eng_manager"
+    phone: "+1-XXX-XXX-XXXX"
+    escalation_threshold: "Severity=critical AND duration>30min"
+  
+  product_manager:
+    slack: "@product"
+    email: "product@company.com"
+    notification_triggers: ["premature_stop_high", "efficiency_degradation"]
+
+---
+# Alert Notification Channels
+
+channels:
+  pagerduty:
+    service: "ml_early_stop_service"
+    integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+    severity_routing:
+      critical: "ml_on_call"
+      warning: "ml_engineer_rotation"  # Non-paging notification
+  
+  slack:
+    critical_channel: "#ml-alerts-critical"
+    warning_channel: "#ml-alerts-warning"
+    info_channel: "#ml-metrics"
+    
+    message_format: |
+      🚨 **{{severity | upper}}**: {{alert_name}}
+      
+      **Metric**: {{metric_name}} = {{current_value}}
+      **Threshold**: {{threshold}}
+      **Duration**: {{duration}}
+      
+      **Action**: {{recommended_action}}
+      **Runbook**: {{runbook_link}}
+      **Owner**: @{{owner}}
+  
+  email:
+    recipients:
+      critical: ["ml-team@company.com", "oncall@company.com"]
+      warning: ["ml-team@company.com"]
+    
+    subject_format: "[{{severity}}] {{alert_name}} - {{environment}}"
