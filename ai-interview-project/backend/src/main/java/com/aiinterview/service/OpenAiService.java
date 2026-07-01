@@ -199,11 +199,19 @@ public class OpenAiService {
      */
     public Mono<String> chatWithConfig(List<OpenAiMessage> messages, String modelOverride,
                                         Double temperatureOverride) {
+        return chatWithConfig(messages, modelOverride, temperatureOverride, null);
+    }
+
+    /**
+     * Call OpenAI with custom model, temperature, and max token overrides.
+     */
+    public Mono<String> chatWithConfig(List<OpenAiMessage> messages, String modelOverride,
+                                        Double temperatureOverride, Integer maxTokensOverride) {
         OpenAiRequest request = new OpenAiRequest();
         request.setModel(modelOverride != null ? modelOverride : model);
         request.setMessages(messages);
         request.setTemperature(temperatureOverride != null ? temperatureOverride : temperature);
-        request.setMaxTokens(maxTokens);
+        request.setMaxTokens(maxTokensOverride != null ? maxTokensOverride : maxTokens);
         request.setStream(false);
 
         return openAiWebClient.post()

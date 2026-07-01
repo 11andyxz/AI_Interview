@@ -160,6 +160,25 @@ class PromptServiceTest {
     }
     
     @Test
+    void testBuildCompactConversationHistoryPrompt_BoundsHistoryAndAnswerLength() {
+        List<QAHistory> history = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            QAHistory qa = new QAHistory();
+            qa.setQuestionText("Question " + i);
+            qa.setAnswerText("Answer " + i + " " + "x".repeat(200));
+            history.add(qa);
+        }
+
+        String prompt = promptService.buildCompactConversationHistoryPrompt(history, 2, 80);
+
+        assertNotNull(prompt);
+        assertFalse(prompt.contains("Question 0"));
+        assertTrue(prompt.contains("Question 3"));
+        assertTrue(prompt.contains("Question 4"));
+        assertTrue(prompt.length() < promptService.buildConversationHistoryPrompt(history, 10).length());
+    }
+
+    @Test
     void testBuildEvaluationPrompt() {
         String question = "What is Spring Boot?";
         String answer = "Spring Boot is a framework";

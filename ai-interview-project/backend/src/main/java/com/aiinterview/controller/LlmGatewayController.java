@@ -27,6 +27,7 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -94,6 +95,15 @@ public class LlmGatewayController {
     @Value("${openai.max-history-messages:10}")
     private int maxHistoryMessages;
 
+    @Value("${openai.question-generation.max-history-messages:3}")
+    private int questionGenerationMaxHistoryMessages;
+
+    @Value("${openai.question-generation.max-answer-chars:360}")
+    private int questionGenerationMaxAnswerChars;
+
+    @Value("${openai.question-generation.max-tokens:240}")
+    private int questionGenerationMaxTokens;
+
     /**
      * Generate next interview question based on session history
      */
@@ -116,16 +126,21 @@ public class LlmGatewayController {
         String systemPrompt = route.getPromptTemplate() != null
                 ? route.getPromptTemplate()
                 : promptService.buildSystemPrompt(roleId, level, candidateInfo);
-        String userPrompt = promptService.buildConversationHistoryPrompt(history, maxHistoryMessages);
+        int promptHistoryMessagesUsed = Math.min(history.size(), Math.max(1, questionGenerationMaxHistoryMessages));
+        String userPrompt = promptService.buildCompactConversationHistoryPrompt(
+                history,
+                questionGenerationMaxHistoryMessages,
+                questionGenerationMaxAnswerChars);
 
         List<OpenAiMessage> messages = List.of(
             new OpenAiMessage("system", systemPrompt),
             new OpenAiMessage("user", userPrompt)
         );
+        int promptInputChars = systemPrompt.length() + userPrompt.length();
 
         long startTime = System.currentTimeMillis();
 
-        return openAiService.chatWithConfig(messages, route.getModel(), route.getTemperature())
+        return openAiService.chatWithConfig(messages, route.getModel(), route.getTemperature(), questionGenerationMaxTokens)
             .flatMap(question -> {
                 long userFacingLatencyMs = System.currentTimeMillis() - startTime;
                 int questionNumber = history.size() + 1;
@@ -143,14 +158,19 @@ public class LlmGatewayController {
                     );
                 }
 
-                Map<String, Object> response = new java.util.HashMap<>(Map.of(
-                    "question", question,
-                    "sessionId", sessionId,
-                    "questionNumber", questionNumber,
-                    "questionGenerationLatencyMs", userFacingLatencyMs,
-                    "latencyDefinition", "user_facing_question_generation_v1",
-                    "postResponseAudit", auditScheduled ? "scheduled" : "skipped"
-                ));
+                Map<String, Object> response = new java.util.HashMap<>();
+                response.put("question", question);
+                response.put("sessionId", sessionId);
+                response.put("questionNumber", questionNumber);
+                response.put("questionGenerationLatencyMs", userFacingLatencyMs);
+                response.put("latencyDefinition", "user_facing_question_generation_v1");
+                response.put("postResponseAudit", auditScheduled ? "scheduled" : "skipped");
+                response.put("promptHistoryMessagesUsed", promptHistoryMessagesUsed);
+                response.put("promptHistoryTotalMessages", history.size());
+                response.put("promptInputChars", promptInputChars);
+                response.put("questionGenerationMaxTokens", questionGenerationMaxTokens);
+                response.put("routeModel", route.getModel());
+                response.put("routeTemperature", route.getTemperature());
 
                 if (route.isInExperiment()) {
                     response.put("experimentId", route.getExperimentId());
@@ -189,12 +209,11 @@ public class LlmGatewayController {
             return;
         }
 
-        Mono<Double> qualityMono = qualityScorer != null
-                ? qualityScorer.score(question, roleId, level)
-                : Mono.just(QuestionQualityScorer.heuristicFallback(question));
-
-        qualityMono
+        Mono.defer(() -> qualityScorer != null
+                        ? qualityScorer.score(question, roleId, level)
+                        : Mono.just(QuestionQualityScorer.heuristicFallback(question)))
                 .defaultIfEmpty(QuestionQualityScorer.heuristicFallback(question))
+                .subscribeOn(Schedulers.boundedElastic())
                 .subscribe(quality -> {
                     if (needsExperimentMetric) {
                         try {

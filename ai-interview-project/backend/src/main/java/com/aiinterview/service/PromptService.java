@@ -191,6 +191,60 @@ public class PromptService {
     }
 
     /**
+     * Build a compact history prompt for latency-sensitive question generation.
+     *
+     * This keeps the latest interview context while bounding prompt size. The
+     * full history remains available in session storage and downstream
+     * evaluation artifacts; this method only trims the OpenAI question
+     * generation request payload.
+     */
+    public String buildCompactConversationHistoryPrompt(
+            List<QAHistory> history,
+            int maxMessages,
+            int maxAnswerChars) {
+        if (history == null || history.isEmpty()) {
+            return "This is the start of the interview. Ask one concise, role-relevant technical question.";
+        }
+
+        int boundedMessages = Math.max(1, maxMessages);
+        int boundedAnswerChars = Math.max(80, maxAnswerChars);
+        int startIndex = Math.max(0, history.size() - boundedMessages);
+        List<QAHistory> recentHistory = history.subList(startIndex, history.size());
+
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("Use the compact interview history below to generate the next interview question. ");
+        prompt.append("Prefer a focused follow-up on recent technical details, and do not repeat prior questions.\n\n");
+        prompt.append("Recent ").append(recentHistory.size()).append(" turns:\n");
+
+        for (int i = 0; i < recentHistory.size(); i++) {
+            QAHistory qa = recentHistory.get(i);
+            prompt.append(i + 1).append(". Q: ").append(trimText(qa.getQuestionText(), 220)).append("\n");
+            prompt.append("   A: ").append(trimText(qa.getAnswerText(), boundedAnswerChars)).append("\n");
+            if (qa.getRubricLevel() != null) {
+                prompt.append("   Eval: ").append(qa.getRubricLevel());
+                if (qa.getScore() != null) {
+                    prompt.append(" (").append(String.format("%.0f", qa.getScore())).append(")");
+                }
+                prompt.append("\n");
+            }
+        }
+
+        prompt.append("\nOutput only the next technical question. Keep it concise, specific, and assessable.");
+        return prompt.toString();
+    }
+
+    private String trimText(String value, int maxChars) {
+        if (value == null) {
+            return "";
+        }
+        String normalized = value.replaceAll("\\s+", " ").trim();
+        if (normalized.length() <= maxChars) {
+            return normalized;
+        }
+        return normalized.substring(0, Math.max(0, maxChars - 3)) + "...";
+    }
+
+    /**
      * Build evaluation prompt
      */
     public String buildEvaluationPrompt(String question, String answer, String roleId, String level) {

@@ -1,0 +1,36 @@
+{
+  "experiment_id": 1,
+  "timestamp": "2026-07-01T01:10:18.784522+00:00",
+  "data_source": "live_aiven_mysql_real_openai_week30_prefix",
+  "model_version": "embedding-v1.0+prediction-v1.0+llm-v1.0-history-week30-latency-remediation",
+  "decision": "HOLD",
+  "stage_b_recommendation": "HOLD",
+  "metrics": {
+    "n_treatment": 80,
+    "n_baseline": 50,
+    "quality_delta_treatment_minus_baseline": 2.075000000000003,
+    "treatment_std_quality": 18.940284448761588,
+    "baseline_std_quality": 21.954726142678258,
+    "avg_questions_delta_pct": 0.004746835443037873,
+    "premature_stop_rate": 0.0,
+    "early_stop_rate": 0.0,
+    "user_facing_latency_p95_ms": 1377.4999999999986,
+    "baseline_user_facing_latency_p95_ms": 1347.0499999999997,
+    "external_question_http_p95_ms": 1469.5999999999988,
+    "topic_coverage_rows": 130,
+    "fallback_cluster_rate": 0.0,
+    "openai_error_rate": 0.0,
+    "calibration_ready": false
+  },
+  "blocking_gates": [
+    "calibration readiness"
+  ],
+  "rationale": [
+    "Week 30 sample-size gate met: True (treatment=80, baseline=50).",
+    "Session-level metrics decision-grade: True.",
+    "Treatment user-facing latency p95 met: True; p95=1377.4999999999986.",
+    "Topic coverage supporting signal healthy: True.",
+    "Calibration ready: False; platt-v2.1 remains unchanged."
+  ],
+  "rollback": "Keep Stage A at 10%; do not expand to Stage B until calibration readiness is resolved."
+}
